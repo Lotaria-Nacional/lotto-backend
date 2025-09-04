@@ -1,0 +1,331 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String              @id @default(uuid())
+  first_name         String
+  last_name          String
+  email              String              @unique
+  password           String
+  role               UserRole            @default(user)
+  zone_id            String?
+  area_id            String?
+  membership         Membership[]
+  created_at         DateTime            @default(now())
+  ResetPasswordToken ResetPasswordToken?
+
+  @@map("users")
+}
+
+model Agent {
+  id               String      @id @default(uuid())
+  id_reference     Int?        @unique
+  first_name       String
+  last_name        String
+  genre            Genre
+  phone_number     Int?
+  afrimoney_number Int?
+  agent_type       AgentType
+  bi_number        String?
+  status           AgentStatus @default(scheduled)
+
+  training_date DateTime
+  created_at    DateTime @default(now())
+
+  terminal Terminal?
+  pos      Pos?
+
+  @@map("agents")
+}
+
+model Terminal {
+  id         String          @id @default(uuid())
+  serial     String
+  device_id  String?
+  note       String?
+  status     TerminalStatus? @default(stock)
+  created_at DateTime        @default(now())
+  arrived_at DateTime
+  leaved_at  DateTime?
+
+  agent_id String?  @unique
+  agent    Agent?   @relation(fields: [agent_id], references: [id])
+  sim_card SimCard?
+
+  @@map("terminals")
+}
+
+model SimCard {
+  id String @id @default(uuid())
+
+  number     Int
+  pin        Int?
+  puk        Int?
+  created_at DateTime @default(now())
+
+  terminal_id String?   @unique
+  terminal    Terminal? @relation(fields: [terminal_id], references: [id])
+
+  @@map("sim_cards")
+}
+
+model Pos {
+  id String @id @default(uuid())
+
+  coordinates String
+  status      PosStatus @default(pending)
+  created_at  DateTime  @default(now())
+
+  admin_id Int
+  admin    Administration @relation(fields: [admin_id], references: [id])
+
+  licence_id String?
+  licence    Licence? @relation(fields: [licence_id], references: [id])
+
+  agent_id String? @unique
+  agent    Agent?  @relation(fields: [agent_id], references: [id])
+
+  area_id Int?
+  area    Area? @relation(fields: [area_id], references: [id])
+
+  zone_id Int?
+  zone    Zone? @relation(fields: [zone_id], references: [id])
+
+  type_id Int?
+  type    Type? @relation(fields: [type_id], references: [id])
+
+  subtype_id Int?
+  subtype    Subtype? @relation(fields: [subtype_id], references: [id])
+
+  city_id Int
+  city    City @relation(fields: [city_id], references: [id])
+
+  province_id Int
+  province    Province @relation(fields: [province_id], references: [id])
+
+  @@map("pos")
+}
+
+model Licence {
+  id          String        @id @default(uuid())
+  number      String
+  description String
+  reference   String
+  limit       Int           @default(1)
+  status      LicenceStatus @default(free)
+  emitted_at  DateTime
+  expires_at  DateTime
+  created_at  DateTime      @default(now())
+
+  file        String?
+  coordinates String?
+
+  admin_id Int?
+  admin    Administration? @relation(fields: [admin_id], references: [id])
+
+  pos Pos[]
+
+  @@map("licences")
+}
+
+model Administration {
+  id       Int       @id @default(autoincrement())
+  name     String
+  pos      Pos[]
+  licences Licence[]
+
+  @@map("administrations")
+}
+
+model Province {
+  name   String @unique
+  id     Int    @id @default(autoincrement())
+  cities City[]
+  pos    Pos[]
+
+  @@map("provinces")
+}
+
+model City {
+  name        String   @unique
+  id          Int      @id @default(autoincrement())
+  province_id Int
+  province    Province @relation(fields: [province_id], references: [id])
+  pos         Pos[]
+
+  @@map("cities")
+}
+
+model Area {
+  name  String @unique
+  id    Int    @id @default(autoincrement())
+  pos   Pos[]
+  zones Zone[]
+
+  @@map("areas")
+}
+
+model Zone {
+  number  Int   @unique
+  id      Int   @id @default(autoincrement())
+  area_id Int
+  pos     Pos[]
+  area    Area  @relation(fields: [area_id], references: [id])
+
+  @@map("zones")
+}
+
+model Type {
+  name     String
+  id       Int       @id @default(autoincrement())
+  pos      Pos[]
+  subtypes Subtype[]
+
+  @@map("types")
+}
+
+model Subtype {
+  name    String
+  id      Int    @id @default(autoincrement())
+  type_id Int
+  pos     Pos[]
+  type    Type   @relation(fields: [type_id], references: [id])
+
+  @@map("subtypes")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  entity     Modules
+  user_name  String
+  user_email String
+  action     Actions
+  changes    Json
+  created_at DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+model IdReference {
+  id      Int       @id @default(autoincrement())
+  counter Int       @default(autoincrement())
+  type    AgentType @unique
+
+  @@map("id_references")
+}
+
+model ResetPasswordToken {
+  id         String   @id @default(uuid())
+  token      String   @unique
+  expires_at DateTime
+  user_id    String   @unique
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+model Group {
+  id          String            @id @default(uuid())
+  name        String
+  description String?
+  memberships Membership[]
+  permissions GroupPermission[]
+  created_at  DateTime          @default(now())
+  updated_at  DateTime          @default(now())
+
+  @@map("groups")
+}
+
+model Membership {
+  user_id  String
+  group_id String
+
+  group Group @relation(fields: [group_id], references: [id])
+  user  User  @relation(fields: [user_id], references: [id])
+
+  @@id([user_id, group_id])
+  @@map("memberships")
+}
+
+model GroupPermission {
+  id       String    @id @default(uuid())
+  group_id String
+  module   Modules
+  action   Actions[]
+
+  group Group @relation(fields: [group_id], references: [id])
+
+  @@unique([group_id, module])
+  @@map("group_permissions")
+}
+
+enum AgentType {
+  lotaria_nacional
+  revendedor
+}
+
+enum Genre {
+  male
+  female
+}
+
+enum AgentStatus {
+  active
+  denied
+  scheduled
+  approved
+}
+
+enum TerminalStatus {
+  ready
+  on_field
+  training
+  stock
+  broken
+  maintenance
+}
+
+enum LicenceStatus {
+  free
+  used
+}
+
+enum PosStatus {
+  pending
+  approved
+  active
+  denied
+}
+
+enum UserRole {
+  user
+  dev
+  admin
+  area_manager
+  supervisor
+}
+
+enum Modules {
+  POS
+  USER
+  AGENT
+  LICENCE
+  TERMINAL
+  SIM_CARD
+}
+
+enum Actions {
+  READ
+  CREATE
+  UPDATE
+  DELETE
+  EXPORT
+  IMPORT
+}
