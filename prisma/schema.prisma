@@ -67,6 +67,7 @@ model SimCard {
   number     Int
   pin        Int?
   puk        Int?
+  arrived_at DateTime @default(now())
   created_at DateTime @default(now())
 
   terminal_id String?   @unique

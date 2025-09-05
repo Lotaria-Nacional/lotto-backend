@@ -1,10 +1,10 @@
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
-import { UpdateSimCardDTO } from '../schemas/update-sim-card.schema';
-import { TerminalStatus } from '../../terminal/@types/terminal.t';
+import { UpdateSimCardDTO } from '@lotaria-nacional/lotto';
+import { AuthPayload } from '../../../@types/auth-payload';
 
-export async function updateSimCardService({ user, ...data }: UpdateSimCardDTO) {
+export async function updateSimCardService({ user, ...data }: UpdateSimCardDTO & { user: AuthPayload }) {
   await prisma.$transaction(async (tx) => {
     const simCard = await tx.simCard.findUnique({
       where: {

@@ -2,11 +2,12 @@ import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
 import { RedisKeys } from '../../../utils/redis/keys';
+import { CreateLicenceDTO } from '@lotaria-nacional/lotto';
+import { AuthPayload } from '../../../@types/auth-payload';
 import { deleteCache } from '../../../utils/redis/delete-cache';
 import { connectIfDefined } from '../../../utils/connect-disconnect';
-import { CreateLicenceDTO } from '../schemas/create-licence.schema';
 
-export async function createLicenceService(data: CreateLicenceDTO) {
+export async function createLicenceService(data: CreateLicenceDTO & { user: AuthPayload }) {
   const id = await prisma.$transaction(async (tx) => {
     const admin = await prisma.administration.findUnique({
       where: { id: data.admin_id },

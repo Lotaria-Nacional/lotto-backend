@@ -1,9 +1,10 @@
 import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
+import { CreateSimCardDTO } from '@lotaria-nacional/lotto';
 import { connectIfDefined } from '../../../utils/connect-disconnect';
-import { CreateSimCardDTO } from '../schemas/create-sim-card.schema';
+import { AuthPayload } from '../../../@types/auth-payload';
 
-export async function createSimCardService({ user, ...data }: CreateSimCardDTO) {
+export async function createSimCardService({ user, ...data }: CreateSimCardDTO & { user: AuthPayload }) {
   const { id } = await prisma.$transaction(async (tx) => {
     const simCard = await tx.simCard.create({
       data: {

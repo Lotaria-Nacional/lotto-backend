@@ -1,6 +1,6 @@
 import z from 'zod';
 
-export const authPayloSchema = z.object({
+export const authPayloadSchema = z.object({
   id: z.uuid(),
   email: z.email(),
   name: z.string(),

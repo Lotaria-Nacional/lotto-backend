@@ -1,8 +1,8 @@
-import { createLicenceService } from '../services';
 import type { Request, Response } from 'express';
+import { createLicenceService } from '../services';
 import { AuthPayload } from '../../../@types/auth-payload';
+import { createLicenceSchema } from '@lotaria-nacional/lotto';
 import { hasPermission } from '../../../middleware/auth/permissions';
-import { createLicenceSchema } from '../schemas/create-licence.schema';
 
 export async function createLicenceController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
@@ -16,8 +16,9 @@ export async function createLicenceController(req: Request, res: Response) {
   //   },
   // });
 
-  const body = createLicenceSchema.parse({ ...req.body, user });
-  const { id } = await createLicenceService(body);
+  const body = createLicenceSchema.parse(req.body);
+
+  const { id } = await createLicenceService({ ...body, user });
 
   return res.status(201).json({
     message: 'Licença criada com sucesso',
