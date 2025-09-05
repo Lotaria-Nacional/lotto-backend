@@ -2,12 +2,13 @@ import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
 import { RedisKeys } from '../../../utils/redis/keys';
+import { AuthPayload } from '../../../@types/auth-payload';
+import { UpdateTerminalDTO } from '@lotaria-nacional/lotto';
 import { Terminal, TerminalStatus } from '../@types/terminal.t';
 import { deleteCache } from '../../../utils/redis/delete-cache';
-import { UpdateTerminalDTO } from '../schemas/update-terminal.schema';
 import { connectOrDisconnect } from '../../../utils/connect-disconnect';
 
-export async function updateTerminalService({ user, ...data }: UpdateTerminalDTO) {
+export async function updateTerminalService({ user, ...data }: UpdateTerminalDTO & { user: AuthPayload }) {
   await prisma.$transaction(async (tx) => {
     const terminal = await tx.terminal.findUnique({
       where: { id: data.id },

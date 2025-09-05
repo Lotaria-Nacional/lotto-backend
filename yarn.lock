@@ -319,13 +319,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lotaria-nacional/lotto@npm:^1.0.16":
-  version: 1.0.16
-  resolution: "@lotaria-nacional/lotto@npm:1.0.16"
+"@lotaria-nacional/lotto@npm:^1.0.18":
+  version: 1.0.18
+  resolution: "@lotaria-nacional/lotto@npm:1.0.18"
   dependencies:
     tsup: "npm:^8.5.0"
     zod: "npm:^4.1.5"
-  checksum: 10c0/ce97c630993e685c37758bf9a71615392f3917755c2af706639caccf3e03e13cb2ab19fcb37b2f17bd2a1eae72c5f0689893c88230b40653284e972aaf96c8dc
+  checksum: 10c0/61b348c0708cc19e69fccec93c2d1f6f1d5282289933aad69884614830dda1452f30bd785d089c8d5e17a9bbe126b61f1fff29b3cb8c7af21bd6955ff64080de
   languageName: node
   linkType: hard
 
@@ -2367,7 +2367,7 @@ __metadata:
   resolution: "lotto-backend@workspace:."
   dependencies:
     "@casl/ability": "npm:^6.7.3"
-    "@lotaria-nacional/lotto": "npm:^1.0.16"
+    "@lotaria-nacional/lotto": "npm:^1.0.18"
     "@prisma/client": "npm:^6.14.0"
     "@types/bcrypt": "npm:^6.0.0"
     "@types/cookie-parser": "npm:^1.4.9"

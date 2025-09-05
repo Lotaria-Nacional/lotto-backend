@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@casl/ability": "^6.7.3",
-    "@lotaria-nacional/lotto": "^1.0.16",
+    "@lotaria-nacional/lotto": "^1.0.18",
     "@prisma/client": "^6.14.0",
     "@types/cookie-parser": "^1.4.9",
     "bcrypt": "^6.0.0",
