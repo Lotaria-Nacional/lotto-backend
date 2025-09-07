@@ -9,7 +9,7 @@ import { makeLicenceReference } from './create-licence.service';
 import { connectOrDisconnect } from '../../../utils/connect-disconnect';
 
 export async function updateLicenceService(data: UpdateLicenceDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const licence = await tx.licence.findUnique({
       where: { id: data.id },
     });
@@ -32,7 +32,6 @@ export async function updateLicenceService(data: UpdateLicenceDTO & { user: Auth
         description: data.description,
         emitted_at: data.emitted_at,
         expires_at: data.expires_at,
-        file: data.file,
         limit: data.limit,
         ...connectOrDisconnect('admin', data.admin_id),
       },

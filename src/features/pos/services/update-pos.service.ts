@@ -6,7 +6,7 @@ import { UpdatePosDTO } from '../schemas/update.schema';
 import { deleteCache } from '../../../utils/redis/delete-cache';
 
 export async function updatePosService(data: UpdatePosDTO) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const pos = await tx.pos.findUnique({ where: { id: data.id } });
 
     if (!pos) throw new NotFoundError('POS não encontrado.');
@@ -35,6 +35,13 @@ export async function updatePosService(data: UpdatePosDTO) {
         licence_id: data.licence_id,
         coordinates: data.coordinates,
         status: data.agent_id ? 'active' : pos.status,
+        area_id: data.area_id,
+        zone_id: data.zone_id,
+        type_id: data.type_id,
+        subtype_id: data.subtype_id,
+        admin_id: data.admin_id,
+        province_id: data.province_id,
+        city_id: data.city_id,
       },
     });
 

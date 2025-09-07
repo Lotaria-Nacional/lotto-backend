@@ -5,7 +5,7 @@ import { connectIfDefined } from '../../../utils/connect-disconnect';
 import { AuthPayload } from '../../../@types/auth-payload';
 
 export async function createSimCardService({ user, ...data }: CreateSimCardDTO & { user: AuthPayload }) {
-  const { id } = await prisma.$transaction(async (tx) => {
+  const { id } = await prisma.$transaction(async tx => {
     const simCard = await tx.simCard.create({
       data: {
         ...data,

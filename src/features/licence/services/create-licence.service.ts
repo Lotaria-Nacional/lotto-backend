@@ -8,7 +8,7 @@ import { deleteCache } from '../../../utils/redis/delete-cache';
 import { connectIfDefined } from '../../../utils/connect-disconnect';
 
 export async function createLicenceService(data: CreateLicenceDTO & { user: AuthPayload }) {
-  const id = await prisma.$transaction(async (tx) => {
+  const id = await prisma.$transaction(async tx => {
     const admin = await prisma.administration.findUnique({
       where: { id: data.admin_id },
       select: { name: true },
@@ -25,7 +25,6 @@ export async function createLicenceService(data: CreateLicenceDTO & { user: Auth
         description: data.description,
         emitted_at: data.emitted_at,
         expires_at: data.expires_at,
-        file: data.file,
         limit: data.limit,
         ...connectIfDefined('admin', data.admin_id),
       },

@@ -9,7 +9,7 @@ import { deleteCache } from '../../../utils/redis/delete-cache';
 import { connectOrDisconnect } from '../../../utils/connect-disconnect';
 
 export async function updateTerminalService({ user, ...data }: UpdateTerminalDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const terminal = await tx.terminal.findUnique({
       where: { id: data.id },
       include: { sim_card: true, agent: { select: { pos: true } } },
@@ -42,6 +42,7 @@ export async function updateTerminalService({ user, ...data }: UpdateTerminalDTO
     const updated = await tx.terminal.update({
       where: { id: data.id },
       data: {
+        ...data,
         status,
         note: data.note,
         leaved_at: data.leaved_at,

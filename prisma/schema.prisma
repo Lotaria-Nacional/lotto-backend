@@ -29,8 +29,8 @@ model Agent {
   first_name       String
   last_name        String
   genre            Genre
-  phone_number     Int?
-  afrimoney_number Int?
+  phone_number     String?
+  afrimoney_number String?
   agent_type       AgentType
   bi_number        String?
   status           AgentStatus @default(scheduled)
@@ -64,11 +64,12 @@ model Terminal {
 model SimCard {
   id String @id @default(uuid())
 
-  number     Int
-  pin        Int?
-  puk        Int?
-  arrived_at DateTime @default(now())
-  created_at DateTime @default(now())
+  number     String
+  pin        String?
+  puk        String?
+  status     SimCardStatus @default(stock)
+  arrived_at DateTime      @default(now())
+  created_at DateTime      @default(now())
 
   terminal_id String?   @unique
   terminal    Terminal? @relation(fields: [terminal_id], references: [id])
@@ -303,6 +304,11 @@ enum PosStatus {
   approved
   active
   denied
+}
+
+enum SimCardStatus {
+  active
+  stock
 }
 
 enum UserRole {

@@ -26,6 +26,13 @@ export async function fetchManyPos(params: PaginationParams) {
           terminal: { select: { id: true, serial: true } },
         },
       },
+      admin: true,
+      area: true,
+      zone: true,
+      type: true,
+      subtype: true,
+      province: true,
+      city: true,
     },
   });
 

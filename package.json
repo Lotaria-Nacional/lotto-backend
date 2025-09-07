@@ -7,11 +7,13 @@
     "dev": "tsx --watch src/index.ts",
     "seed": "tsx src/database/seed.ts",
     "build": "tsc",
-    "test:e2e": "vitest run"
+    "test:e2e": "vitest run",
+    "generate": "prisma generate",
+    "migrate": "prisma migrate dev"
   },
   "dependencies": {
     "@casl/ability": "^6.7.3",
-    "@lotaria-nacional/lotto": "^1.0.18",
+    "@lotaria-nacional/lotto": "^1.0.29",
     "@prisma/client": "^6.14.0",
     "@types/cookie-parser": "^1.4.9",
     "bcrypt": "^6.0.0",

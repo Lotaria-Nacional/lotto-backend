@@ -8,7 +8,7 @@ import { AgentStatus, UpdateAgentDTO } from '@lotaria-nacional/lotto';
 import { connectOrDisconnect } from '../../../utils/connect-disconnect';
 
 export async function updateAgentService({ user, ...data }: UpdateAgentDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const agent = await tx.agent.findUnique({
       where: {
         id: data.id,
@@ -55,7 +55,6 @@ export async function updateAgentService({ user, ...data }: UpdateAgentDTO & { u
         genre: data.genre,
         phone_number: data.phone_number,
         training_date: data.training_date,
-        afrimoney_number: data.afrimoney_number,
         ...connectOrDisconnect('pos', data.pos_id),
         ...connectOrDisconnect('terminal', data.terminal_id),
       },

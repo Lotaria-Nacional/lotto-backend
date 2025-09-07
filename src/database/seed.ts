@@ -5,6 +5,24 @@ const prisma = new PrismaClient();
 
 async function seedData() {
   try {
+    await prisma.city.deleteMany();
+    await prisma.province.deleteMany();
+    await prisma.subtype.deleteMany();
+    await prisma.type.deleteMany();
+    await prisma.zone.deleteMany();
+    await prisma.area.deleteMany();
+    await prisma.administration.deleteMany();
+    await prisma.agent.deleteMany();
+    await prisma.terminal.deleteMany();
+    await prisma.licence.deleteMany();
+    await prisma.pos.deleteMany();
+    await prisma.simCard.deleteMany();
+    await prisma.idReference.deleteMany();
+    await prisma.user.deleteMany();
+    await prisma.group.deleteMany();
+    await prisma.groupPermission.deleteMany();
+    await prisma.membership.deleteMany();
+
     await prisma.province.create({
       data: {
         name: 'Luanda',
