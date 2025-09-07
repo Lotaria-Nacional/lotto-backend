@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import { CreateAuditLogDTO } from '../schemas/create-audit-log.schema';
+import { CreateAuditLogDTO } from '@lotaria-nacional/lotto';
 
 export async function createAuditLogService(tx: Prisma.TransactionClient, data: CreateAuditLogDTO) {
   return await tx.auditLog.create({
