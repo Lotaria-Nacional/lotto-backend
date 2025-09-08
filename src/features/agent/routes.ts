@@ -7,10 +7,12 @@ import {
   resetAgentController,
   fetchAgentsInTrainingController,
 } from './controllers';
+import multer from 'multer';
 import { Router } from 'express';
 import catchErrors from '../../utils/catch-errors';
+import { denyAgentController } from './controllers/deny-agent.controller';
+import { approveAgentController } from './controllers/approve-agent.controller';
 import { uploadAgentsController } from './controllers/upload-agents.controller';
-import multer from 'multer';
 
 const agentRouter = Router();
 
@@ -19,6 +21,8 @@ export const upload = multer({ dest: 'uploads/' });
 agentRouter.post('/', catchErrors(createAgentController));
 agentRouter.post('/upload', upload.single('file'), catchErrors(uploadAgentsController));
 
+agentRouter.put('/approve/:id', catchErrors(approveAgentController));
+agentRouter.put('/deny/:id', catchErrors(denyAgentController));
 agentRouter.put('/reset/:id', catchErrors(resetAgentController));
 agentRouter.put('/:id', catchErrors(updateAgentController));
 

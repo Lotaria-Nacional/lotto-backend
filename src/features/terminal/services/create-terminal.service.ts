@@ -1,20 +1,17 @@
 import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
 import { RedisKeys } from '../../../utils/redis/keys';
-import { deleteCache } from '../../../utils/redis/delete-cache';
-import { CreateTerminalDTO, TerminalStatus } from '@lotaria-nacional/lotto';
 import { AuthPayload } from '../../../@types/auth-payload';
+import { CreateTerminalDTO } from '@lotaria-nacional/lotto';
+import { deleteCache } from '../../../utils/redis/delete-cache';
 
 export async function createTerminalService({
   user,
   ...data
 }: CreateTerminalDTO & { user: AuthPayload }): Promise<{ id: string }> {
   const response = await prisma.$transaction(async tx => {
-    const status: TerminalStatus = data.note ? 'broken' : 'stock';
-
     const terminal = await tx.terminal.create({
       data: {
-        status,
         note: data.note,
         serial: data.serial,
         device_id: data.device_id,
