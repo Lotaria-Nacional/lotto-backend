@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { updateGroupSchema } from '../schemas/update.schema';
 import { idSchema } from '../../../schemas/common/id.schema';
 import { updateGroupService } from '../services';
 import { HttpStatus } from '../../../constants/http';
+import { updateGroupSchema } from '@lotaria-nacional/lotto';
 
 export async function updateGroupController(req: Request, res: Response) {
   const { id } = idSchema.parse(req.params);

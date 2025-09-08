@@ -3,8 +3,9 @@ import {
   deleteAgentController,
   createAgentController,
   updateAgentController,
-  fetchManyAgentsController,
+  fetchAgentsController,
   resetAgentController,
+  fetchAgentsInTrainingController,
 } from './controllers';
 import { Router } from 'express';
 import catchErrors from '../../utils/catch-errors';
@@ -18,7 +19,8 @@ agentRouter.put('/:id', catchErrors(updateAgentController));
 
 agentRouter.delete('/:id', catchErrors(deleteAgentController));
 
+agentRouter.get('/training', catchErrors(fetchAgentsInTrainingController));
+agentRouter.get('/', catchErrors(fetchAgentsController));
 agentRouter.get('/:id', catchErrors(getAgentController));
-agentRouter.get('/', catchErrors(fetchManyAgentsController));
 
 export default agentRouter;

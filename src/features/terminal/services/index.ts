@@ -4,4 +4,4 @@ export * from './reset-terminal-service';
 export * from './delete-terminal.service';
 export * from './delete-many-terminals.service';
 export * from './get-terminal.service';
-export * from './fetch-many-terminals.service';
+export * from './fetch-terminals.service';

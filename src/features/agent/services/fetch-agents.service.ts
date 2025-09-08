@@ -5,11 +5,11 @@ import { getCache } from '../../../utils/redis/get-cache';
 import { setCache } from '../../../utils/redis/set-cache';
 import { PaginationParams } from '../../../@types/pagination-params';
 
-export async function fetchManyAgents(params: PaginationParams) {
+export async function fetchAgents(params: PaginationParams & { status?: AgentStatus }) {
   const cacheKey = RedisKeys.agents.listWithFilters(params);
 
-  const cached = await getCache(cacheKey);
-  if (cached) return cached;
+  // const cached = await getCache(cacheKey);
+  // if (cached) return cached;
 
   let search = buildFilters(params.query);
 
@@ -30,7 +30,20 @@ export async function fetchManyAgents(params: PaginationParams) {
 
   const offset = (params.page - 1) * params.limit;
 
+  let where: Prisma.AgentWhereInput = {};
+
+  if (params.status === 'active') {
+    where = {
+      status: AgentStatus.active,
+    };
+  } else if (params.status === 'scheduled') {
+    where = {
+      status: { notIn: [AgentStatus.active] },
+    };
+  }
+
   const agents = await prisma.agent.findMany({
+    where,
     take: params.limit,
     skip: offset,
     orderBy: { created_at: 'asc' },
@@ -40,16 +53,15 @@ export async function fetchManyAgents(params: PaginationParams) {
     },
   });
 
-  if (agents.length > 0) {
-    await setCache(cacheKey, agents);
-  }
+  // if (agents.length > 0) {
+  //   await setCache(cacheKey, agents);
+  // }
 
   return agents;
 }
 
 function buildFilters(query: string | undefined) {
   let filters: Prisma.AgentWhereInput[] = [];
-  const numberValue = Number(query);
 
   if (!query?.trim()) return filters;
 
@@ -62,15 +74,16 @@ function buildFilters(query: string | undefined) {
   filters.push(
     { bi_number: { contains: query, mode: 'insensitive' } },
     { last_name: { contains: query, mode: 'insensitive' } },
-    { first_name: { contains: query, mode: 'insensitive' } }
+    { first_name: { contains: query, mode: 'insensitive' } },
+    { phone_number: { contains: query } },
+    { afrimoney_number: { contains: query } }
   );
 
-  if (!isNaN(numberValue)) {
-    filters.push(
-      { phone_number: { equals: numberValue } },
-      { afrimoney_number: { equals: numberValue } },
-      { id_reference: numberValue }
-    );
+  if (!isNaN(Number(query))) {
+    {
+      id_reference: Number(query);
+    }
+    filters.push();
   }
 
   return filters;

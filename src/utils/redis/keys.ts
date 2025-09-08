@@ -1,4 +1,3 @@
-import { AgentStatus } from '@prisma/client';
 import { PaginationParams } from '../../@types/pagination-params';
 
 export const RedisKeys = {
@@ -10,7 +9,6 @@ export const RedisKeys = {
         limit,
         page,
         query,
-        status,
         delivery_date,
         area_id = 'all',
         zone_id = 'all',
@@ -19,7 +17,7 @@ export const RedisKeys = {
         province_id = 'all',
       } = params;
 
-      return `terminals:${limit}:page:${page}:query:${query}:delivery_date:${delivery_date}:area:status:${status}:${area_id}:zone:${zone_id}:province:${province_id}:city:${city_id}:agent:${agent_id}`;
+      return `terminals:${limit}:page:${page}:query:${query}:delivery_date:${delivery_date}:area:${area_id}:zone:${zone_id}:province:${province_id}:city:${city_id}:agent:${agent_id}`;
     },
   },
 
@@ -52,7 +50,6 @@ export const RedisKeys = {
         limit,
         page,
         query,
-        status,
         area_id = 'all',
         zone_id = 'all',
         city_id = 'all',
@@ -62,7 +59,7 @@ export const RedisKeys = {
         province_id = 'all',
       } = params;
 
-      return `pos:${limit}:page:${page}:query:status${status}:admin_id:${admin_id}:${query}:type:${type_id}:subtype${subtype_id}:area:${area_id}:zone:${zone_id}:city:${city_id}:province:${province_id}`;
+      return `pos:${limit}:page:${page}:query:admin_id:${admin_id}:${query}:type:${type_id}:subtype${subtype_id}:area:${area_id}:zone:${zone_id}:city:${city_id}:province:${province_id}`;
     },
   },
 

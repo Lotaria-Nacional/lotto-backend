@@ -4,8 +4,9 @@ import {
   updateSimCardController,
   createSimCardController,
   deleteSimCardController,
-  fetchManySimCardsController,
+  fetchSimCardsController,
   deleteManySimCardsController,
+  fetchSimCardsInStockController,
 } from './controllers';
 import { Router } from 'express';
 import catchErrors from '../../utils/catch-errors';
@@ -20,7 +21,8 @@ simCardRouter.put('/:id', catchErrors(updateSimCardController));
 simCardRouter.delete('/bulk', catchErrors(deleteManySimCardsController));
 simCardRouter.delete('/:id', catchErrors(deleteSimCardController));
 
-simCardRouter.get('/', catchErrors(fetchManySimCardsController));
+simCardRouter.get('/stock', catchErrors(fetchSimCardsInStockController));
+simCardRouter.get('/', catchErrors(fetchSimCardsController));
 simCardRouter.get('/:id', catchErrors(getSimCardController));
 
 export default simCardRouter;

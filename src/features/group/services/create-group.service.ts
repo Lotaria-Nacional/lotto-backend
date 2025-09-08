@@ -1,8 +1,8 @@
+import { CreateGroupDTO } from '@lotaria-nacional/lotto';
 import prisma from '../../../lib/prisma';
-import { CreateGroupDTO } from '../schemas/create.schema';
 
 export async function createGroupService(data: CreateGroupDTO) {
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async tx => {
     const group = await tx.group.create({
       data: {
         name: data.name,
@@ -12,7 +12,7 @@ export async function createGroupService(data: CreateGroupDTO) {
         ...(data.users_id &&
           data.users_id.length > 0 && {
             memberships: {
-              create: data.users_id.map((userId) => ({
+              create: data.users_id.map(userId => ({
                 user: { connect: { id: userId } },
               })),
             },
@@ -22,7 +22,7 @@ export async function createGroupService(data: CreateGroupDTO) {
         ...(data.permissions &&
           data.permissions.length > 0 && {
             permissions: {
-              create: data.permissions.map((permission) => ({
+              create: data.permissions.map(permission => ({
                 module: permission.module,
                 action: permission.actions,
               })),
