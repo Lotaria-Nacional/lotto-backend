@@ -13,6 +13,8 @@ import { Router } from 'express';
 import catchErrors from '../../utils/catch-errors';
 import { uploadTerminalsController } from './controllers/upload-terminals.controller';
 import multer from 'multer';
+import { activateTerminalController } from './controllers/activate-terminal.controller';
+import { associateAgentAndSimCardOnTerminalController } from './controllers/associate-agent-and-sim-card-on-terminal.controller';
 
 const terminalRouter = Router();
 
@@ -22,6 +24,8 @@ terminalRouter.post('/', catchErrors(createTerminalController));
 terminalRouter.post('/upload', upload.single('file'), catchErrors(uploadTerminalsController));
 
 terminalRouter.put('/reset/:id', catchErrors(resetTerminalController));
+terminalRouter.put('/associate/:id', catchErrors(associateAgentAndSimCardOnTerminalController));
+terminalRouter.put('/activate/:id', catchErrors(activateTerminalController));
 terminalRouter.put('/:id', catchErrors(updateTerminalController));
 
 terminalRouter.delete('/bulk', catchErrors(deleteManyTerminalsController));

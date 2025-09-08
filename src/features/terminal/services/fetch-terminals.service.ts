@@ -49,6 +49,11 @@ export async function fetchTerminalsService(params: PaginationParams) {
     skip: offset,
     orderBy: { created_at: 'desc' },
     include: {
+      sim_card: {
+        select: {
+          number: true,
+        },
+      },
       agent: {
         select: {
           id: true,

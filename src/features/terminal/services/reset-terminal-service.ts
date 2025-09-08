@@ -3,7 +3,7 @@ import { NotFoundError } from '../../../errors';
 import { deleteCache, RedisKeys } from '../../../utils/redis';
 
 export async function resetTerminalService(id: string) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const terminal = await tx.terminal.findUnique({
       where: {
         id,
@@ -19,7 +19,8 @@ export async function resetTerminalService(id: string) {
         id: terminal.id,
       },
       data: {
-        agent: { disconnect: true },
+        status: 'stock',
+        agent_id: null,
         sim_card: { disconnect: true },
       },
     });
