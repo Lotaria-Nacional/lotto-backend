@@ -67,11 +67,13 @@ async function fetchTerminalsByStatus(params: PaginationParams, status?: Termina
     },
   });
 
+  const nextPage = terminals.length === params.limit ? params.page + 1 : null;
+
   if (terminals.length > 0) {
     await setCache(cacheKey, terminals);
   }
 
-  return terminals;
+  return { data: terminals, nextPage };
 }
 
 // Wrappers para cada página

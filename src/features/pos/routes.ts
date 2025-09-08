@@ -10,10 +10,14 @@ import {
 } from './controllers';
 import { Router } from 'express';
 import catchErrors from '../../utils/catch-errors';
+import { uploadPosService } from './services/upload-pos-sevice';
+import { upload } from '../agent/routes';
 
 const posRouter = Router();
 
 posRouter.post('/', catchErrors(createPosController));
+posRouter.post('/upload', upload.single('file'), catchErrors(uploadPosService));
+
 posRouter.put('/:id', catchErrors(updatePosController));
 
 posRouter.delete('/bulk', catchErrors(deleteManyPosController));

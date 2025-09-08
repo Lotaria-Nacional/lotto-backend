@@ -1,7 +1,10 @@
 import type { Response, Request } from 'express';
+import { HttpStatus } from '../../../constants/http';
+import { paramsSchema } from '../../../schemas/common/query.schema';
 import { fetchManyAuditLogs } from '../services/fetch-many-audit-logs.service';
 
-export async function fetchManyAuditLogsController(_req: Request, res: Response) {
-  const response = await fetchManyAuditLogs();
-  return res.status(200).json(response);
+export async function fetchManyAuditLogsController(req: Request, res: Response) {
+  const query = paramsSchema.parse(req.query);
+  const response = await fetchManyAuditLogs(query);
+  return res.status(HttpStatus.OK).json(response);
 }

@@ -11,10 +11,15 @@ import {
 } from './controllers';
 import { Router } from 'express';
 import catchErrors from '../../utils/catch-errors';
+import { uploadTerminalsController } from './controllers/upload-terminals.controller';
+import multer from 'multer';
 
 const terminalRouter = Router();
 
+export const upload = multer({ dest: 'uploads/' });
+
 terminalRouter.post('/', catchErrors(createTerminalController));
+terminalRouter.post('/upload', upload.single('file'), catchErrors(uploadTerminalsController));
 
 terminalRouter.put('/reset/:id', catchErrors(resetTerminalController));
 terminalRouter.put('/:id', catchErrors(updateTerminalController));

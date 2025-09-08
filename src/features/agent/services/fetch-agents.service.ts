@@ -1,15 +1,16 @@
 import prisma from '../../../lib/prisma';
 import { Prisma, AgentStatus } from '@prisma/client';
 import { RedisKeys } from '../../../utils/redis/keys';
-import { getCache } from '../../../utils/redis/get-cache';
-import { setCache } from '../../../utils/redis/set-cache';
 import { PaginationParams } from '../../../@types/pagination-params';
+import { Agent } from '@lotaria-nacional/lotto';
+
+export type FetchAgentsResponse = {
+  data: Agent[];
+  nextPage?: number | null;
+};
 
 export async function fetchAgents(params: PaginationParams & { status?: AgentStatus }) {
   const cacheKey = RedisKeys.agents.listWithFilters(params);
-
-  // const cached = await getCache(cacheKey);
-  // if (cached) return cached;
 
   let search = buildFilters(params.query);
 
@@ -53,11 +54,9 @@ export async function fetchAgents(params: PaginationParams & { status?: AgentSta
     },
   });
 
-  // if (agents.length > 0) {
-  //   await setCache(cacheKey, agents);
-  // }
+  const nextPage = agents.length === params.limit ? params.page + 1 : null;
 
-  return agents;
+  return { data: agents, nextPage };
 }
 
 function buildFilters(query: string | undefined) {

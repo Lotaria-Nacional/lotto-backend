@@ -1,15 +1,10 @@
 import prisma from '../../../lib/prisma';
 import { RedisKeys } from '../../../utils/redis/keys';
 import { Prisma, TerminalStatus } from '@prisma/client';
-import { getCache } from '../../../utils/redis/get-cache';
-import { setCache } from '../../../utils/redis/set-cache';
 import { PaginationParams } from '../../../@types/pagination-params';
 
 export async function fetchTerminalsService(params: PaginationParams) {
   const cacheKey = RedisKeys.terminals.listWithFilters(params);
-
-  // const cached = await getCache(cacheKey);
-  // if (cached) return cached;
 
   const filters = buildFilters(params.query);
 
@@ -65,11 +60,9 @@ export async function fetchTerminalsService(params: PaginationParams) {
     },
   });
 
-  // if (terminals.length > 0) {
-  //   await setCache(cacheKey, terminals);
-  // }
+  const nextPage = terminals.length === params.limit ? params.page + 1 : null;
 
-  return terminals;
+  return { data: terminals, nextPage };
 }
 
 function buildFilters(query: string): Prisma.TerminalWhereInput[] {

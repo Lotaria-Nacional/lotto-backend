@@ -4,10 +4,10 @@ import { PaginationParams } from '../../../@types/pagination-params';
 import { getCache, RedisKeys, setCache } from '../../../utils/redis';
 
 export async function fetchManyLicencesService(params: PaginationParams) {
-  const cacheKey = RedisKeys.licences.listWithFilters(params);
+  // const cacheKey = RedisKeys.licences.listWithFilters(params);
 
-  const cached = await getCache(cacheKey);
-  if (cached) return cached;
+  // const cached = await getCache(cacheKey);
+  // if (cached) return cached;
 
   const searchFilters = makeLicenceFilters(params.query);
 
@@ -28,11 +28,9 @@ export async function fetchManyLicencesService(params: PaginationParams) {
     omit: { admin_id: true },
   });
 
-  if (licences.length > 0) {
-    await setCache(cacheKey, licences);
-  }
+  const nextPage = licences.length === params.limit ? params.page + 1 : null;
 
-  return licences;
+  return { data: licences, nextPage };
 }
 
 // make licence filters function

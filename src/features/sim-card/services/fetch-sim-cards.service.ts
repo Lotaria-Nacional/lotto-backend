@@ -27,5 +27,7 @@ export async function fetchSimCardsService(params: PaginationParams & { status?:
     },
   });
 
-  return simCards;
+  const nextPage = simCards.length === params.limit ? params.page + 1 : null;
+
+  return { data: simCards, nextPage };
 }

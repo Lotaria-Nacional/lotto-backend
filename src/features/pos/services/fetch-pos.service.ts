@@ -4,11 +4,6 @@ import { PaginationParams } from '../../../@types/pagination-params';
 import { setCache, RedisKeys, getCache } from '../../../utils/redis';
 
 export async function fetchPoService(params: PaginationParams & { status?: PosStatus }) {
-  const cacheKey = RedisKeys.pos.listWithFilters(params);
-
-  // const cached = await getCache(cacheKey);
-  // if (cached) return cached;
-
   const offset = (params.page - 1) * params.limit;
 
   let where: Prisma.PosWhereInput = {};
@@ -47,11 +42,9 @@ export async function fetchPoService(params: PaginationParams & { status?: PosSt
     },
   });
 
-  if (pos.length > 0) {
-    await setCache(cacheKey, pos);
-  }
+  const nextPage = pos.length === params.limit ? params.page + 1 : null;
 
-  return pos;
+  return { data: pos, nextPage };
 }
 
 function buildFilters(query: string | undefined) {

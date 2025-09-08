@@ -17,6 +17,7 @@ export async function fetchManyLicencesController(req: Request, res: Response) {
   // });
 
   const query = paramsSchema.parse(req.query);
+
   const response = await fetchManyLicencesService(query);
 
   return res.status(200).json(response);
