@@ -19,7 +19,7 @@ export async function approvePosService(id: string) {
         id: pos.id,
       },
       data: {
-        status: 'active',
+        status: 'approved',
       },
     });
   });

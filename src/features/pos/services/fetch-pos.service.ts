@@ -9,11 +9,11 @@ export async function fetchPoService(params: PaginationParams & { status?: PosSt
 
   if (params.status === 'pending') {
     where.status = {
-      notIn: ['active', 'approved'],
+      in: ['pending', 'approved', 'denied'],
     };
   } else if (params.status === 'active') {
     where.status = {
-      in: ['active', 'approved'],
+      in: ['active'],
     };
   }
 

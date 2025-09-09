@@ -28,13 +28,17 @@ export async function associateAgentAndSimCardOnTerminalService(data: UpdateTerm
     }
 
     if (data.agent_id) {
-      if (terminal.agent_id && terminal.agent_id !== data.agent_id) {
-        throw new BadRequestError('Este terminal já está a ser usado por outro agente');
-      }
-
       const agent = await tx.agent.findUnique({ where: { id: data.agent_id } });
 
       if (!agent) throw new NotFoundError('Agente não encontrado');
+
+      await tx.terminal.update({
+        where: { id: data.id },
+        data: {
+          agent_id: null,
+          status: 'on_field',
+        },
+      });
 
       if (terminal.agent_id !== data.agent_id) {
         await tx.agent.update({

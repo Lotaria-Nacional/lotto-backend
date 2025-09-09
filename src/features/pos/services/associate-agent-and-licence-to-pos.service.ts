@@ -1,6 +1,5 @@
 import prisma from '../../../lib/prisma';
 import { BadRequestError, NotFoundError } from '../../../errors';
-import { RedisKeys } from '../../../utils/redis';
 import { LicenceStatus, UpdatePosDTO } from '@lotaria-nacional/lotto';
 
 export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO) {
@@ -16,7 +15,6 @@ export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO) {
     }
 
     if (data.licence_id) {
-      // se já tem uma licença diferente -> erro
       if (pos.licence_id && pos.licence_id !== data.licence_id) {
         throw new BadRequestError('Este POS já possui outra licença atribuída');
       }
@@ -47,10 +45,16 @@ export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO) {
           ...(pos.licence_id ? {} : { pos: { connect: { id: pos.id } } }),
         },
       });
+
+      await tx.pos.update({
+        where: { id: data.id },
+        data: {
+          status: 'approved',
+        },
+      });
     }
 
     if (data.agent_id) {
-      // Se o POS já tem agente diferente → erro
       if (pos.agent_id && pos.agent_id !== data.agent_id) {
         throw new BadRequestError('Este POS já está associado a outro agente');
       }
@@ -77,25 +81,9 @@ export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO) {
         where: { id: pos.id },
         data: {
           agent_id: data.agent_id,
+          status: 'active',
         },
       });
     }
-
-    await tx.pos.update({
-      where: {
-        id: pos.id,
-      },
-      data: {
-        status: 'active',
-        agent_id: data.agent_id,
-      },
-    });
   });
-
-  await Promise.all([
-    RedisKeys.pos.all(),
-    RedisKeys.agents.all(),
-    RedisKeys.terminals.all(),
-    RedisKeys.auditLogs.all(),
-  ]);
 }
