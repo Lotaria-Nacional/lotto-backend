@@ -20,7 +20,6 @@ export async function createPosService({ user, ...data }: CreatePosDTO) {
         licence_id: data.licence_id,
       },
     });
-
     await audit(tx, 'CREATE', {
       entity: 'POS',
       user,

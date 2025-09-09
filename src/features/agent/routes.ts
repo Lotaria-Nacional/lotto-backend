@@ -13,15 +13,20 @@ import catchErrors from '../../utils/catch-errors';
 import { denyAgentController } from './controllers/deny-agent.controller';
 import { approveAgentController } from './controllers/approve-agent.controller';
 import { uploadAgentsController } from './controllers/upload-agents.controller';
+import { associatePosAndTerminalOnAgentController } from './controllers/associate-pos-and-terminal-on-agent.controller';
+import { desativateAgentController } from './controllers/desativate-agent.controller';
 
 const agentRouter = Router();
 
+//TODO: mudar o uploads/ para algo fora do servidor
 export const upload = multer({ dest: 'uploads/' });
 
 agentRouter.post('/', catchErrors(createAgentController));
 agentRouter.post('/upload', upload.single('file'), catchErrors(uploadAgentsController));
 
+agentRouter.put('/associate/:id', catchErrors(associatePosAndTerminalOnAgentController));
 agentRouter.put('/approve/:id', catchErrors(approveAgentController));
+agentRouter.put('/desativate/:id', catchErrors(desativateAgentController));
 agentRouter.put('/deny/:id', catchErrors(denyAgentController));
 agentRouter.put('/reset/:id', catchErrors(resetAgentController));
 agentRouter.put('/:id', catchErrors(updateAgentController));

@@ -1,7 +1,6 @@
-import { PosStatus, Prisma } from '@prisma/client';
 import prisma from '../../../lib/prisma';
+import { PosStatus, Prisma } from '@prisma/client';
 import { PaginationParams } from '../../../@types/pagination-params';
-import { setCache, RedisKeys, getCache } from '../../../utils/redis';
 
 export async function fetchPoService(params: PaginationParams & { status?: PosStatus }) {
   const offset = (params.page - 1) * params.limit;
@@ -10,10 +9,12 @@ export async function fetchPoService(params: PaginationParams & { status?: PosSt
 
   if (params.status === 'pending') {
     where.status = {
-      notIn: [PosStatus.active],
+      notIn: ['active', 'approved'],
     };
   } else if (params.status === 'active') {
-    where.status = PosStatus.active;
+    where.status = {
+      in: ['active', 'approved'],
+    };
   }
 
   const pos = await prisma.pos.findMany({

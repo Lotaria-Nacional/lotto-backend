@@ -1,5 +1,5 @@
 import prisma from '../../../lib/prisma';
-import { NotFoundError } from '../../../errors';
+import { BadRequestError, NotFoundError } from '../../../errors';
 import { deleteCache, RedisKeys } from '../../../utils/redis';
 
 export async function resetTerminalService(id: string) {
@@ -8,10 +8,15 @@ export async function resetTerminalService(id: string) {
       where: {
         id,
       },
+      include: { sim_card: true },
     });
 
     if (!terminal) {
       throw new NotFoundError('Terminal não encontrado ');
+    }
+
+    if (!terminal.agent_id && !terminal.sim_card) {
+      throw new BadRequestError('Não há nada para resetar');
     }
 
     await tx.terminal.update({

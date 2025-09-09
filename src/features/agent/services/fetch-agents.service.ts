@@ -49,8 +49,25 @@ export async function fetchAgents(params: PaginationParams & { status?: AgentSta
     skip: offset,
     orderBy: { created_at: 'asc' },
     include: {
-      terminal: true,
-      pos: true,
+      terminal: {
+        include: {
+          sim_card: {
+            select: {
+              number: true,
+            },
+          },
+        },
+      },
+      pos: {
+        include: {
+          area: { select: { name: true } },
+          zone: { select: { number: true } },
+          type: { select: { name: true } },
+          subtype: { select: { name: true } },
+          province: { select: { name: true } },
+          city: { select: { name: true } },
+        },
+      },
     },
   });
 

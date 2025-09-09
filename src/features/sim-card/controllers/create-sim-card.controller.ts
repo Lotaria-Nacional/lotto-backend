@@ -11,5 +11,5 @@ export async function createSimCardController(req: Request, res: Response) {
 
   const { id } = await createSimCardService({ ...body, user });
 
-  return res.status(HttpStatus.CREATED).json({ id });
+  return res.status(HttpStatus.CREATED).json({ id, message: 'Sim card criado' });
 }

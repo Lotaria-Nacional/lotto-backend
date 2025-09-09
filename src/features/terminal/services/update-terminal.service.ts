@@ -46,8 +46,7 @@ export async function updateTerminalService({ user, ...data }: UpdateTerminalDTO
         status,
         note: data.note,
         leaved_at: data.leaved_at,
-        ...(data.agent_id && { agent_id: data.agent_id }),
-        ...connectOrDisconnect('sim_card', data.sim_card_id),
+        agent_id: status === 'broken' ? null : terminal.agent_id,
       },
     });
 

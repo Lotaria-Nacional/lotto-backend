@@ -2,7 +2,7 @@ import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
 import { RedisKeys } from '../../../utils/redis';
 
-export async function resetPosService(id: string) {
+export async function approvePosService(id: string) {
   await prisma.$transaction(async tx => {
     const pos = await tx.pos.findUnique({
       where: {
@@ -14,31 +14,12 @@ export async function resetPosService(id: string) {
       throw new NotFoundError('POS não encontrado ');
     }
 
-    if (pos.agent_id) {
-      const agent = await tx.agent.findUnique({
-        where: { id: pos.agent_id },
-      });
-
-      if (!agent) {
-        throw new NotFoundError('Agente não encontrado');
-      }
-
-      await tx.agent.update({
-        where: { id: pos.agent_id },
-        data: {
-          status: 'denied',
-        },
-      });
-    }
-
     await tx.pos.update({
       where: {
         id: pos.id,
       },
       data: {
-        status: 'pending',
-        agent_id: null,
-        licence_id: null,
+        status: 'active',
       },
     });
   });
