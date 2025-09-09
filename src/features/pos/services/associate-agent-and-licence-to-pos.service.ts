@@ -16,45 +16,47 @@ export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO) {
     }
 
     if (data.licence_id) {
+      // se já tem uma licença diferente -> erro
+      if (pos.licence_id && pos.licence_id !== data.licence_id) {
+        throw new BadRequestError('Este POS já possui outra licença atribuída');
+      }
+
       const licence = await tx.licence.findUnique({
         where: { id: data.licence_id },
         include: { pos: { select: { id: true } } },
       });
 
       if (!licence) {
-        throw new NotFoundError('Licencee não encontrado');
+        throw new NotFoundError('Licença não encontrada');
       }
 
       const posWithThisLicenceCount = licence.pos.length;
       const limitCount = licence.limit;
-      const hasReachedTheLimit = posWithThisLicenceCount >= limitCount;
 
-      if (hasReachedTheLimit) {
+      if (posWithThisLicenceCount >= limitCount) {
         throw new BadRequestError('Esta licença atingiu o limite de uso');
       }
 
-      const limitStatus: LicenceStatus = posWithThisLicenceCount + 1 >= limitCount ? 'used' : 'free';
+      const limitStatus: LicenceStatus =
+        posWithThisLicenceCount + (pos.licence_id ? 0 : 1) >= limitCount ? 'used' : 'free';
 
       await tx.licence.update({
         where: { id: data.licence_id },
         data: {
           status: limitStatus,
-          pos: {
-            connect: {
-              id: pos.id,
-            },
-          },
+          ...(pos.licence_id ? {} : { pos: { connect: { id: pos.id } } }),
         },
       });
     }
 
     if (data.agent_id) {
-      if (data.agent_id !== pos.agent_id) {
-        throw new BadRequestError('Este POS já está ocupado');
+      // Se o POS já tem agente diferente → erro
+      if (pos.agent_id && pos.agent_id !== data.agent_id) {
+        throw new BadRequestError('Este POS já está associado a outro agente');
       }
 
       const agent = await tx.agent.findUnique({
-        where: { id: pos.agent_id },
+        where: { id: data.agent_id },
         include: {
           terminal: { select: { id: true } },
         },
@@ -65,9 +67,16 @@ export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO) {
       }
 
       await tx.agent.update({
-        where: { id: pos.agent_id },
+        where: { id: data.agent_id },
         data: {
           status: agent.terminal ? 'active' : agent.status,
+        },
+      });
+
+      await tx.pos.update({
+        where: { id: pos.id },
+        data: {
+          agent_id: data.agent_id,
         },
       });
     }

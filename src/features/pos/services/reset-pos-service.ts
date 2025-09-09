@@ -1,6 +1,8 @@
+import { licence } from './../../licence/@types/licence.t';
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
 import { RedisKeys } from '../../../utils/redis';
+import { LicenceStatus } from '@lotaria-nacional/lotto';
 
 export async function resetPosService(id: string) {
   await prisma.$transaction(async tx => {
@@ -17,6 +19,7 @@ export async function resetPosService(id: string) {
     if (pos.agent_id) {
       const agent = await tx.agent.findUnique({
         where: { id: pos.agent_id },
+        select: { id: true },
       });
 
       if (!agent) {
@@ -27,6 +30,33 @@ export async function resetPosService(id: string) {
         where: { id: pos.agent_id },
         data: {
           status: 'denied',
+        },
+      });
+    }
+
+    if (pos.licence_id) {
+      const licence = await tx.licence.findUnique({
+        where: { id: pos.licence_id },
+        select: {
+          id: true,
+          limit: true,
+          pos: { select: { id: true } },
+        },
+      });
+
+      if (!licence) {
+        throw new NotFoundError('Licencee não encontrado');
+      }
+
+      const posWithThisLicenceCount = licence.pos.length - 1; // -1 pq este POS vai ser removido
+      const limitCount = licence.limit;
+
+      const limitStatus: LicenceStatus = posWithThisLicenceCount >= limitCount ? 'used' : 'free';
+
+      await tx.licence.update({
+        where: { id: pos.licence_id },
+        data: {
+          status: limitStatus,
         },
       });
     }
