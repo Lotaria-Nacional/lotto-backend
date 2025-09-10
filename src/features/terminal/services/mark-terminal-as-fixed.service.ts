@@ -1,7 +1,9 @@
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
+import { audit } from '../../../utils/audit-log';
+import { AuthPayload } from '@lotaria-nacional/lotto';
 
-export async function markTerminalAsFixedService(id: string) {
+export async function markTerminalAsFixedService(id: string, user: AuthPayload) {
   await prisma.$transaction(async tx => {
     const terminal = await tx.terminal.findUnique({
       where: { id },
@@ -9,12 +11,19 @@ export async function markTerminalAsFixedService(id: string) {
 
     if (!terminal) throw new NotFoundError('Terminal não encontrado');
 
-    await tx.terminal.update({
+    const terminalUpdated = await tx.terminal.update({
       where: { id },
       data: {
         status: 'stock',
         note: null,
       },
+    });
+
+    await audit(tx, 'APPROVE', {
+      entity: 'TERMINAL',
+      user: user,
+      before: terminal,
+      after: terminalUpdated,
     });
   });
 }

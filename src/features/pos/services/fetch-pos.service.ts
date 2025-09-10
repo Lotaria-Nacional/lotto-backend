@@ -5,17 +5,23 @@ import { PaginationParams } from '../../../@types/pagination-params';
 export async function fetchPoService(params: PaginationParams & { status?: PosStatus }) {
   const offset = (params.page - 1) * params.limit;
 
-  let where: Prisma.PosWhereInput = {};
+  const queryFilters = buildFilters(params.query);
 
-  if (params.status === 'pending') {
-    where.status = {
-      in: ['pending', 'approved', 'denied'],
-    };
-  } else if (params.status === 'active') {
-    where.status = {
-      in: ['active'],
-    };
-  }
+  const where: Prisma.PosWhereInput = {
+    AND: [
+      ...(queryFilters.length ? [{ OR: queryFilters }] : []),
+
+      ...(params.status ? getStatus(params.status as PosStatus) : []),
+
+      ...(params.area_id ? [{ area_id: params.area_id }] : []),
+      ...(params.zone_id ? [{ zone_id: params.zone_id }] : []),
+      ...(params.type_id ? [{ type_id: params.type_id }] : []),
+      ...(params.subtype_id ? [{ subtype_id: params.subtype_id }] : []),
+      ...(params.admin_id ? [{ admin_id: params.admin_id }] : []),
+      ...(params.province_id ? [{ province_id: params.province_id }] : []),
+      ...(params.city_id ? [{ city_id: params.city_id }] : []),
+    ],
+  };
 
   const pos = await prisma.pos.findMany({
     where,
@@ -56,15 +62,34 @@ function buildFilters(query: string | undefined) {
 
   filters.push({
     coordinates: { contains: query },
+    licence: { id: query },
   });
 
   if (!isNaN(numericQuery)) {
     filters.push({
-      agent: {
-        id_reference: numericQuery,
-      },
+      agent: { id_reference: numericQuery },
+      area_id: numericQuery,
+      zone_id: numericQuery,
+      type_id: numericQuery,
+      subtype_id: numericQuery,
+      admin_id: numericQuery,
+      province_id: numericQuery,
+      city_id: numericQuery,
     });
   }
 
   return filters;
+}
+
+function getStatus(status?: PosStatus): Prisma.PosWhereInput[] {
+  if (!status) return [];
+
+  if (status === 'pending') {
+    return [{ status: { in: ['pending', 'approved', 'denied'] } }];
+  }
+  if (status === 'active') {
+    return [{ status: { in: ['active'] } }];
+  }
+
+  return [];
 }

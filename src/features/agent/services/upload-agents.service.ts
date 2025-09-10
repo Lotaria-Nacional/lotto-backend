@@ -1,5 +1,5 @@
-import { agentBulkSchema } from '@lotaria-nacional/lotto';
 import prisma from '../../../lib/prisma';
+import { agentBulkSchema } from '@lotaria-nacional/lotto';
 
 export async function uploadAgentsService(data: any[]) {
   const validAgents = [];

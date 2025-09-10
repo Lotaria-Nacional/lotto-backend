@@ -1,8 +1,10 @@
 import prisma from '../../../lib/prisma';
-import { AgentStatus, TerminalStatus, UpdateAgentDTO } from '@lotaria-nacional/lotto';
+import { AgentStatus, AuthPayload, TerminalStatus, UpdateAgentDTO } from '@lotaria-nacional/lotto';
 import { BadRequestError, NotFoundError } from '../../../errors';
+import { audit } from '../../../utils/audit-log';
+import { Agent } from '@prisma/client';
 
-export async function associatePosAndagentOnAgentService(data: UpdateAgentDTO) {
+export async function associatePosAndagentOnAgentService(data: UpdateAgentDTO & { user: AuthPayload }) {
   await prisma.$transaction(async tx => {
     const agent = await tx.agent.findUnique({
       where: { id: data.id },
@@ -13,6 +15,8 @@ export async function associatePosAndagentOnAgentService(data: UpdateAgentDTO) {
     });
 
     if (!agent) throw new NotFoundError('agent não encontrado');
+
+    let agentUpdated: Agent | null = null;
 
     if (data.pos_id) {
       const pos = await tx.pos.findUnique({ where: { id: data.pos_id } });
@@ -30,7 +34,7 @@ export async function associatePosAndagentOnAgentService(data: UpdateAgentDTO) {
         },
       });
 
-      await tx.agent.update({
+      agentUpdated = await tx.agent.update({
         where: { id: data.id },
         data: {
           status: 'active',
@@ -80,12 +84,19 @@ export async function associatePosAndagentOnAgentService(data: UpdateAgentDTO) {
         },
       });
 
-      await tx.agent.update({
+      agentUpdated = await tx.agent.update({
         where: { id: data.id },
         data: {
           status: newAgentStatus,
         },
       });
     }
+
+    await audit(tx, 'ASSOCIATE', {
+      user: data.user,
+      before: agent,
+      after: agentUpdated,
+      entity: 'AGENT',
+    });
   });
 }

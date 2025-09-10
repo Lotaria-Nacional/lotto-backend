@@ -1,8 +1,9 @@
+import { updateUserService } from '../services';
 import type { Request, Response } from 'express';
+import { HttpStatus } from '../../../constants/http';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { idSchema } from '../../../schemas/common/id.schema';
 import { updateUserSchema } from '../schemas/update-user.schema';
-import { updateUserService } from '../services';
 
 export async function updateUserController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
@@ -12,8 +13,8 @@ export async function updateUserController(req: Request, res: Response) {
 
   const response = await updateUserService(body);
 
-  return res.status(200).json({
-    message: 'Os dados do usuário foram atualizados com sucesso.',
+  return res.status(HttpStatus.OK).json({
+    message: 'Usuário atualizado',
     data: response,
   });
 }

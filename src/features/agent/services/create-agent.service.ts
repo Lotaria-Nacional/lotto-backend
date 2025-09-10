@@ -6,7 +6,7 @@ import { AuthPayload } from '../../../@types/auth-payload';
 import { deleteCache } from '../../../utils/redis/delete-cache';
 
 export async function createAgentService({ user, ...data }: CreateAgentDTO & { user: AuthPayload }) {
-  const id = await prisma.$transaction(async (tx) => {
+  const id = await prisma.$transaction(async tx => {
     const { counter } = await tx.idReference.update({
       where: { type: data.type },
       data: { counter: { increment: 1 } },

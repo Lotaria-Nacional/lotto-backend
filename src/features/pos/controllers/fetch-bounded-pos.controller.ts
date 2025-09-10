@@ -1,9 +1,8 @@
 import type { Request, Response } from 'express';
-import { AuthPayload } from '../../../@types/auth-payload';
 import { HttpStatus } from '../../../constants/http';
-import { boundedBoxSchema } from '../schemas/bounds';
 import { fecthBoundedPosService } from '../services/fetch-bounded-pos-service';
 import { hasPermission } from '../../../middleware/auth/permissions';
+import { AuthPayload } from '@lotaria-nacional/lotto';
 
 export async function fetchBoundedPosController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
@@ -13,11 +12,11 @@ export async function fetchBoundedPosController(req: Request, res: Response) {
     userId: user.id,
     permission: {
       action: 'READ',
-      subject: 'Pos',
+      subject: 'POS',
     },
   });
 
-  const bounds = boundedBoxSchema.parse(req.query);
-  const response = await fecthBoundedPosService(bounds);
+  const response = await fecthBoundedPosService();
+
   return res.status(HttpStatus.OK).json(response);
 }

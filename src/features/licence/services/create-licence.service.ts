@@ -1,10 +1,8 @@
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
-import { RedisKeys } from '../../../utils/redis/keys';
 import { CreateLicenceDTO } from '@lotaria-nacional/lotto';
 import { AuthPayload } from '../../../@types/auth-payload';
-import { deleteCache } from '../../../utils/redis/delete-cache';
 import { connectIfDefined } from '../../../utils/connect-disconnect';
 
 export async function createLicenceService(data: CreateLicenceDTO & { user: AuthPayload }) {
@@ -39,13 +37,6 @@ export async function createLicenceService(data: CreateLicenceDTO & { user: Auth
 
     return licenceCreated.id;
   });
-
-  await Promise.all([
-    deleteCache(RedisKeys.pos.all()),
-    deleteCache(RedisKeys.admins.all()),
-    deleteCache(RedisKeys.licences.all()),
-    deleteCache(RedisKeys.auditLogs.all()),
-  ]);
 
   return { id };
 }

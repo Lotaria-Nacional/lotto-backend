@@ -1,14 +1,7 @@
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
-import { RedisKeys, getCache, setCache } from '../../../utils/redis';
 
 export async function getPosService(id: string) {
-  const cacheKey = RedisKeys.pos.byId(id);
-
-  const cached = await getCache(cacheKey);
-
-  if (cached) return cached;
-
   const pos = await prisma.pos.findUnique({
     where: { id },
     include: {
@@ -38,8 +31,6 @@ export async function getPosService(id: string) {
   });
 
   if (!pos) throw new NotFoundError('Pos não encontrado');
-
-  await setCache(cacheKey, pos);
 
   return pos;
 }

@@ -326,6 +326,7 @@ enum Modules {
   LICENCE
   TERMINAL
   SIM_CARD
+  MAINTAINANCE
 }
 
 enum Actions {
@@ -335,4 +336,10 @@ enum Actions {
   DELETE
   EXPORT
   IMPORT
+  APPROVE
+  DENY
+  REPROVE
+  BLOCK
+  RESET
+  ASSOCIATE
 }

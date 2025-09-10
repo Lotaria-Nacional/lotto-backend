@@ -20,9 +20,9 @@ export async function getUserPermissionsService(userId: string) {
 
   if (!user) return [];
 
-  const permissions = user.membership.flatMap((group) => group.group.permissions);
+  const permissions = user.membership.flatMap(group => group.group.permissions);
 
-  return permissions.map((p) => ({
+  return permissions.map(p => ({
     action: p.action,
     module: p.module,
   }));

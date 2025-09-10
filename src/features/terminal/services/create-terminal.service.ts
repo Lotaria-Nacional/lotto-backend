@@ -1,9 +1,7 @@
 import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
-import { RedisKeys } from '../../../utils/redis/keys';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { CreateTerminalDTO } from '@lotaria-nacional/lotto';
-import { deleteCache } from '../../../utils/redis/delete-cache';
 
 export async function createTerminalService({
   user,
@@ -28,12 +26,6 @@ export async function createTerminalService({
 
     return terminal;
   });
-
-  await Promise.all([
-    deleteCache(RedisKeys.terminals.all()),
-    deleteCache(RedisKeys.auditLogs.all()),
-    deleteCache(RedisKeys.agents.all()),
-  ]);
 
   return { id: response.id };
 }

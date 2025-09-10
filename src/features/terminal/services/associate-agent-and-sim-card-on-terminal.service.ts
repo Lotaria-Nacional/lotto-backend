@@ -1,14 +1,14 @@
 import prisma from '../../../lib/prisma';
-import { RedisKeys } from '../../../utils/redis/keys';
-import { UpdateTerminalDTO } from '@lotaria-nacional/lotto';
-import { deleteCache } from '../../../utils/redis/delete-cache';
-import { BadRequestError, NotFoundError } from '../../../errors';
+import { AuthPayload, UpdateTerminalDTO } from '@lotaria-nacional/lotto';
+import { NotFoundError } from '../../../errors';
+import { audit } from '../../../utils/audit-log';
 
-export async function associateAgentAndSimCardOnTerminalService(data: UpdateTerminalDTO) {
+export async function associateAgentAndSimCardOnTerminalService(data: UpdateTerminalDTO & { user: AuthPayload }) {
   await prisma.$transaction(async tx => {
     const terminal = await tx.terminal.findUnique({ where: { id: data.id }, include: { sim_card: true } });
 
     if (!terminal) throw new NotFoundError('Terminal não encontrado');
+    let terminalUpdated;
 
     if (data.sim_card_id) {
       const simCard = await tx.simCard.findUnique({ where: { id: data.sim_card_id } });
@@ -32,7 +32,7 @@ export async function associateAgentAndSimCardOnTerminalService(data: UpdateTerm
 
       if (!agent) throw new NotFoundError('Agente não encontrado');
 
-      await tx.terminal.update({
+      terminalUpdated = await tx.terminal.update({
         where: { id: data.id },
         data: {
           agent_id: null,
@@ -49,7 +49,12 @@ export async function associateAgentAndSimCardOnTerminalService(data: UpdateTerm
         });
       }
     }
-  });
 
-  await Promise.all([deleteCache(RedisKeys.terminals.all()), deleteCache(RedisKeys.auditLogs.all())]);
+    await audit(tx, 'ASSOCIATE', {
+      entity: 'TERMINAL',
+      user: data.user,
+      before: terminal,
+      after: terminalUpdated,
+    });
+  });
 }

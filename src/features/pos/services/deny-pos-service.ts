@@ -1,8 +1,9 @@
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
-import { RedisKeys } from '../../../utils/redis';
+import { audit } from '../../../utils/audit-log';
+import { AuthPayload } from '@lotaria-nacional/lotto';
 
-export async function denyPosService(id: string) {
+export async function denyPosService(id: string, user: AuthPayload) {
   await prisma.$transaction(async tx => {
     const pos = await tx.pos.findUnique({
       where: {
@@ -14,7 +15,7 @@ export async function denyPosService(id: string) {
       throw new NotFoundError('POS não encontrado ');
     }
 
-    await tx.pos.update({
+    const posUpdated = await tx.pos.update({
       where: {
         id: pos.id,
       },
@@ -22,12 +23,12 @@ export async function denyPosService(id: string) {
         status: 'denied',
       },
     });
-  });
 
-  await Promise.all([
-    RedisKeys.pos.all(),
-    RedisKeys.agents.all(),
-    RedisKeys.terminals.all(),
-    RedisKeys.auditLogs.all(),
-  ]);
+    await audit(tx, 'REPROVE', {
+      user: user,
+      entity: 'POS',
+      before: pos,
+      after: posUpdated,
+    });
+  });
 }

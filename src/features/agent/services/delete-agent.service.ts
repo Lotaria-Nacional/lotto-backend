@@ -6,7 +6,7 @@ import { AuthPayload } from '../../../@types/auth-payload';
 import { deleteCache } from '../../../utils/redis/delete-cache';
 
 export async function deleteAgentService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const agent = await tx.agent.findUnique({
       where: {
         id,

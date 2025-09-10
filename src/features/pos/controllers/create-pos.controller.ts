@@ -8,20 +8,21 @@ import { hasPermission } from '../../../middleware/auth/permissions';
 export async function createPosController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
 
-  // await hasPermission({
-  //   res,
-  //   userId: user.id,
-  //   permission: {
-  //     action: 'CREATE',
-  //     subject: 'Pos',
-  //   },
-  // });
+  await hasPermission({
+    res,
+    userId: user.id,
+    permission: {
+      action: 'CREATE',
+      subject: 'POS',
+    },
+  });
 
-  const body = createPosSchema.parse({ ...req.body, user });
-  const response = await createPosService(body);
+  const body = createPosSchema.parse(req.body);
+
+  const response = await createPosService({ ...body, user });
 
   return res.status(HttpStatus.CREATED).json({
-    message: 'Pos criado com sucesso',
+    message: 'O POS foi criado',
     id: response,
   });
 }

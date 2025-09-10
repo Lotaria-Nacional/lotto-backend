@@ -1,15 +1,9 @@
 import prisma from '../../../lib/prisma';
-import { RedisKeys } from '../../../utils/redis/keys';
 import { Prisma } from '@prisma/client';
-import { setCache } from '../../../utils/redis/set-cache';
-import { PaginationParams } from '../../../@types/pagination-params';
 import { TerminalStatus } from '@lotaria-nacional/lotto';
+import { PaginationParams } from '../../../@types/pagination-params';
 
 export async function fetchTerminalsService(params: PaginationParams) {
-  const cacheKey = RedisKeys.terminals.listWithFilters(params);
-
-  const filters = buildFilters(params.query);
-
   let start: Date | undefined;
   let end: Date | undefined;
   let isValidDate = false;
@@ -25,17 +19,14 @@ export async function fetchTerminalsService(params: PaginationParams) {
     }
   }
 
-  let where: Prisma.TerminalWhereInput = {};
+  const filters = buildFilters(params.query);
 
-  if ((params.status as TerminalStatus) === 'stock') {
-    where.status = { in: ['stock'] };
-  } else if ((params.status as TerminalStatus) === 'on_field') {
-    where.status = { in: ['on_field', 'ready'] };
-  } else if ((params.status as TerminalStatus) === 'broken') {
-    where.status = { in: ['broken'] };
-  } else if ((params.status as TerminalStatus | 'stock-ready') === 'stock-ready') {
-    where.status = { in: ['stock', 'ready'] };
-  }
+  let where: Prisma.TerminalWhereInput = {
+    AND: [
+      ...(filters.length ? [{ OR: filters }] : []),
+      ...(params.status ? getStatus(params.status as TerminalStatus | 'stock-ready') : []),
+    ],
+  };
 
   const offset = (params.page - 1) * params.limit;
 
@@ -63,10 +54,6 @@ export async function fetchTerminalsService(params: PaginationParams) {
 
   const nextPage = terminals.length === params.limit ? params.page + 1 : null;
 
-  if (terminals.length > 0) {
-    await setCache(cacheKey, terminals);
-  }
-
   return { data: terminals, nextPage };
 }
 
@@ -86,4 +73,26 @@ function buildFilters(query: string): Prisma.TerminalWhereInput[] {
   }
 
   return filters;
+}
+
+function getStatus(status: TerminalStatus | 'stock-ready'): Prisma.TerminalWhereInput[] {
+  if (!status) return [];
+
+  if (status === 'stock') {
+    return [{ status: { in: ['stock'] } }];
+  }
+
+  if (status === 'on_field') {
+    return [{ status: { in: ['on_field', 'ready'] } }];
+  }
+
+  if (status === 'broken') {
+    return [{ status: { in: ['broken'] } }];
+  }
+
+  if (status === 'stock-ready') {
+    return [{ status: { in: ['stock', 'ready'] } }];
+  }
+
+  return [];
 }

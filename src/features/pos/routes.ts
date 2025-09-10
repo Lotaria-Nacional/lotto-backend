@@ -32,9 +32,8 @@ posRouter.delete('/bulk', catchErrors(deleteManyPosController));
 posRouter.delete('/:id', catchErrors(deletePosController));
 
 posRouter.get('/pending', catchErrors(fetchPendingPosController));
+posRouter.get('/bounded', catchErrors(fetchBoundedPosController));
 posRouter.get('/', catchErrors(fetchPosController));
 posRouter.get('/:id', catchErrors(getPosController));
-
-posRouter.get('/bounds', catchErrors(fetchBoundedPosController));
 
 export default posRouter;

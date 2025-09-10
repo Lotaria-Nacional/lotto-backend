@@ -5,7 +5,7 @@ import { AuthPayload } from '../../../@types/auth-payload';
 import { deleteCache, RedisKeys } from '../../../utils/redis';
 
 export async function deleteManyLicencesService(ids: string[], user: AuthPayload) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const { count } = await tx.licence.deleteMany({
       where: {
         id: {

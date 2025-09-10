@@ -1,15 +1,9 @@
 import prisma from '../../../lib/prisma';
 import { Prisma, LicenceStatus } from '@prisma/client';
 import { PaginationParams } from '../../../@types/pagination-params';
-import { getCache, RedisKeys, setCache } from '../../../utils/redis';
 
 export async function fetchManyLicencesService(params: PaginationParams) {
-  // const cacheKey = RedisKeys.licences.listWithFilters(params);
-
-  // const cached = await getCache(cacheKey);
-  // if (cached) return cached;
-
-  const searchFilters = makeLicenceFilters(params.query);
+  const searchFilters = buildFilters(params.query);
 
   const where: Prisma.LicenceWhereInput = {
     ...(searchFilters.length ? { OR: searchFilters } : {}),
@@ -33,8 +27,7 @@ export async function fetchManyLicencesService(params: PaginationParams) {
   return { data: licences, nextPage };
 }
 
-// make licence filters function
-export const makeLicenceFilters = (query: string): Prisma.LicenceWhereInput[] => {
+export const buildFilters = (query: string): Prisma.LicenceWhereInput[] => {
   const filters: Prisma.LicenceWhereInput[] = [];
 
   filters.push({ number: { contains: query, mode: 'insensitive' } });
@@ -42,24 +35,20 @@ export const makeLicenceFilters = (query: string): Prisma.LicenceWhereInput[] =>
   filters.push({ coordinates: { contains: query, mode: 'insensitive' } });
   filters.push({ description: { contains: query, mode: 'insensitive' } });
 
-  if (Object.values(LicenceStatus).includes(query.toLowerCase() as LicenceStatus)) {
-    filters.push({
-      status: { equals: query.toLowerCase() as LicenceStatus },
-    });
+  const numericQuery = Number(query);
+  if (!isNaN(numericQuery)) {
+    filters.push({ admin_id: numericQuery });
   }
 
   const parsedDate = new Date(query);
   if (!isNaN(parsedDate.getTime())) {
-    const start = new Date(parsedDate);
-    const end = new Date(parsedDate);
-    end.setDate(end.getDate() + 1);
+    const start = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), 0, 0, 0, 0);
+    const end = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), 23, 59, 59, 999);
 
-    filters.push({
-      emitted_at: {
-        gte: start,
-        lt: end,
-      },
-    });
+    filters.push(
+      { emitted_at: { gte: start, lte: end } },
+      { expires_at: { gte: start, lte: end } } // opcional, se quiser filtrar também pelo vencimento
+    );
   }
 
   return filters;

@@ -9,11 +9,7 @@ export type FetchAgentsResponse = {
   nextPage?: number | null;
 };
 
-export async function fetchAgents(params: PaginationParams & { status?: AgentStatus }) {
-  const cacheKey = RedisKeys.agents.listWithFilters(params);
-
-  let search = buildFilters(params.query);
-
+export async function fetchAgentsService(params: PaginationParams) {
   let start: Date | undefined;
   let end: Date | undefined;
   let isValidDate: boolean = false;
@@ -31,17 +27,23 @@ export async function fetchAgents(params: PaginationParams & { status?: AgentSta
 
   const offset = (params.page - 1) * params.limit;
 
-  let where: Prisma.AgentWhereInput = {};
+  let queryFilters = buildFilters(params.query);
 
-  if (params.status === 'active') {
-    where = {
-      status: AgentStatus.active,
-    };
-  } else if (params.status === 'scheduled') {
-    where = {
-      status: { notIn: [AgentStatus.active] },
-    };
-  }
+  const where: Prisma.AgentWhereInput = {
+    AND: [
+      // Filtros textuais ou numéricos
+      ...(queryFilters.length ? [{ OR: queryFilters }] : []),
+
+      // Filtro de status do agente
+      ...(params.status ? getStatus(params.status as AgentStatus) : []),
+
+      // Filtro relacional
+      ...(params.area_id ? [{ pos: { area: { id: params.area_id } } }] : []),
+      ...(params.zone_id ? [{ pos: { area: { id: params.zone_id } } }] : []),
+      ...(params.type_id ? [{ pos: { area: { id: params.type_id } } }] : []),
+      ...(params.subtype_id ? [{ pos: { area: { id: params.subtype_id } } }] : []),
+    ],
+  };
 
   const agents = await prisma.agent.findMany({
     where,
@@ -60,12 +62,12 @@ export async function fetchAgents(params: PaginationParams & { status?: AgentSta
       },
       pos: {
         include: {
-          area: { select: { name: true } },
-          zone: { select: { number: true } },
-          type: { select: { name: true } },
-          subtype: { select: { name: true } },
-          province: { select: { name: true } },
-          city: { select: { name: true } },
+          area: { select: { id: true, name: true } },
+          zone: { select: { id: true, number: true } },
+          type: { select: { id: true, name: true } },
+          subtype: { select: { id: true, name: true } },
+          province: { select: { id: true, name: true } },
+          city: { select: { id: true, name: true } },
         },
       },
     },
@@ -76,31 +78,33 @@ export async function fetchAgents(params: PaginationParams & { status?: AgentSta
   return { data: agents, nextPage };
 }
 
-function buildFilters(query: string | undefined) {
-  let filters: Prisma.AgentWhereInput[] = [];
+function buildFilters(query?: string): Prisma.AgentWhereInput[] {
+  if (!query?.trim()) return [];
 
-  if (!query?.trim()) return filters;
+  const filters: Prisma.AgentWhereInput[] = [];
 
-  if (Object.values(AgentStatus).includes(query.toLowerCase() as AgentStatus)) {
-    filters.push({
-      status: { equals: query.toLowerCase() as AgentStatus },
-    });
-  }
-
+  // filtros textuais
   filters.push(
     { bi_number: { contains: query, mode: 'insensitive' } },
     { last_name: { contains: query, mode: 'insensitive' } },
     { first_name: { contains: query, mode: 'insensitive' } },
-    { phone_number: { contains: query } },
-    { afrimoney_number: { contains: query } }
+    { phone_number: { contains: query, mode: 'insensitive' } },
+    { afrimoney_number: { contains: query, mode: 'insensitive' } }
   );
 
+  // se for número, adiciona filtros numéricos
+  const numericQuery = Number(query);
   if (!isNaN(Number(query))) {
-    {
-      id_reference: Number(query);
-    }
-    filters.push();
+    filters.push({ id_reference: numericQuery });
   }
 
   return filters;
+}
+
+function getStatus(status: AgentStatus) {
+  if (!status) return [];
+
+  if (status === 'active') return [{ status: AgentStatus.active }];
+
+  return [{ status: { notIn: [AgentStatus.active] } }];
 }

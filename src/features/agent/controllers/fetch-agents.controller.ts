@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { HttpStatus } from '../../../constants/http';
 import { paramsSchema } from '../../../schemas/common/query.schema';
-import { fetchAgents } from '../services/fetch-agents.service';
+import { fetchAgentsService } from '../services/fetch-agents.service';
 import { hasPermission } from '../../../middleware/auth/permissions';
 
 export async function fetchAgentsController(req: Request, res: Response) {
@@ -18,7 +18,8 @@ export async function fetchAgentsController(req: Request, res: Response) {
   // });
 
   const query = paramsSchema.parse(req.query);
-  const response = await fetchAgents({ ...query, status: 'active' });
+
+  const response = await fetchAgentsService(query);
 
   return res.status(HttpStatus.OK).json(response);
 }

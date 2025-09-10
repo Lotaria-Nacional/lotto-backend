@@ -1,10 +1,9 @@
-import { licence } from './../../licence/@types/licence.t';
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
-import { RedisKeys } from '../../../utils/redis';
-import { LicenceStatus } from '@lotaria-nacional/lotto';
+import { AuthPayload, LicenceStatus } from '@lotaria-nacional/lotto';
+import { audit } from '../../../utils/audit-log';
 
-export async function resetPosService(id: string) {
+export async function resetPosService(id: string, user: AuthPayload) {
   await prisma.$transaction(async tx => {
     const pos = await tx.pos.findUnique({
       where: {
@@ -61,7 +60,7 @@ export async function resetPosService(id: string) {
       });
     }
 
-    await tx.pos.update({
+    const posUpdated = await tx.pos.update({
       where: {
         id: pos.id,
       },
@@ -71,12 +70,12 @@ export async function resetPosService(id: string) {
         licence_id: null,
       },
     });
-  });
 
-  await Promise.all([
-    RedisKeys.pos.all(),
-    RedisKeys.agents.all(),
-    RedisKeys.terminals.all(),
-    RedisKeys.auditLogs.all(),
-  ]);
+    await audit(tx, 'RESET', {
+      user: user,
+      entity: 'POS',
+      before: pos,
+      after: posUpdated,
+    });
+  });
 }

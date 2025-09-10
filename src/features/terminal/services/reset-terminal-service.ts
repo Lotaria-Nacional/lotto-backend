@@ -1,8 +1,9 @@
 import prisma from '../../../lib/prisma';
 import { BadRequestError, NotFoundError } from '../../../errors';
-import { deleteCache, RedisKeys } from '../../../utils/redis';
+import { audit } from '../../../utils/audit-log';
+import { AuthPayload } from '@lotaria-nacional/lotto';
 
-export async function resetTerminalService(id: string) {
+export async function resetTerminalService(id: string, user: AuthPayload) {
   await prisma.$transaction(async tx => {
     const terminal = await tx.terminal.findUnique({
       where: {
@@ -19,7 +20,7 @@ export async function resetTerminalService(id: string) {
       throw new BadRequestError('Não há nada para resetar');
     }
 
-    await tx.terminal.update({
+    const terminalUpdated = await tx.terminal.update({
       where: {
         id: terminal.id,
       },
@@ -29,14 +30,12 @@ export async function resetTerminalService(id: string) {
         sim_card: { disconnect: true },
       },
     });
+
+    await audit(tx, 'RESET', {
+      entity: 'TERMINAL',
+      user: user,
+      before: terminal,
+      after: terminalUpdated,
+    });
   });
-
-  await Promise.all([
-    deleteCache(RedisKeys.pos.all()),
-    deleteCache(RedisKeys.agents.all()),
-    deleteCache(RedisKeys.auditLogs.all()),
-    deleteCache(RedisKeys.terminals.all()),
-
-    //TODO: clear sim card cache
-  ]);
 }

@@ -1,9 +1,7 @@
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
-import { RedisKeys } from '../../../utils/redis';
 import { UpdatePosDTO } from '../schemas/update.schema';
-import { deleteCache } from '../../../utils/redis/delete-cache';
 
 export async function updatePosService(data: UpdatePosDTO) {
   await prisma.$transaction(async tx => {
@@ -28,7 +26,7 @@ export async function updatePosService(data: UpdatePosDTO) {
       });
     }
 
-    const after = await tx.pos.update({
+    const posUpdated = await tx.pos.update({
       where: { id: data.id },
       data: {
         agent_id: data.agent_id,
@@ -49,15 +47,7 @@ export async function updatePosService(data: UpdatePosDTO) {
       user: data.user,
       entity: 'POS',
       before: pos,
-      after,
+      after: posUpdated,
     });
   });
-
-  const promises = [deleteCache(RedisKeys.pos.all()), deleteCache(RedisKeys.auditLogs.all())];
-
-  if (data.admin_id) promises.push(deleteCache(RedisKeys.admins.all()));
-  if (data.agent_id) promises.push(deleteCache(RedisKeys.agents.all()));
-  if (data.licence_id) promises.push(deleteCache(RedisKeys.licences.all()));
-
-  await Promise.all(promises);
 }

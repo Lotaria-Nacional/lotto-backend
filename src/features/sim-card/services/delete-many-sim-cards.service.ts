@@ -2,7 +2,7 @@ import { BadRequestError } from '../../../errors';
 import prisma from '../../../lib/prisma';
 
 export async function deleteManySimCardsService(ids: string[]) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const { count } = await tx.simCard.deleteMany({
       where: {
         id: {

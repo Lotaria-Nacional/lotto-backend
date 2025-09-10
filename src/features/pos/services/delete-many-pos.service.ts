@@ -1,12 +1,10 @@
 import prisma from '../../../lib/prisma';
 import { BadRequestError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
-import { RedisKeys } from '../../../utils/redis/keys';
 import { AuthPayload } from '../../../@types/auth-payload';
-import { deleteCache } from '../../../utils/redis/delete-cache';
 
 export async function deleteManyPosService(ids: string[], user: AuthPayload) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const { count } = await tx.pos.deleteMany({
       where: {
         id: {
@@ -26,13 +24,4 @@ export async function deleteManyPosService(ids: string[], user: AuthPayload) {
       after: null,
     });
   });
-
-  // Limpa os caches
-  await Promise.all([
-    deleteCache(RedisKeys.pos.all()),
-    deleteCache(RedisKeys.admins.all()),
-    deleteCache(RedisKeys.agents.all()),
-    deleteCache(RedisKeys.licences.all()),
-    deleteCache(RedisKeys.auditLogs.all()),
-  ]);
 }

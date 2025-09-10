@@ -3,18 +3,19 @@ import { HttpStatus } from '../../../constants/http';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { paramsSchema } from '../../../schemas/common/query.schema';
 import { fetchSimCardsService } from '../services';
+import { hasPermission } from '../../../middleware/auth/permissions';
 
 export async function fetchSimCardsInStockController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
 
-  // await hasPermission({
-  //   res,
-  //   userId: user.id,
-  //   permission: {
-  //     action: 'READ',
-  //     subject: 'Pos',
-  //   },
-  // });
+  await hasPermission({
+    res,
+    userId: user.id,
+    permission: {
+      action: 'READ',
+      subject: 'SIM_CARD',
+    },
+  });
 
   const query = paramsSchema.parse(req.query);
   const result = await fetchSimCardsService({ ...query, status: 'stock' });

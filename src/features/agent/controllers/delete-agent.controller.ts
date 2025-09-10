@@ -8,19 +8,20 @@ import { deleteAgentService } from '../services/delete-agent.service';
 export async function deleteAgentController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
 
-  // await hasPermission({
-  //   userId: user.id,
-  //   res,
-  //   permission: {
-  //     action: 'DELETE',
-  //     subject: 'Agents',
-  //   },
-  // });
+  await hasPermission({
+    res,
+    userId: user.id,
+    permission: {
+      action: 'DELETE',
+      subject: 'AGENT',
+    },
+  });
 
   const { id } = idSchema.parse(req.params);
+
   await deleteAgentService(id, user);
 
   return res.status(HttpStatus.OK).json({
-    message: 'Agente removido com sucesso',
+    message: 'Agente removido',
   });
 }

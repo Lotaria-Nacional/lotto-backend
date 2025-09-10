@@ -2,8 +2,10 @@ import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
 import { RedisKeys } from '../../../utils/redis/keys';
 import { deleteCache } from '../../../utils/redis/delete-cache';
+import { AuthPayload } from '@lotaria-nacional/lotto';
+import { audit } from '../../../utils/audit-log';
 
-export async function desativateAgentService(id: string) {
+export async function desativateAgentService(id: string, user: AuthPayload) {
   await prisma.$transaction(async tx => {
     const agent = await tx.agent.findUnique({
       where: { id },
@@ -44,9 +46,16 @@ export async function desativateAgentService(id: string) {
       });
     }
 
-    await tx.agent.update({
+    const agentUpdated = await tx.agent.update({
       where: { id },
       data: { status: 'denied' },
+    });
+
+    await audit(tx, 'REPROVE', {
+      user: user,
+      before: agent,
+      after: agentUpdated,
+      entity: 'AGENT',
     });
   });
 

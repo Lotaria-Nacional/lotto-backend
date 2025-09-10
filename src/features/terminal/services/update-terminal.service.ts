@@ -1,12 +1,9 @@
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
-import { RedisKeys } from '../../../utils/redis/keys';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { UpdateTerminalDTO } from '@lotaria-nacional/lotto';
 import { Terminal, TerminalStatus } from '../@types/terminal.t';
-import { deleteCache } from '../../../utils/redis/delete-cache';
-import { connectOrDisconnect } from '../../../utils/connect-disconnect';
 
 export async function updateTerminalService({ user, ...data }: UpdateTerminalDTO & { user: AuthPayload }) {
   await prisma.$transaction(async tx => {
@@ -57,14 +54,6 @@ export async function updateTerminalService({ user, ...data }: UpdateTerminalDTO
       after: updated,
     });
   });
-
-  const promises = [deleteCache(RedisKeys.terminals.all()), deleteCache(RedisKeys.auditLogs.all())];
-
-  if (data.agent_id) {
-    promises.push(deleteCache(RedisKeys.agents.all()));
-  }
-
-  await Promise.all(promises);
 }
 
 const getTerminalStatus = (data: Omit<UpdateTerminalDTO, 'user'>, terminal: any): TerminalStatus => {

@@ -12,6 +12,6 @@ export async function deleteManyUsersController(req: Request, res: Response) {
   await deleteManyUsersService(ids, user);
 
   return res.status(HttpStatus.OK).json({
-    message: 'Usuários removidos com sucesso',
+    message: 'Usuários removidos',
   });
 }

@@ -1,9 +1,10 @@
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
-import { deleteCache, RedisKeys } from '../../../utils/redis';
+import { audit } from '../../../utils/audit-log';
+import { AuthPayload } from '@lotaria-nacional/lotto';
 
-export async function resetSimCardService(id: string) {
-  await prisma.$transaction(async (tx) => {
+export async function resetSimCardService(id: string, user: AuthPayload) {
+  await prisma.$transaction(async tx => {
     const simCard = await tx.simCard.findUnique({
       where: {
         id,
@@ -13,6 +14,7 @@ export async function resetSimCardService(id: string) {
     if (!simCard) {
       throw new NotFoundError('Sim card não encontrado ');
     }
+    let simCardUpdated;
 
     if (simCard.terminal_id) {
       await tx.terminal.update({
@@ -24,7 +26,7 @@ export async function resetSimCardService(id: string) {
         },
       });
 
-      await tx.simCard.update({
+      simCardUpdated = await tx.simCard.update({
         where: {
           id: simCard.id,
         },
@@ -33,14 +35,12 @@ export async function resetSimCardService(id: string) {
         },
       });
     }
+
+    await audit(tx, 'RESET', {
+      entity: 'SIM_CARD',
+      user: user,
+      after: simCard,
+      before: simCardUpdated,
+    });
   });
-
-  await Promise.all([
-    deleteCache(RedisKeys.pos.all()),
-    deleteCache(RedisKeys.agents.all()),
-    deleteCache(RedisKeys.terminals.all()),
-    deleteCache(RedisKeys.auditLogs.all()),
-
-    //TODO: clear sim card cache
-  ]);
 }

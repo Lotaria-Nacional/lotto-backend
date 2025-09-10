@@ -14,6 +14,8 @@ export const paramsSchema = z.object({
   province_id: z.coerce.number().optional(),
   agent_id: z.string().optional(),
   delivery_date: z.string().optional(),
+  emitted_at: z.string().optional(),
+  expires_at: z.string().optional(),
   training_date: z.string().optional(),
   coordinates: z.string().optional(),
 });
