@@ -2,8 +2,7 @@ import app from '../../src';
 import { auth } from './auth';
 import request from 'supertest';
 import { makeAgent } from '../factories/make-agent';
-import { Agent } from '../../src/features/agent/@types/agent.t';
-import { CreateAgentDTO } from '../../src/features/agent/schemas/create-agent.schema';
+import { Agent, CreateAgentDTO } from '@lotaria-nacional/lotto';
 
 export async function createAgent(data?: Partial<CreateAgentDTO>) {
   const agent = makeAgent(data);

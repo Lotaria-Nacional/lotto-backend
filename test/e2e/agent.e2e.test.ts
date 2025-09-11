@@ -5,7 +5,7 @@ import { createPos } from '../utils/pos';
 import { createTerminal } from '../utils/terminal';
 import { makeAgent } from '../factories/make-agent';
 import { createAgent, getAgent } from '../utils/agent';
-import { Agent } from '../../src/features/agent/@types/agent.t';
+import { Agent } from '@lotaria-nacional/lotto';
 
 export const agentURL = '/api/agents';
 
@@ -36,7 +36,7 @@ describe('E2E - Agent', () => {
       genre: 'female',
       terminal_id: terminalId,
       pos_id: postId,
-      phone_number: 929375582,
+      phone_number: '929375582',
       training_date: new Date('2025-11-12'),
     });
 

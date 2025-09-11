@@ -1,7 +1,7 @@
 import prisma from '../../../lib/prisma';
-import { BadRequestError, NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
+import { BadRequestError, NotFoundError } from '../../../errors';
 
 export async function resetTerminalService(id: string, user: AuthPayload) {
   await prisma.$transaction(async tx => {
@@ -28,6 +28,16 @@ export async function resetTerminalService(id: string, user: AuthPayload) {
         status: 'stock',
         agent_id: null,
         sim_card: { disconnect: true },
+      },
+    });
+
+    await tx.simCard.update({
+      where: {
+        id: terminal.sim_card?.id,
+      },
+      data: {
+        status: 'stock',
+        terminal_id: null,
       },
     });
 

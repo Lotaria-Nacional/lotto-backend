@@ -3,7 +3,7 @@ import { auth } from './auth';
 import request from 'supertest';
 import { makeLicence } from '../factories/make-licence';
 import { Licence } from '../../src/features/licence/@types/licence.t';
-import { CreateLicenceDTO } from '../../src/features/licence/schemas/create-licence.schema';
+import { CreateLicenceDTO } from '@lotaria-nacional/lotto';
 
 export async function createLicence(data?: Partial<CreateLicenceDTO>) {
   const licence = makeLicence(data);

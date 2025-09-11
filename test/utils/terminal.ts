@@ -2,8 +2,7 @@ import app from '../../src';
 import { auth } from './auth';
 import request from 'supertest';
 import { makeTerminal } from '../factories/make-terminal';
-import { CreateTerminalDTO } from '../../src/features/terminal/schemas/create-terminal.schema';
-import { Terminal } from '../../src/features/terminal/@types/terminal.t';
+import { CreateTerminalDTO, Terminal } from '@lotaria-nacional/lotto';
 
 export async function createTerminal(data?: Partial<CreateTerminalDTO>) {
   const terminal = makeTerminal(data);

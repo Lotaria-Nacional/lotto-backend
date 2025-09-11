@@ -5,7 +5,7 @@ import { createAgent } from '../utils/agent';
 import { createSimCard } from '../utils/sim-card';
 import { updateTerminal } from '../factories/make-terminal';
 import { createTerminal, getTerminal } from '../utils/terminal';
-import { Terminal } from '../../src/features/terminal/@types/terminal.t';
+import { Terminal } from '@lotaria-nacional/lotto';
 
 export const terminalURL = '/api/terminals' as const;
 

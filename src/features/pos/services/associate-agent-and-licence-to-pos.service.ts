@@ -46,6 +46,7 @@ export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO & 
         data: {
           status: limitStatus,
           ...(pos.licence_id ? {} : { pos: { connect: { id: pos.id } } }),
+          coordinates: `${pos.latitude},${pos.longitude}}`,
         },
       });
 

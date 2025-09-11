@@ -3,7 +3,7 @@ import { auth } from './auth';
 import request from 'supertest';
 import { makePos } from '../factories/make-pos';
 import { Pos } from '../../src/features/pos/@types/pos.t';
-import { CreatePosDTO } from '../../src/features/pos/schemas/create-pos.schema';
+import { CreatePosDTO } from '@lotaria-nacional/lotto';
 
 export async function createPos(data?: Partial<CreatePosDTO>) {
   const pos = makePos(data);

@@ -16,7 +16,8 @@ export async function fetchSimCardsController(req: Request, res: Response) {
       subject: 'SIM_CARD',
     },
   });
+
   const query = paramsSchema.parse(req.query);
-  const response = await fetchSimCardsService({ ...query, status: 'active' });
+  const response = await fetchSimCardsService(query);
   return res.status(HttpStatus.OK).json(response);
 }

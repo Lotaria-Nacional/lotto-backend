@@ -1,4 +1,4 @@
-import { CreateLicenceDTO } from '../../src/features/licence/schemas/create-licence.schema';
+import { CreateLicenceDTO } from '@lotaria-nacional/lotto';
 import { adminId } from '../setup';
 
 export function makeLicence(override?: Partial<CreateLicenceDTO>) {

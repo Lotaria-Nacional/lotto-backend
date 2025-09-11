@@ -21,7 +21,7 @@ router.use('/auth', authRouter);
 router.post('/refresh-token', refreshTokenController);
 
 // Main routers
-router.use('/groups', groupRouter);
+router.use('/groups', authenticate, groupRouter);
 router.use('/pos', authenticate, posRouter);
 router.use('/users', authenticate, userRouter);
 router.use('/agents', authenticate, agentRouter);

@@ -22,6 +22,21 @@ export async function createUserService({ user, ...data }: CreateUserDTO) {
       },
     });
 
+    const group = await tx.group.findFirst({
+      where: {
+        name: 'Pendentes',
+      },
+    });
+
+    if (group) {
+      await tx.membership.create({
+        data: {
+          user_id: userCreated.id,
+          group_id: group.id,
+        },
+      });
+    }
+
     await audit(tx, 'CREATE', {
       entity: 'USER',
       user,

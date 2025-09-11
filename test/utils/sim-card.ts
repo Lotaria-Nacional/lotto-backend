@@ -3,7 +3,7 @@ import { auth } from './auth';
 import request from 'supertest';
 import { makeSimCard } from '../factories/make-sim-card';
 import { SimCard } from '../../src/features/sim-card/@types/sim-card.t';
-import { CreateSimCardDTO } from '../../src/features/sim-card/schemas/create-sim-card.schema';
+import { CreateSimCardDTO } from '@lotaria-nacional/lotto';
 
 export async function createSimCard(data?: Partial<CreateSimCardDTO>) {
   const simCard = makeSimCard(data);

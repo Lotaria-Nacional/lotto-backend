@@ -1,9 +1,10 @@
-import { CreatePosDTO } from '../../src/features/pos/schemas/create-pos.schema';
+import { CreatePosDTO } from '@lotaria-nacional/lotto';
 import { adminId, cityId, provinceId } from '../setup';
 
 export function makePos(override?: Partial<CreatePosDTO>) {
   return {
-    coordinates: '12,1234567,-13,12435678',
+    latitude: 12.1234567,
+    longitude: -13.12435678,
     admin_id: adminId,
     province_id: provinceId,
     city_id: cityId,

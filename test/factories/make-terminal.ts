@@ -1,5 +1,4 @@
-import { CreateTerminalDTO } from '../../src/features/terminal/schemas/create-terminal.schema';
-import { UpdateTerminalDTO } from '../../src/features/terminal/schemas/update-terminal.schema';
+import { CreateTerminalDTO, UpdateTerminalDTO } from '@lotaria-nacional/lotto';
 
 export function makeTerminal(override?: Partial<CreateTerminalDTO>) {
   return {

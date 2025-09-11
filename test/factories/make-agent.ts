@@ -1,4 +1,4 @@
-import { CreateAgentDTO } from '../../src/features/agent/schemas/create-agent.schema';
+import { CreateAgentDTO } from '@lotaria-nacional/lotto';
 
 export function makeAgent(override?: Partial<CreateAgentDTO>) {
   return {

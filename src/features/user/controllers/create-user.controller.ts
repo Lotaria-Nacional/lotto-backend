@@ -3,11 +3,22 @@ import type { Request, Response } from 'express';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { createUserSchema } from '../schemas/create-user.schema';
 import { HttpStatus } from '../../../constants/http';
+import { hasPermission } from '../../../middleware/auth/permissions';
 
 export async function createUserController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
 
+  await hasPermission({
+    res,
+    userId: user.id,
+    permission: {
+      action: 'CREATE',
+      subject: 'USER',
+    },
+  });
+
   const body = createUserSchema.parse({ ...req.body, user });
+
   const response = await createUserService(body);
 
   return res.status(HttpStatus.CREATED).json({

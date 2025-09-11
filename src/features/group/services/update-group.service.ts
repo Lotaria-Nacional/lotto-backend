@@ -1,9 +1,9 @@
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
-import { UpdateGroupDTO } from '../schemas/update.schema';
+import { UpdateGroupDTO } from '@lotaria-nacional/lotto';
 
 export async function updateGroupService(data: UpdateGroupDTO) {
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async tx => {
     const group = await tx.group.findUnique({
       where: { id: data.id },
     });
@@ -22,7 +22,7 @@ export async function updateGroupService(data: UpdateGroupDTO) {
         ...(data.permissions?.length
           ? {
               permissions: {
-                upsert: data.permissions.map((perm) => ({
+                upsert: data.permissions.map(perm => ({
                   where: {
                     group_id_module: {
                       group_id: data.id,

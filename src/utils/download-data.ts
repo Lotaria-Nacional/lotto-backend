@@ -43,7 +43,6 @@ export async function exportPosStream(req: Request, res: Response) {
       worksheet
         .addRow([
           pos.id,
-          pos.coordinates,
           pos.status,
           pos.agent?.id ?? '',
           pos.agent ? `${pos.agent.first_name} ${pos.agent.last_name}` : '',

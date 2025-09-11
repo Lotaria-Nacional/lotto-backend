@@ -2,8 +2,7 @@ import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '../../../@types/auth-payload';
-import { UpdateTerminalDTO } from '@lotaria-nacional/lotto';
-import { Terminal, TerminalStatus } from '../@types/terminal.t';
+import { Terminal, TerminalStatus, UpdateTerminalDTO } from '@lotaria-nacional/lotto';
 
 export async function updateTerminalService({ user, ...data }: UpdateTerminalDTO & { user: AuthPayload }) {
   await prisma.$transaction(async tx => {

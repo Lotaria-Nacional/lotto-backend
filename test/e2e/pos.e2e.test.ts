@@ -20,7 +20,8 @@ describe('E2E - Pos', () => {
     const { id } = await createPos();
 
     const data = makePos({
-      coordinates: '13,-12',
+      latitude: 13.987678,
+      longitude: -12.987678,
     });
 
     const { status } = await auth(request(app).put(`${posURL}/${id}`)).send(data);
@@ -57,8 +58,8 @@ describe('E2E - Pos', () => {
   });
 
   it('should be able to fetch all pos', async () => {
-    await createPos({ coordinates: '10,000,-13,000' });
-    await createPos({ coordinates: '12,000,-14,000' });
+    await createPos({ latitude: 13.987678, longitude: -12.987678 });
+    await createPos({ latitude: 13.987678, longitude: -12.987678 });
 
     const response = await auth(request(app).get('/api/pos'));
     const posList: Pos[] = response.body;

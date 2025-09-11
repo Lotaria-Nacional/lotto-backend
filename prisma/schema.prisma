@@ -329,6 +329,10 @@ enum Modules {
   TERMINAL
   SIM_CARD
   MAINTAINANCE
+  GROUP
+  INVENTORY
+  TRAINING
+  all
 }
 
 enum Actions {
@@ -344,4 +348,5 @@ enum Actions {
   BLOCK
   RESET
   ASSOCIATE
+  manage
 }

@@ -1,5 +1,5 @@
+import { Terminal } from '@lotaria-nacional/lotto';
 import z from 'zod';
-import { Terminal, terminalSchema } from '../../terminal/@types/terminal.t';
 
 export const simCardSchema = z.object({
   id: z.string(),

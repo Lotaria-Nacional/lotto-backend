@@ -20,9 +20,9 @@ describe('E2E - SimCards', () => {
     const { id: terminalId } = await createTerminal();
 
     const data = makeSimCard({
-      number: 952366605,
-      pin: 9999,
-      puk: 9898989,
+      number: '952366605',
+      pin: '9999',
+      puk: '9898989',
       terminal_id: terminalId,
     });
 
@@ -62,7 +62,7 @@ describe('E2E - SimCards', () => {
 
   it('should be able to fetch all simCards', async () => {
     await createSimCard();
-    await createSimCard({ number: 952366605 });
+    await createSimCard({ number: '952366605' });
 
     const response = await auth(request(app).get(`${simCardURL}`));
 
