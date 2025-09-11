@@ -1,9 +1,9 @@
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
-import { UpdatePosDTO } from '../schemas/update.schema';
+import { AuthPayload, UpdatePosDTO } from '@lotaria-nacional/lotto';
 
-export async function updatePosService(data: UpdatePosDTO) {
+export async function updatePosService(data: UpdatePosDTO & { user: AuthPayload }) {
   await prisma.$transaction(async tx => {
     const pos = await tx.pos.findUnique({ where: { id: data.id } });
 
@@ -31,7 +31,8 @@ export async function updatePosService(data: UpdatePosDTO) {
       data: {
         agent_id: data.agent_id,
         licence_id: data.licence_id,
-        coordinates: data.coordinates,
+        latitude: data.latitude,
+        longitude: data.longitude,
         status: data.agent_id ? 'active' : pos.status,
         area_id: data.area_id,
         zone_id: data.zone_id,

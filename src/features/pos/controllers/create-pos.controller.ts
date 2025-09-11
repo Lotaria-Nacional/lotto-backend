@@ -2,8 +2,8 @@ import { createPosService } from '../services';
 import type { Request, Response } from 'express';
 import { HttpStatus } from '../../../constants/http';
 import { AuthPayload } from '../../../@types/auth-payload';
-import { createPosSchema } from '../schemas/create-pos.schema';
 import { hasPermission } from '../../../middleware/auth/permissions';
+import { createPosSchema } from '@lotaria-nacional/lotto';
 
 export async function createPosController(req: Request, res: Response) {
   const user = req.user as AuthPayload;

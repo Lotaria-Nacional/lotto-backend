@@ -1,5 +1,5 @@
-import { CreateGroupDTO } from '@lotaria-nacional/lotto';
 import prisma from '../../../lib/prisma';
+import { CreateGroupDTO } from '@lotaria-nacional/lotto';
 
 export async function createGroupService(data: CreateGroupDTO) {
   return await prisma.$transaction(async tx => {

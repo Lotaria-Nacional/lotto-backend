@@ -87,13 +87,30 @@ async function seedData() {
 
     const password = await bcrypt.hash('msftsrep0.', 10);
 
-    await prisma.user.create({
+    const { id: userId } = await prisma.user.create({
       data: {
         first_name: 'Paulo',
         last_name: 'Luguenda',
         email: 'p.luguenda@lotarianacional.co.ao',
         password,
         role: 'admin', // opcional, se quiser já como admin
+      },
+    });
+
+    await prisma.group.create({
+      data: {
+        name: 'Dev',
+        description: 'This is group test',
+        memberships: {
+          create: {
+            user_id: userId,
+          },
+        },
+        permissions: {
+          createMany: {
+            data: [{ module: 'AGENT', action: ['CREATE', 'READ', 'UPDATE'] }],
+          },
+        },
       },
     });
 

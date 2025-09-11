@@ -61,7 +61,6 @@ function buildFilters(query: string | undefined) {
   if (!query?.trim()) return filters;
 
   filters.push({
-    coordinates: { contains: query },
     licence: { id: query },
   });
 
@@ -69,6 +68,8 @@ function buildFilters(query: string | undefined) {
     filters.push({
       agent: { id_reference: numericQuery },
       area_id: numericQuery,
+      latitude: numericQuery,
+      longitude: numericQuery,
       zone_id: numericQuery,
       type_id: numericQuery,
       subtype_id: numericQuery,

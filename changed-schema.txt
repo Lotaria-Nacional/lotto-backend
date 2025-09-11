@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -46,8 +47,8 @@ model Agent {
 
 model Terminal {
   id         String          @id @default(uuid())
-  serial     String
-  device_id  String?
+  serial     String          @unique
+  device_id  String?         @unique
   note       String?
   status     TerminalStatus? @default(stock)
   created_at DateTime        @default(now())
@@ -80,9 +81,8 @@ model SimCard {
 model Pos {
   id String @id @default(uuid())
 
-  latitude  Float
-  longitude Float
-
+  latitude   Float
+  longitude  Float
   status     PosStatus @default(pending)
   created_at DateTime  @default(now())
 
@@ -95,23 +95,23 @@ model Pos {
   agent_id String? @unique
   agent    Agent?  @relation(fields: [agent_id], references: [id])
 
-  area_id Int?
-  area    Area? @relation(fields: [area_id], references: [id])
+  area_name String?
+  area      Area?   @relation(fields: [area_name], references: [name])
 
-  zone_id Int?
-  zone    Zone? @relation(fields: [zone_id], references: [id])
+  zone_number Int?
+  zone        Zone? @relation(fields: [zone_number], references: [number])
 
-  type_id Int?
-  type    Type? @relation(fields: [type_id], references: [id])
+  type_name String?
+  type      Type?   @relation(fields: [type_name], references: [name])
 
-  subtype_id Int?
-  subtype    Subtype? @relation(fields: [subtype_id], references: [id])
+  subtype_name String?
+  subtype      Subtype? @relation(fields: [subtype_name], references: [name])
 
-  city_id Int
-  city    City @relation(fields: [city_id], references: [id])
+  city_name String
+  city      City   @relation(fields: [city_name], references: [name])
 
-  province_id Int
-  province    Province @relation(fields: [province_id], references: [id])
+  province_name String
+  province      Province @relation(fields: [province_name], references: [name])
 
   @@map("pos")
 }
@@ -157,18 +157,18 @@ model Province {
 }
 
 model City {
-  name        String   @unique
-  id          Int      @id @default(autoincrement())
-  province_id Int
-  province    Province @relation(fields: [province_id], references: [id])
-  pos         Pos[]
+  name          String   @unique
+  id            Int      @id @default(autoincrement())
+  province_name String
+  province      Province @relation(fields: [province_name], references: [name])
+  pos           Pos[]
 
   @@map("cities")
 }
 
 model Area {
-  name  String @unique
   id    Int    @id @default(autoincrement())
+  name  String @unique
   pos   Pos[]
   zones Zone[]
 
@@ -176,17 +176,17 @@ model Area {
 }
 
 model Zone {
-  number  Int   @unique
-  id      Int   @id @default(autoincrement())
-  area_id Int
-  pos     Pos[]
-  area    Area  @relation(fields: [area_id], references: [id])
+  number    Int    @unique
+  id        Int    @id @default(autoincrement())
+  area_name String
+  pos       Pos[]
+  area      Area   @relation(fields: [area_name], references: [name])
 
   @@map("zones")
 }
 
 model Type {
-  name     String
+  name     String    @unique
   id       Int       @id @default(autoincrement())
   pos      Pos[]
   subtypes Subtype[]
@@ -195,11 +195,11 @@ model Type {
 }
 
 model Subtype {
-  name    String
-  id      Int    @id @default(autoincrement())
-  type_id Int
-  pos     Pos[]
-  type    Type   @relation(fields: [type_id], references: [id])
+  name      String @unique
+  id        Int    @id @default(autoincrement())
+  type_name String
+  pos       Pos[]
+  type      Type   @relation(fields: [type_name], references: [name])
 
   @@map("subtypes")
 }
@@ -218,7 +218,7 @@ model AuditLog {
 
 model IdReference {
   id      Int       @id @default(autoincrement())
-  counter Int       @default(autoincrement())
+  counter Int       @unique @default(autoincrement())
   type    AgentType @unique
 
   @@map("id_references")

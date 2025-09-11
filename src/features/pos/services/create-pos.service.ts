@@ -1,12 +1,13 @@
+import { AuthPayload, CreatePosDTO } from '@lotaria-nacional/lotto';
 import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
-import { CreatePosDTO } from '../schemas/create-pos.schema';
 
-export async function createPosService({ user, ...data }: CreatePosDTO) {
+export async function createPosService({ user, ...data }: CreatePosDTO & { user: AuthPayload }) {
   const response = await prisma.$transaction(async tx => {
     const posCreated = await tx.pos.create({
       data: {
-        coordinates: data.coordinates,
+        latitude: data.latitude,
+        longitude: data.longitude,
         admin_id: data.admin_id,
         province_id: data.province_id,
         city_id: data.city_id,

@@ -1,18 +1,33 @@
+import z from 'zod';
 import prisma from '../../../lib/prisma';
+import { BoundedBoxSchemaDTO } from '@lotaria-nacional/lotto';
 
-export async function fecthBoundedPosService() {
+export async function fecthBoundedPosService({ minLat, maxLat, minLng, maxLng }: BoundedBoxSchemaDTO) {
   const pos = await prisma.pos.findMany({
     take: 40,
     where: {
-      status: {
-        in: ['active', 'approved'],
-      },
+      AND: [
+        {
+          status: {
+            in: ['active', 'approved'],
+          },
+        },
+        {
+          latitude: { gte: minLat, lte: maxLat },
+          longitude: { gte: minLng, lte: maxLng },
+        },
+      ],
     },
     orderBy: {
       created_at: 'desc',
     },
     include: {
-      licence: true,
+      licence: {
+        select: {
+          admin: { select: { name: true } },
+          reference: true,
+        },
+      },
       agent: {
         select: {
           id: true,
