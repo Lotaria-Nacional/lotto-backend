@@ -20,7 +20,7 @@ export async function uploadAgentsService(data: any[]) {
   if (validAgents.length > 0) {
     await prisma.agent.createMany({
       data: validAgents,
-      skipDuplicates: true, // ignora duplicados em id_reference
+      skipDuplicates: true,
     });
   }
 
