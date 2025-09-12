@@ -10,9 +10,7 @@ export async function fetchPoService(params: PaginationParams & { status?: PosSt
   const where: Prisma.PosWhereInput = {
     AND: [
       ...(queryFilters.length ? [{ OR: queryFilters }] : []),
-
       ...(params.status ? getStatus(params.status as PosStatus) : []),
-
       ...(params.area_id ? [{ area_id: params.area_id }] : []),
       ...(params.zone_id ? [{ zone_id: params.zone_id }] : []),
       ...(params.type_id ? [{ type_id: params.type_id }] : []),

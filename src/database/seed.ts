@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 async function seedData() {
   try {
-    await prisma.$transaction(async tx => {
+    await prisma.$transaction(async (tx) => {
       // Primeiro apaga tabelas que dependem de user e group
       await tx.membership.deleteMany();
       await tx.groupPermission.deleteMany();

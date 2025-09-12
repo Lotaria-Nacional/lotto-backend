@@ -28,7 +28,7 @@ export async function uploadLicencesController(req: Request, res: Response) {
     return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Formato inválido (use CSV ou Excel)' });
   }
 
-  const result = await uploadLicencesService(data);
+  const result = await uploadLicencesService(data, user);
 
   return res.status(HttpStatus.OK).json({ result, message: 'Upload feito com sucesso' });
 }

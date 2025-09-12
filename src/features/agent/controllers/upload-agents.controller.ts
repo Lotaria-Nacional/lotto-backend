@@ -28,7 +28,7 @@ export async function uploadAgentsController(req: Request, res: Response) {
     return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Formato inválido (use CSV ou Excel)' });
   }
 
-  const result = await uploadAgentsService(data);
+  const result = await uploadAgentsService(data, user);
 
   return res.status(HttpStatus.OK).json({ result, message: 'Upload feito com sucesso' });
 }

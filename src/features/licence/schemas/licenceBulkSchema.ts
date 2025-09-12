@@ -11,7 +11,7 @@ export const licenceBulkSchema = z.object({
   expires_at: z.coerce.date(),
   file: z.string().optional(),
   coordinates: z.string().optional(),
-  admin_id: z.number().optional(),
+  admin_id: z.number().default(1),
 });
 
 export type LicenceBulk = z.infer<typeof licenceBulkSchema>;
