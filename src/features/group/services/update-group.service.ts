@@ -11,40 +11,44 @@ export async function updateGroupService(data: UpdateGroupDTO) {
     if (!group) throw new NotFoundError('Grupo não encontrado');
 
     const updatedGroup = await tx.group.update({
-      where: {
-        id: data.id,
-      },
+      where: { id: data.id },
       data: {
         name: data.name,
         description: data.description,
-
-        // update permissions if thers's something to update
-        ...(data.permissions?.length
-          ? {
-              permissions: {
-                upsert: data.permissions.map(perm => ({
-                  where: {
-                    group_id_module: {
-                      group_id: data.id,
-                      module: perm.module,
-                    },
-                  },
-                  update: {
-                    action: perm.actions,
-                  },
-                  create: {
-                    module: perm.module,
-                    action: perm.actions,
-                  },
-                })),
-              },
-            }
-          : {}),
       },
-      include: {
-        permissions: true,
-      },
+      include: { permissions: true, memberships: true },
     });
+
+    if (data.permissions) {
+      await tx.groupPermission.deleteMany({
+        where: { group_id: data.id },
+      });
+
+      if (data.permissions.length > 0) {
+        await tx.groupPermission.createMany({
+          data: data.permissions.map(perm => ({
+            group_id: data.id,
+            module: perm.module,
+            action: perm.actions,
+          })),
+        });
+      }
+    }
+
+    if (data.users_id) {
+      await tx.membership.deleteMany({
+        where: { group_id: data.id },
+      });
+
+      if (data.users_id.length > 0) {
+        await tx.membership.createMany({
+          data: data.users_id.map(userId => ({
+            group_id: data.id,
+            user_id: userId,
+          })),
+        });
+      }
+    }
 
     return updatedGroup.id;
   });

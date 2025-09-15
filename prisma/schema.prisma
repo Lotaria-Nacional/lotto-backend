@@ -78,40 +78,46 @@ model SimCard {
 }
 
 model Pos {
-  id String @id @default(uuid())
-
-  latitude  Float
-  longitude Float
-
+  id         String    @id @default(uuid())
+  latitude   Float
+  longitude  Float
   status     PosStatus @default(pending)
   created_at DateTime  @default(now())
 
-  admin_id Int
-  admin    Administration @relation(fields: [admin_id], references: [id])
+  /// Administração pelo nome
+  admin_name String
+  admin      Administration @relation(fields: [admin_name], references: [name])
 
-  licence_id String?
-  licence    Licence? @relation(fields: [licence_id], references: [id])
+  licence_reference String?
+  licence           Licence? @relation(fields: [licence_reference], references: [reference])
 
-  agent_id String? @unique
-  agent    Agent?  @relation(fields: [agent_id], references: [id])
+  /// Agente segue igual
+  agent_id_reference Int?   @unique
+  agent              Agent? @relation(fields: [agent_id_reference], references: [id_reference])
 
-  area_id Int?
-  area    Area? @relation(fields: [area_id], references: [id])
+  /// Relacionamento pela Área (nome)
+  area_name String?
+  area      Area?   @relation(fields: [area_name], references: [name])
 
-  zone_id Int?
-  zone    Zone? @relation(fields: [zone_id], references: [id])
+  /// Relacionamento pela Zona (number)
+  zone_number Int?
+  zone        Zone? @relation(fields: [zone_number], references: [number])
 
-  type_id Int?
-  type    Type? @relation(fields: [type_id], references: [id])
+  /// Cidade pelo nome
+  city_name String
+  city      City   @relation(fields: [city_name], references: [name])
 
-  subtype_id Int?
-  subtype    Subtype? @relation(fields: [subtype_id], references: [id])
+  /// Província pelo nome
+  province_name String
+  province      Province @relation(fields: [province_name], references: [name])
 
-  city_id Int
-  city    City @relation(fields: [city_id], references: [id])
+  /// Tipo pelo nome
+  type_name String?
+  type      Type?   @relation(fields: [type_name], references: [name])
 
-  province_id Int
-  province    Province @relation(fields: [province_id], references: [id])
+  /// Subtipo pelo nome
+  subtype_name String?
+  subtype      Subtype? @relation(fields: [subtype_name], references: [name])
 
   @@map("pos")
 }
@@ -120,7 +126,7 @@ model Licence {
   id          String        @id @default(uuid())
   number      String
   description String
-  reference   String
+  reference   String        @unique
   limit       Int           @default(1)
   status      LicenceStatus @default(free)
   emitted_at  DateTime
@@ -140,7 +146,7 @@ model Licence {
 
 model Administration {
   id       Int       @id @default(autoincrement())
-  name     String
+  name     String    @unique
   pos      Pos[]
   licences Licence[]
 
@@ -186,7 +192,7 @@ model Zone {
 }
 
 model Type {
-  name     String
+  name     String    @unique
   id       Int       @id @default(autoincrement())
   pos      Pos[]
   subtypes Subtype[]
@@ -195,7 +201,7 @@ model Type {
 }
 
 model Subtype {
-  name    String
+  name    String @unique
   id      Int    @id @default(autoincrement())
   type_id Int
   pos     Pos[]

@@ -44,7 +44,7 @@ export async function resetAgentService(id: string, user: AuthPayload) {
       where: { id: pos.id },
       data: {
         status: 'pending',
-        agent_id: null,
+        agent_id_reference: null,
       },
     });
 

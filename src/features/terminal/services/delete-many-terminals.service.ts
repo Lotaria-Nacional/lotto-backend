@@ -4,7 +4,7 @@ import { deleteCache } from '../../../utils/redis/delete-cache';
 import { BadRequestError } from '../../../errors';
 
 export async function deleteManyTerminalService(ids: string[]) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const { count } = await tx.terminal.deleteMany({
       where: { id: { in: ids } },
     });

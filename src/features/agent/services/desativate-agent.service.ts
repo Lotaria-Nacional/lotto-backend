@@ -40,7 +40,7 @@ export async function desativateAgentService(id: string, user: AuthPayload) {
       await tx.pos.update({
         where: { id: agent.pos.id },
         data: {
-          agent_id: null,
+          agent_id_reference: null,
           status: 'pending',
         },
       });

@@ -5,16 +5,18 @@ const prisma = new PrismaClient();
 
 async function seedData() {
   try {
-    await prisma.$transaction(async (tx) => {
-      // Primeiro apaga tabelas que dependem de user e group
+    await prisma.$transaction(async tx => {
       await tx.membership.deleteMany();
       await tx.groupPermission.deleteMany();
 
-      // Agora pode apagar grupos e usuários
-      await tx.group.deleteMany();
-      await tx.user.deleteMany();
+      // POS e dependências primeiro
+      await tx.simCard.deleteMany();
+      await tx.licence.deleteMany();
+      await tx.terminal.deleteMany();
+      await tx.agent.deleteMany();
+      await tx.pos.deleteMany();
 
-      // Depois apaga o resto
+      // Depois "cadastros" usados por POS
       await tx.city.deleteMany();
       await tx.province.deleteMany();
       await tx.subtype.deleteMany();
@@ -22,12 +24,10 @@ async function seedData() {
       await tx.zone.deleteMany();
       await tx.area.deleteMany();
       await tx.administration.deleteMany();
-      await tx.agent.deleteMany();
-      await tx.terminal.deleteMany();
-      await tx.licence.deleteMany();
-      await tx.pos.deleteMany();
-      await tx.simCard.deleteMany();
-      await tx.idReference.deleteMany();
+
+      // Por fim grupos e usuários
+      await tx.group.deleteMany();
+      await tx.user.deleteMany();
 
       await tx.province.createMany({
         data: [
@@ -75,7 +75,7 @@ async function seedData() {
         });
       }
 
-      const [_a, supermercado_id, _p, quiosque_id] = await Promise.all([
+      const [ambulante, supermercado, popupKit, quiosque, agencias, comercio] = await Promise.all([
         tx.type.create({ data: { name: 'Ambulante' } }),
         tx.type.create({ data: { name: 'Supermercado' } }),
         tx.type.create({ data: { name: 'Popup-kit' } }),
@@ -86,12 +86,12 @@ async function seedData() {
 
       await tx.subtype.createMany({
         data: [
-          { name: 'Arreiou', type_id: supermercado_id.id },
-          { name: 'Kibabo', type_id: supermercado_id.id },
-          { name: 'Nossa casa', type_id: supermercado_id.id },
-          { name: 'Angomart', type_id: supermercado_id.id },
-          { name: 'Bancada', type_id: quiosque_id.id },
-          { name: 'Roulote', type_id: quiosque_id.id },
+          { name: 'Arreiou', type_id: supermercado.id },
+          { name: 'Kibabo', type_id: supermercado.id },
+          { name: 'Nossa casa', type_id: supermercado.id },
+          { name: 'Angomart', type_id: supermercado.id },
+          { name: 'Bancada', type_id: quiosque.id },
+          { name: 'Roulote', type_id: quiosque.id },
         ],
       });
 
@@ -159,9 +159,7 @@ async function seedData() {
           name: 'Dev',
           description: 'This is group test',
           memberships: {
-            create: {
-              user_id: userId,
-            },
+            create: { user_id: userId },
           },
           permissions: {
             createMany: {
@@ -171,7 +169,7 @@ async function seedData() {
         },
       });
 
-      await prisma.group.create({
+      await tx.group.create({
         data: {
           name: 'Pendentes',
           description: 'Usuários recém-criados que ainda não têm grupo definido',
@@ -183,7 +181,7 @@ async function seedData() {
   } catch (error) {
     console.error('Error while generate seed.', error);
   } finally {
-    prisma.$disconnect();
+    await prisma.$disconnect();
   }
 }
 

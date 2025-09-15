@@ -4,7 +4,7 @@ import { licenceBulkSchema } from '../schemas/licenceBulkSchema';
 import { audit } from '../../../utils/audit-log';
 
 export async function uploadLicencesService(data: any[], user: AuthPayload) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const validLicences = [];
     const errors = [];
 

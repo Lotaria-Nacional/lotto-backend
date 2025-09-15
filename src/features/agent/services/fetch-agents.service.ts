@@ -1,6 +1,5 @@
 import prisma from '../../../lib/prisma';
 import { Prisma, AgentStatus } from '@prisma/client';
-import { RedisKeys } from '../../../utils/redis/keys';
 import { PaginationParams } from '../../../@types/pagination-params';
 import { Agent } from '@lotaria-nacional/lotto';
 
@@ -10,40 +9,9 @@ export type FetchAgentsResponse = {
 };
 
 export async function fetchAgentsService(params: PaginationParams) {
-  let start: Date | undefined;
-  let end: Date | undefined;
-  let isValidDate: boolean = false;
-
-  if (params.training_date) {
-    const parsedDate = new Date(params.training_date);
-    isValidDate = !isNaN(parsedDate.getTime());
-
-    if (isValidDate) {
-      start = new Date(parsedDate);
-      end = new Date(parsedDate);
-      end.setDate(end.getDate() + 1);
-    }
-  }
-
   const offset = (params.page - 1) * params.limit;
 
-  let queryFilters = buildFilters(params.query);
-
-  const where: Prisma.AgentWhereInput = {
-    AND: [
-      // Filtros textuais ou numéricos
-      ...(queryFilters.length ? [{ OR: queryFilters }] : []),
-
-      // Filtro de status do agente
-      ...(params.status ? getStatus(params.status as AgentStatus) : []),
-
-      // Filtro relacional
-      ...(params.area_id ? [{ pos: { area: { id: params.area_id } } }] : []),
-      ...(params.zone_id ? [{ pos: { area: { id: params.zone_id } } }] : []),
-      ...(params.type_id ? [{ pos: { area: { id: params.type_id } } }] : []),
-      ...(params.subtype_id ? [{ pos: { area: { id: params.subtype_id } } }] : []),
-    ],
-  };
+  const where = buildAgentWhereInput(params);
 
   const agents = await prisma.agent.findMany({
     where,
@@ -78,7 +46,7 @@ export async function fetchAgentsService(params: PaginationParams) {
   return { data: agents, nextPage };
 }
 
-function buildFilters(query?: string): Prisma.AgentWhereInput[] {
+const createAgentSearchFilter = (query?: string): Prisma.AgentWhereInput[] => {
   if (!query?.trim()) return [];
 
   const filters: Prisma.AgentWhereInput[] = [];
@@ -99,12 +67,37 @@ function buildFilters(query?: string): Prisma.AgentWhereInput[] {
   }
 
   return filters;
-}
+};
 
-function getStatus(status: AgentStatus) {
+const getAgentsByStatus = (status: AgentStatus): Prisma.AgentWhereInput[] => {
   if (!status) return [];
 
   if (status === 'active') return [{ status: AgentStatus.active }];
 
   return [{ status: { notIn: [AgentStatus.active] } }];
-}
+};
+
+const buildAgentWhereInput = (params: PaginationParams): Prisma.AgentWhereInput => {
+  let query = createAgentSearchFilter(params.query);
+
+  let where: Prisma.AgentWhereInput = {
+    AND: [
+      // Filtros textuais ou numéricos
+      ...(query.length ? [{ OR: query }] : []),
+
+      // Filtro de status do agente
+      ...(params.status ? getAgentsByStatus(params.status as AgentStatus) : []),
+
+      // Filtro relacional
+      ...(params.area_name ? [{ pos: { area: { name: params.area_name } } }] : []),
+      ...(params.zone_number ? [{ pos: { zone: { number: params.zone_number } } }] : []),
+      ...(params.type_name ? [{ pos: { area: { name: params.type_name } } }] : []),
+      ...(params.subtype_name ? [{ pos: { area: { name: params.subtype_name } } }] : []),
+      ...(params.province_name ? [{ pos: { area: { name: params.province_name } } }] : []),
+      ...(params.city_name ? [{ pos: { area: { name: params.city_name } } }] : []),
+      ...(params.admin_name ? [{ pos: { area: { name: params.admin_name } } }] : []),
+    ],
+  };
+
+  return where;
+};

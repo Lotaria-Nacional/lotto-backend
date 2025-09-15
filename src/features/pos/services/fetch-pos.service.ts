@@ -5,28 +5,14 @@ import { PaginationParams } from '../../../@types/pagination-params';
 export async function fetchPoService(params: PaginationParams & { status?: PosStatus }) {
   const offset = (params.page - 1) * params.limit;
 
-  const queryFilters = buildFilters(params.query);
-
-  const where: Prisma.PosWhereInput = {
-    AND: [
-      ...(queryFilters.length ? [{ OR: queryFilters }] : []),
-      ...(params.status ? getStatus(params.status as PosStatus) : []),
-      ...(params.area_id ? [{ area_id: params.area_id }] : []),
-      ...(params.zone_id ? [{ zone_id: params.zone_id }] : []),
-      ...(params.type_id ? [{ type_id: params.type_id }] : []),
-      ...(params.subtype_id ? [{ subtype_id: params.subtype_id }] : []),
-      ...(params.admin_id ? [{ admin_id: params.admin_id }] : []),
-      ...(params.province_id ? [{ province_id: params.province_id }] : []),
-      ...(params.city_id ? [{ city_id: params.city_id }] : []),
-    ],
-  };
+  const where = buildPosWhereInput(params);
 
   const pos = await prisma.pos.findMany({
     where,
     skip: offset,
     take: params.limit,
     orderBy: { created_at: 'asc' },
-    include: {
+    select: {
       licence: true,
       agent: {
         select: {
@@ -52,43 +38,56 @@ export async function fetchPoService(params: PaginationParams & { status?: PosSt
   return { data: pos, nextPage };
 }
 
-function buildFilters(query: string | undefined) {
+const createPosSearchFilters = (query: string | undefined) => {
   const filters: Prisma.PosWhereInput[] = [];
   const numericQuery = Number(query);
 
   if (!query?.trim()) return filters;
 
   filters.push({
-    licence: { id: query },
+    licence_reference: { equals: query },
   });
 
   if (!isNaN(numericQuery)) {
     filters.push({
       agent: { id_reference: numericQuery },
-      area_id: numericQuery,
       latitude: numericQuery,
       longitude: numericQuery,
-      zone_id: numericQuery,
-      type_id: numericQuery,
-      subtype_id: numericQuery,
-      admin_id: numericQuery,
-      province_id: numericQuery,
-      city_id: numericQuery,
+      zone_number: numericQuery,
     });
   }
 
   return filters;
-}
+};
 
-function getStatus(status?: PosStatus): Prisma.PosWhereInput[] {
+const getStatus = (status?: PosStatus): Prisma.PosWhereInput[] => {
   if (!status) return [];
 
-  if (status === 'pending') {
-    return [{ status: { in: ['pending', 'approved', 'denied'] } }];
+  switch (status) {
+    case 'active':
+      return [{ status: 'active' }];
+    case 'pending':
+      return [{ status: { in: ['pending', 'approved', 'denied'] } }];
+    default:
+      return [];
   }
-  if (status === 'active') {
-    return [{ status: { in: ['active'] } }];
-  }
+};
 
-  return [];
-}
+const buildPosWhereInput = (params: PaginationParams): Prisma.PosWhereInput => {
+  const filters = createPosSearchFilters(params.query);
+  let where: Prisma.PosWhereInput = {
+    AND: [
+      ...(filters.length ? [{ OR: filters }] : []),
+      ...(params.status ? getStatus(params.status as PosStatus) : []),
+      ...(params.area_name ? [{ area_name: params.area_name }] : []),
+      ...(params.zone_number ? [{ zone_number: params.zone_number }] : []),
+      ...(params.type_name ? [{ type_name: params.type_name }] : []),
+      ...(params.subtype_name ? [{ subtype_name: params.subtype_name }] : []),
+      ...(params.admin_name ? [{ admin_name: params.admin_name }] : []),
+      ...(params.province_name ? [{ province_name: params.province_name }] : []),
+      ...(params.city_name ? [{ city_name: params.city_name }] : []),
+    ],
+  };
+
+  return where;
+};

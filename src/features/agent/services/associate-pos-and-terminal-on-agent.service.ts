@@ -22,14 +22,14 @@ export async function associatePosAndagentOnAgentService(data: UpdateAgentDTO & 
       const pos = await tx.pos.findUnique({ where: { id: data.pos_id } });
       if (!pos) throw new NotFoundError('POS não encontrado');
 
-      if (pos.agent_id) {
+      if (pos.agent_id_reference) {
         throw new BadRequestError('Este POS já está ocupado');
       }
 
       await tx.pos.update({
         where: { id: data.pos_id },
         data: {
-          agent_id: data.id,
+          agent_id_reference: data.id_reference,
           status: 'active',
         },
       });

@@ -9,9 +9,9 @@ export async function updatePosService(data: UpdatePosDTO & { user: AuthPayload 
 
     if (!pos) throw new NotFoundError('POS não encontrado.');
 
-    if (data.agent_id) {
+    if (data.agent_id_reference) {
       const agent = await tx.agent.findUnique({
-        where: { id: data.agent_id },
+        where: { id_reference: data.agent_id_reference },
       });
 
       if (!agent) {
@@ -29,18 +29,18 @@ export async function updatePosService(data: UpdatePosDTO & { user: AuthPayload 
     const posUpdated = await tx.pos.update({
       where: { id: data.id },
       data: {
-        agent_id: data.agent_id,
-        licence_id: data.licence_id,
         latitude: data.latitude,
         longitude: data.longitude,
-        status: data.agent_id ? 'active' : pos.status,
-        area_id: data.area_id,
-        zone_id: data.zone_id,
-        type_id: data.type_id,
-        subtype_id: data.subtype_id,
-        admin_id: data.admin_id,
-        province_id: data.province_id,
-        city_id: data.city_id,
+        admin_name: data.admin_name,
+        province_name: data.province_name,
+        city_name: data.city_name,
+        area_name: data.area_name,
+        zone_number: data.zone_number,
+        type_name: data.type_name,
+        status: data.agent_id_reference ? 'active' : pos.status,
+        subtype_name: data.subtype_name,
+        agent_id_reference: data.agent_id_reference,
+        licence_reference: data.licence_reference,
       },
     });
 

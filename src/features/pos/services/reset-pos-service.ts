@@ -15,9 +15,9 @@ export async function resetPosService(id: string, user: AuthPayload) {
       throw new NotFoundError('POS não encontrado ');
     }
 
-    if (pos.agent_id) {
+    if (pos.agent_id_reference) {
       const agent = await tx.agent.findUnique({
-        where: { id: pos.agent_id },
+        where: { id_reference: pos.agent_id_reference },
         select: { id: true },
       });
 
@@ -26,16 +26,16 @@ export async function resetPosService(id: string, user: AuthPayload) {
       }
 
       await tx.agent.update({
-        where: { id: pos.agent_id },
+        where: { id_reference: pos.agent_id_reference },
         data: {
           status: 'denied',
         },
       });
     }
 
-    if (pos.licence_id) {
+    if (pos.licence_reference) {
       const licence = await tx.licence.findUnique({
-        where: { id: pos.licence_id },
+        where: { id: pos.licence_reference },
         select: {
           id: true,
           limit: true,
@@ -53,7 +53,7 @@ export async function resetPosService(id: string, user: AuthPayload) {
       const limitStatus: LicenceStatus = posWithThisLicenceCount >= limitCount ? 'used' : 'free';
 
       await tx.licence.update({
-        where: { id: pos.licence_id },
+        where: { id: pos.licence_reference },
         data: {
           status: limitStatus,
         },
@@ -66,8 +66,8 @@ export async function resetPosService(id: string, user: AuthPayload) {
       },
       data: {
         status: 'pending',
-        agent_id: null,
-        licence_id: null,
+        agent_id_reference: null,
+        licence_reference: null,
       },
     });
 
