@@ -3,7 +3,7 @@ import { HttpStatus } from '../../../constants/http';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 import { hasPermission } from '../../../middleware/auth/permissions';
 import { parseCsvTerminals, parseExcelTerminals } from '../utils/parser';
-import { uploadTerminalsService } from '../services/upload-terminal-service';
+import { uploadTerminalsService } from '../services/import-terminal-service';
 
 export async function uploadTerminalsController(req: Request, res: Response) {
   const user = req.user as AuthPayload;

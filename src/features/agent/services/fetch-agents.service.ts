@@ -18,9 +18,22 @@ export async function fetchAgentsService(params: PaginationParams) {
     take: params.limit,
     skip: offset,
     orderBy: { created_at: 'asc' },
-    include: {
+    select: {
+      status: true,
+      id: true,
+      first_name: true,
+      last_name: true,
+      bi_number: true,
+      approved_at: true,
+      genre: true,
+      phone_number: true,
+      training_date: true,
+      id_reference: true,
+      afrimoney_number: true,
       terminal: {
-        include: {
+        select: {
+          serial: true,
+          device_id: true,
           sim_card: {
             select: {
               number: true,
@@ -29,7 +42,7 @@ export async function fetchAgentsService(params: PaginationParams) {
         },
       },
       pos: {
-        include: {
+        select: {
           area: { select: { id: true, name: true } },
           zone: { select: { id: true, number: true } },
           type: { select: { id: true, name: true } },
@@ -69,12 +82,14 @@ const createAgentSearchFilter = (query?: string): Prisma.AgentWhereInput[] => {
   return filters;
 };
 
-const getAgentsByStatus = (status: AgentStatus): Prisma.AgentWhereInput[] => {
+const getAgentsByStatus = (status: AgentStatus | 'approved-active-ready'): Prisma.AgentWhereInput[] => {
   if (!status) return [];
 
-  if (status === 'active') return [{ status: AgentStatus.active }];
+  if (status === 'active') return [{ status: { in: ['approved', 'active', 'ready'] } }];
 
-  return [{ status: { notIn: [AgentStatus.active] } }];
+  if (status === 'scheduled') return [{ status: { in: ['scheduled'] } }];
+
+  return [];
 };
 
 const buildAgentWhereInput = (params: PaginationParams): Prisma.AgentWhereInput => {

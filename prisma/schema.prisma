@@ -36,17 +36,18 @@ model Agent {
   status           AgentStatus @default(scheduled)
 
   training_date DateTime
-  created_at    DateTime @default(now())
+  approved_at   DateTime?
 
-  terminal Terminal?
-  pos      Pos?
+  created_at DateTime  @default(now())
+  terminal   Terminal?
+  pos        Pos?
 
   @@map("agents")
 }
 
 model Terminal {
   id         String          @id @default(uuid())
-  serial     String
+  serial     String          @unique
   device_id  String?
   note       String?
   status     TerminalStatus? @default(stock)
@@ -54,9 +55,9 @@ model Terminal {
   arrived_at DateTime
   leaved_at  DateTime?
 
-  agent_id String?  @unique
-  agent    Agent?   @relation(fields: [agent_id], references: [id])
-  sim_card SimCard?
+  agent_id_reference Int?     @unique
+  agent              Agent?   @relation(fields: [agent_id_reference], references: [id_reference])
+  sim_card           SimCard?
 
   @@map("terminals")
 }
@@ -291,6 +292,8 @@ enum AgentStatus {
   denied
   scheduled
   approved
+  ready
+  discontinued
 }
 
 enum TerminalStatus {
@@ -300,6 +303,7 @@ enum TerminalStatus {
   stock
   broken
   maintenance
+  discontinued
 }
 
 enum LicenceStatus {
@@ -312,6 +316,7 @@ enum PosStatus {
   approved
   active
   denied
+  discontinued
 }
 
 enum SimCardStatus {

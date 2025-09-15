@@ -12,7 +12,7 @@ import { Router } from 'express';
 import catchErrors from '../../utils/catch-errors';
 import { denyAgentController } from './controllers/deny-agent.controller';
 import { approveAgentController } from './controllers/approve-agent.controller';
-import { uploadAgentsController } from './controllers/upload-agents.controller';
+import { importAgentsController } from './controllers/import-agents.controller';
 import { associatePosAndTerminalOnAgentController } from './controllers/associate-pos-and-terminal-on-agent.controller';
 import { desativateAgentController } from './controllers/desativate-agent.controller';
 
@@ -22,7 +22,7 @@ const agentRouter = Router();
 export const upload = multer({ dest: 'uploads/' });
 
 agentRouter.post('/', catchErrors(createAgentController));
-agentRouter.post('/upload', upload.single('file'), catchErrors(uploadAgentsController));
+agentRouter.post('/upload', upload.single('file'), catchErrors(importAgentsController));
 
 agentRouter.put('/associate/:id', catchErrors(associatePosAndTerminalOnAgentController));
 agentRouter.put('/approve/:id', catchErrors(approveAgentController));

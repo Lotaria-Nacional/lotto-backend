@@ -2,8 +2,8 @@ import prisma from '../../../lib/prisma';
 import { agentBulkSchema, AuthPayload } from '@lotaria-nacional/lotto';
 import { audit } from '../../../utils/audit-log';
 
-export async function uploadAgentsService(data: any[], user: AuthPayload) {
-  await prisma.$transaction(async tx => {
+export async function importAgentsService(data: any[], user: AuthPayload) {
+  await prisma.$transaction(async (tx) => {
     const validAgents = [];
     const errors = [];
 

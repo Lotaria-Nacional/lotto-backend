@@ -4,19 +4,22 @@ import { BadRequestError, NotFoundError } from '../../../errors';
 import { AuthPayload, LicenceStatus, UpdatePosDTO } from '@lotaria-nacional/lotto';
 
 export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const pos = await tx.pos.findUnique({
-      where: {
-        id: data.id,
-      },
+      where: { id: data.id },
     });
 
-    if (!pos) {
-      throw new NotFoundError('POS não encontrado ');
+    if (!pos) throw new NotFoundError('POS não encontrado');
+
+    if (!data.licence_reference && !data.agent_id_reference) {
+      throw new BadRequestError('É necessário fornecer licença ou agente para associar.');
     }
 
-    let posUpdated;
+    let hasAgent = false;
+    let hasLicence = false;
+    let posUpdated = pos;
 
+    // Associação de licença
     if (data.licence_reference) {
       if (pos.licence_reference && pos.licence_reference !== data.licence_reference) {
         throw new BadRequestError('Este POS já possui outra licença atribuída');
@@ -27,9 +30,7 @@ export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO & 
         include: { pos: { select: { id: true } } },
       });
 
-      if (!licence) {
-        throw new NotFoundError('Licença não encontrada');
-      }
+      if (!licence) throw new NotFoundError('Licença não encontrada');
 
       const posWithThisLicenceCount = licence.pos.length;
       const limitCount = licence.limit;
@@ -46,18 +47,14 @@ export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO & 
         data: {
           status: limitStatus,
           ...(pos.licence_reference ? {} : { pos: { connect: { id: pos.id } } }),
-          coordinates: `${pos.latitude},${pos.longitude}}`,
+          coordinates: `${pos.latitude},${pos.longitude}`,
         },
       });
 
-      posUpdated = await tx.pos.update({
-        where: { id: data.id },
-        data: {
-          status: 'approved',
-        },
-      });
+      hasLicence = true;
     }
 
+    // Associação de agente
     if (data.agent_id_reference) {
       if (pos.agent_id_reference && pos.agent_id_reference !== data.agent_id_reference) {
         throw new BadRequestError('Este POS já está associado a outro agente');
@@ -65,36 +62,45 @@ export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO & 
 
       const agent = await tx.agent.findUnique({
         where: { id_reference: data.agent_id_reference },
-        include: {
-          terminal: { select: { id: true } },
-        },
+        include: { terminal: { select: { id: true } } },
       });
 
-      if (!agent) {
-        throw new NotFoundError('Agente não encontrado');
-      }
+      if (!agent) throw new NotFoundError('Agente não encontrado');
 
       await tx.agent.update({
         where: { id_reference: data.agent_id_reference },
-        data: {
-          status: agent.terminal ? 'active' : agent.status,
-        },
+        data: { status: 'active' },
       });
 
-      posUpdated = await tx.pos.update({
-        where: { id: pos.id },
-        data: {
-          agent_id_reference: data.agent_id_reference,
-          status: 'active',
-        },
-      });
-
-      await audit(tx, 'ASSOCIATE', {
-        user: data.user,
-        entity: 'POS',
-        after: posUpdated,
-        before: pos,
-      });
+      hasAgent = true;
     }
+
+    // Decide status final do POS
+    let newPosStatus: 'approved' | 'active' = pos.status as any;
+
+    if (hasAgent && hasLicence) {
+      newPosStatus = 'active'; // 👈 prioridade para agente
+    } else if (hasAgent) {
+      newPosStatus = 'active';
+    } else if (hasLicence) {
+      newPosStatus = 'approved';
+    }
+
+    posUpdated = await tx.pos.update({
+      where: { id: pos.id },
+      data: {
+        agent_id_reference: data.agent_id_reference ?? pos.agent_id_reference,
+        licence_reference: data.licence_reference ?? pos.licence_reference,
+        status: newPosStatus,
+      },
+    });
+
+    // Audit log
+    await audit(tx, 'ASSOCIATE', {
+      user: data.user,
+      entity: 'POS',
+      before: pos,
+      after: posUpdated,
+    });
   });
 }

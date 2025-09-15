@@ -11,7 +11,7 @@ export async function fetchPoService(params: PaginationParams & { status?: PosSt
     where,
     skip: offset,
     take: params.limit,
-    orderBy: { created_at: 'asc' },
+    orderBy: { created_at: 'desc' },
     select: {
       licence: true,
       agent: {
@@ -20,9 +20,15 @@ export async function fetchPoService(params: PaginationParams & { status?: PosSt
           id_reference: true,
           first_name: true,
           last_name: true,
+          genre: true,
+          bi_number: true,
           terminal: { select: { id: true, serial: true } },
         },
       },
+      status: true,
+      id: true,
+      latitude: true,
+      longitude: true,
       admin: true,
       area: true,
       zone: true,
@@ -65,9 +71,9 @@ const getStatus = (status?: PosStatus): Prisma.PosWhereInput[] => {
 
   switch (status) {
     case 'active':
-      return [{ status: 'active' }];
+      return [{ status: { in: ['active', 'approved'] } }];
     case 'pending':
-      return [{ status: { in: ['pending', 'approved', 'denied'] } }];
+      return [{ status: { in: ['pending', 'denied'] } }];
     default:
       return [];
   }
@@ -75,6 +81,7 @@ const getStatus = (status?: PosStatus): Prisma.PosWhereInput[] => {
 
 const buildPosWhereInput = (params: PaginationParams): Prisma.PosWhereInput => {
   const filters = createPosSearchFilters(params.query);
+
   let where: Prisma.PosWhereInput = {
     AND: [
       ...(filters.length ? [{ OR: filters }] : []),

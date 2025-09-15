@@ -4,7 +4,7 @@ import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 
 export async function approveAgentService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const agent = await tx.agent.findUnique({
       where: { id },
     });
@@ -13,7 +13,10 @@ export async function approveAgentService(id: string, user: AuthPayload) {
 
     const agentApproved = await tx.agent.update({
       where: { id },
-      data: { status: 'approved' },
+      data: {
+        status: 'approved',
+        approved_at: new Date(),
+      },
     });
 
     await audit(tx, 'APPROVE', {

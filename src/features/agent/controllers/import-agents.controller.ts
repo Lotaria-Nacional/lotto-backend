@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import { parseCsvAgents, parseExcelAgents } from '../utils/parser';
-import { uploadAgentsService } from '../services/upload-agents.service';
+import { importAgentsService } from '../services/import-agents.service';
 import { HttpStatus } from '../../../constants/http';
 import { hasPermission } from '../../../middleware/auth/permissions';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 
-export async function uploadAgentsController(req: Request, res: Response) {
+export async function importAgentsController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
 
   await hasPermission({
@@ -28,7 +28,7 @@ export async function uploadAgentsController(req: Request, res: Response) {
     return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Formato inválido (use CSV ou Excel)' });
   }
 
-  const result = await uploadAgentsService(data, user);
+  const result = await importAgentsService(data, user);
 
   return res.status(HttpStatus.OK).json({ result, message: 'Upload feito com sucesso' });
 }

@@ -6,7 +6,7 @@ import { AuthPayload } from '@lotaria-nacional/lotto';
 import { audit } from '../../../utils/audit-log';
 
 export async function desativateAgentService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const agent = await tx.agent.findUnique({
       where: { id },
       include: {
@@ -26,7 +26,7 @@ export async function desativateAgentService(id: string, user: AuthPayload) {
       await tx.terminal.update({
         where: { id: agent.terminal.id },
         data: {
-          agent_id: null,
+          agent_id_reference: null,
         },
       });
     }

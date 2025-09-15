@@ -3,7 +3,7 @@ import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
 
 export async function createPosService({ user, ...data }: CreatePosDTO & { user: AuthPayload }) {
-  const response = await prisma.$transaction(async tx => {
+  const response = await prisma.$transaction(async (tx) => {
     const posCreated = await tx.pos.create({
       data: {
         latitude: data.latitude,

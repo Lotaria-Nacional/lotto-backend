@@ -12,7 +12,7 @@ import {
 } from './controllers';
 import { Router } from 'express';
 import catchErrors from '../../utils/catch-errors';
-import { uploadPosService } from './services/upload-pos-sevice';
+import { uploadPosService } from './services/import-pos-sevice';
 import { upload } from '../agent/routes';
 import { approvePosController } from './controllers/approve-pos.controller';
 import { denyPosController } from './controllers/deny-pos.controller';
