@@ -10,14 +10,14 @@ export const RedisKeys = {
         page,
         query,
         delivery_date,
-        area_id = 'all',
-        zone_id = 'all',
-        city_id = 'all',
-        agent_id = 'all',
-        province_id = 'all',
+        area_name = 'all',
+        zone_number = 'all',
+        city_name = 'all',
+        agent_id_reference = 'all',
+        province_name = 'all',
       } = params;
 
-      return `terminals:${limit}:page:${page}:query:${query}:delivery_date:${delivery_date}:area:${area_id}:zone:${zone_id}:province:${province_id}:city:${city_id}:agent:${agent_id}`;
+      return `terminals:${limit}:page:${page}:query:${query}:delivery_date:${delivery_date}:area:${area_name}:zone:${zone_number}:province:${province_name}:city:${city_name}:agent:${agent_id_reference}`;
     },
   },
 
@@ -31,14 +31,14 @@ export const RedisKeys = {
         query,
         status,
         training_date,
-        area_id = 'all',
-        zone_id = 'all',
-        city_id = 'all',
-        type_id = 'all',
-        province_id = 'all',
+        area_name = 'all',
+        zone_number = 'all',
+        city_name = 'all',
+        type_name = 'all',
+        province_name = 'all',
       } = params;
 
-      return `agents:${limit}:${training_date}:page:${page}:query:${query}:type:${type_id}:area:${area_id}:zone:${zone_id}:status:${status}:city:${city_id}:province:${province_id}`;
+      return `agents:${limit}:${training_date}:page:${page}:query:${query}:type:${type_name}:area:${area_name}:zone:${zone_number}:status:${status}:city:${city_name}:province:${province_name}`;
     },
   },
 
@@ -50,16 +50,16 @@ export const RedisKeys = {
         limit,
         page,
         query,
-        area_id = 'all',
-        zone_id = 'all',
-        city_id = 'all',
-        type_id = 'all',
-        admin_id = 'all',
-        subtype_id = 'all',
-        province_id = 'all',
+        area_name = 'all',
+        zone_number = 'all',
+        city_name = 'all',
+        type_name = 'all',
+        admin_name = 'all',
+        subtype_name = 'all',
+        province_name = 'all',
       } = params;
 
-      return `pos:${limit}:page:${page}:query:admin_id:${admin_id}:${query}:type:${type_id}:subtype${subtype_id}:area:${area_id}:zone:${zone_id}:city:${city_id}:province:${province_id}`;
+      return `pos:${limit}:page:${page}:query:admin_name:${admin_name}:${query}:type:${type_name}:subtype${subtype_name}:area:${area_name}:zone:${zone_number}:city:${city_name}:province:${province_name}`;
     },
   },
 
@@ -67,8 +67,8 @@ export const RedisKeys = {
     all: () => 'licences:*',
     byId: (id: string) => `licences:${id}`,
     listWithFilters: (params: PaginationParams) => {
-      const { limit, page, query, admin_id } = params;
-      return `licences:${limit}:page:${page}:query:${query}:admin_id${admin_id}`;
+      const { limit, page, query, admin_name } = params;
+      return `licences:${limit}:page:${page}:query:${query}:admin_name${admin_name}`;
     },
   },
 
