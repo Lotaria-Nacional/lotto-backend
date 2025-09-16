@@ -28,11 +28,7 @@ const createLicenceSearchFilters = (query: string): Prisma.LicenceWhereInput[] =
   filters.push({ reference: { contains: query, mode: 'insensitive' } });
   filters.push({ coordinates: { contains: query, mode: 'insensitive' } });
   filters.push({ description: { contains: query, mode: 'insensitive' } });
-
-  const numericQuery = Number(query);
-  if (!isNaN(numericQuery)) {
-    filters.push({ admin_id: numericQuery });
-  }
+  filters.push({ admin: { name: { contains: query, mode: 'insensitive' } } });
 
   const parsedDate = new Date(query);
   if (!isNaN(parsedDate.getTime())) {
@@ -53,7 +49,9 @@ const buildLicenceWhereInput = (params: PaginationParams): Prisma.LicenceWhereIn
 
   let where = {
     ...(filters.length ? { OR: filters } : {}),
-    ...(params.admin_name && { admin_name: params.admin_name }),
+
+    ...(params.admin_name && { admin: { name: params.admin_name } }),
+
     ...(params.status && { status: params.status as LicenceStatus }),
   };
 

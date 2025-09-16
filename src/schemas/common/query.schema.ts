@@ -2,7 +2,7 @@ import z from 'zod';
 
 export const paramsSchema = z.object({
   page: z.coerce.number().optional().default(1),
-  limit: z.coerce.number().optional().default(20),
+  limit: z.coerce.number().optional().default(50),
   query: z.string().trim().optional().default(''),
   status: z.string().trim().optional().default(''),
   type_name: z.string().optional(),

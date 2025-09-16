@@ -77,14 +77,20 @@ function buildTermninalWhereInput(params: PaginationParams): Prisma.TerminalWher
 
   let where: Prisma.TerminalWhereInput = {
     AND: [
+      // Filtros textuais ou numéricos
       ...(filters.length ? [{ OR: filters }] : []),
-      ...(params.admin_name ? [{ agent: { pos: { admin_name: params.admin_name } } }] : []),
-      ...(params.zone_number ? [{ agent: { pos: { zone_number: params.zone_number } } }] : []),
-      ...(params.type_name ? [{ agent: { pos: { type_name: params.type_name } } }] : []),
-      ...(params.subtype_name ? [{ agent: { pos: { subtype_name: params.subtype_name } } }] : []),
-      ...(params.province_name ? [{ agent: { pos: { province_name: params.province_name } } }] : []),
-      ...(params.city_name ? [{ agent: { pos: { city_name: params.city_name } } }] : []),
+
+      // Filtro de status do terminal
       ...(params.status ? getStatus(params.status as TerminalStatus | 'stock-ready') : []),
+
+      // Filtros relacionais
+      ...(params.admin_name ? [{ agent: { pos: { admin: { name: params.admin_name } } } }] : []),
+      ...(params.area_name ? [{ agent: { pos: { area: { name: params.area_name } } } }] : []),
+      ...(params.zone_number ? [{ agent: { pos: { zone: { number: params.zone_number } } } }] : []),
+      ...(params.type_name ? [{ agent: { pos: { type: { name: params.type_name } } } }] : []),
+      ...(params.subtype_name ? [{ agent: { pos: { subtype: { name: params.subtype_name } } } }] : []),
+      ...(params.province_name ? [{ agent: { pos: { province: { name: params.province_name } } } }] : []),
+      ...(params.city_name ? [{ agent: { pos: { city: { name: params.city_name } } } }] : []),
     ],
   };
 

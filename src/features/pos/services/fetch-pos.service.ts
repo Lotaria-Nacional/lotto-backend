@@ -84,15 +84,20 @@ const buildPosWhereInput = (params: PaginationParams): Prisma.PosWhereInput => {
 
   let where: Prisma.PosWhereInput = {
     AND: [
+      // Filtros textuais ou numéricos
       ...(filters.length ? [{ OR: filters }] : []),
+
+      // Filtro de status do terminal
       ...(params.status ? getStatus(params.status as PosStatus) : []),
-      ...(params.area_name ? [{ area_name: params.area_name }] : []),
-      ...(params.zone_number ? [{ zone_number: params.zone_number }] : []),
-      ...(params.type_name ? [{ type_name: params.type_name }] : []),
-      ...(params.subtype_name ? [{ subtype_name: params.subtype_name }] : []),
-      ...(params.admin_name ? [{ admin_name: params.admin_name }] : []),
-      ...(params.province_name ? [{ province_name: params.province_name }] : []),
-      ...(params.city_name ? [{ city_name: params.city_name }] : []),
+
+      // Filtros relacionais
+      ...(params.admin_name ? [{ agent: { pos: { admin_name: params.admin_name } } }] : []),
+      ...(params.area_name ? [{ agent: { pos: { area_name: params.area_name } } }] : []),
+      ...(params.zone_number ? [{ agent: { pos: { zone_number: params.zone_number } } }] : []),
+      ...(params.type_name ? [{ agent: { pos: { type_name: params.type_name } } }] : []),
+      ...(params.subtype_name ? [{ agent: { pos: { subtype_name: params.subtype_name } } }] : []),
+      ...(params.province_name ? [{ agent: { pos: { province_name: params.province_name } } }] : []),
+      ...(params.city_name ? [{ agent: { pos: { city_name: params.city_name } } }] : []),
     ],
   };
 
