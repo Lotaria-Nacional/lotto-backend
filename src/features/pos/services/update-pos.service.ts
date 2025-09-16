@@ -4,7 +4,7 @@ import { audit } from '../../../utils/audit-log';
 import { AuthPayload, UpdatePosDTO } from '@lotaria-nacional/lotto';
 
 export async function updatePosService(data: UpdatePosDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const pos = await tx.pos.findUnique({ where: { id: data.id } });
 
     if (!pos) throw new NotFoundError('POS não encontrado.');
