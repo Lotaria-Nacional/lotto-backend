@@ -2,7 +2,7 @@ import prisma from '../../../lib/prisma';
 import { PosStatus, Prisma } from '@prisma/client';
 import { PaginationParams } from '../../../@types/pagination-params';
 
-export async function fetchPoService(params: PaginationParams & { status?: PosStatus }) {
+export async function fetchPoService(params: PaginationParams) {
   const offset = (params.page - 1) * params.limit;
 
   const where = buildPosWhereInput(params);
@@ -38,6 +38,8 @@ export async function fetchPoService(params: PaginationParams & { status?: PosSt
       city: true,
     },
   });
+
+  console.log(pos);
 
   const nextPage = pos.length === params.limit ? params.page + 1 : null;
 

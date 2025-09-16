@@ -19,7 +19,7 @@ export async function fetchPosController(req: Request, res: Response) {
 
   const query = paramsSchema.parse(req.query);
 
-  const result = await fetchPoService({ ...query, status: 'active' });
+  const result = await fetchPoService(query);
 
   return res.status(HttpStatus.OK).json(result);
 }

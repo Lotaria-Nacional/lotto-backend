@@ -151,7 +151,7 @@ model Administration {
   pos      Pos[]
   licences Licence[]
 
-  @@map("administrations")
+  cities City[] // Uma administração tem várias cidades
 }
 
 model Province {
@@ -164,32 +164,36 @@ model Province {
 }
 
 model City {
-  name        String   @unique
   id          Int      @id @default(autoincrement())
-  province_id Int
+  name        String   @unique
   province    Province @relation(fields: [province_id], references: [id])
-  pos         Pos[]
+  province_id Int
 
-  @@map("cities")
-}
+  zone    Zone? @relation(fields: [zone_id], references: [id])
+  zone_id Int? // cada cidade só tem 1 zona
 
-model Area {
-  name  String @unique
-  id    Int    @id @default(autoincrement())
-  pos   Pos[]
-  zones Zone[]
+  area    Area? @relation(fields: [area_id], references: [id])
+  area_id Int?
 
-  @@map("areas")
+  pos Pos[]
+
+  administration    Administration? @relation(fields: [administration_id], references: [id])
+  administration_id Int?
 }
 
 model Zone {
-  number  Int   @unique
-  id      Int   @id @default(autoincrement())
-  area_id Int
-  pos     Pos[]
-  area    Area  @relation(fields: [area_id], references: [id])
+  id     Int @id @default(autoincrement())
+  number Int @unique
 
-  @@map("zones")
+  cities City[] // uma zona pode ter várias cidades
+  pos    Pos[]
+}
+
+model Area {
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  cities City[]
+  pos    Pos[]
 }
 
 model Type {
