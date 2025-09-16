@@ -8,3 +8,4 @@ export * from './fetch-pending-pos.controller';
 export * from './fetch-bounded-pos.controller';
 export * from './reset-pos.controller';
 export * from './associate-agent-and-licence-to-pos.controller';
+export * from './fetch-pos-history.controller';

@@ -20,7 +20,7 @@ export async function uploadTerminalsService(data: any[]) {
   if (validTerminals.length > 0) {
     await prisma.terminal.createMany({
       data: validTerminals,
-      skipDuplicates: true, // ignora duplicados em serial ou agent_id
+      skipDuplicates: true,
     });
   }
 

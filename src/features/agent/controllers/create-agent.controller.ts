@@ -13,7 +13,7 @@ export async function createAgentController(req: Request, res: Response) {
     userId: user.id,
     permission: {
       action: 'CREATE',
-      subject: 'AGENT',
+      subject: 'TRAINING',
     },
   });
 

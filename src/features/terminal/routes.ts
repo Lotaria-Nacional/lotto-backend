@@ -6,6 +6,7 @@ import {
   deleteTerminalController,
   deleteManyTerminalsController,
   fetchTerminalsController,
+  fetchTerminalsHistoryController,
 } from './controllers';
 import { Router } from 'express';
 import catchErrors from '../../utils/catch-errors';
@@ -14,6 +15,7 @@ import multer from 'multer';
 import { activateTerminalController } from './controllers/activate-terminal.controller';
 import { associateAgentAndSimCardOnTerminalController } from './controllers/associate-agent-and-sim-card-on-terminal.controller';
 import { markTerminalAsFixedController } from './controllers/mark-terminal-as-fixed.controller';
+import { exportTerminalController } from './controllers/export-terminals.controller';
 
 const terminalRouter = Router();
 
@@ -31,7 +33,9 @@ terminalRouter.put('/:id', catchErrors(updateTerminalController));
 terminalRouter.delete('/bulk', catchErrors(deleteManyTerminalsController));
 terminalRouter.delete('/:id', catchErrors(deleteTerminalController));
 
-terminalRouter.get('/', catchErrors(fetchTerminalsController));
+terminalRouter.get('/export', catchErrors(exportTerminalController));
+terminalRouter.get('/history', catchErrors(fetchTerminalsHistoryController));
 terminalRouter.get('/:id', catchErrors(getTerminalController));
+terminalRouter.get('/', catchErrors(fetchTerminalsController));
 
 export default terminalRouter;

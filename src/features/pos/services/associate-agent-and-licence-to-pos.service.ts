@@ -1,35 +1,36 @@
 import prisma from '../../../lib/prisma';
-import { BadRequestError, NotFoundError } from '../../../errors';
-import { AuthPayload, LicenceStatus, UpdatePosDTO } from '@lotaria-nacional/lotto';
 import { audit } from '../../../utils/audit-log';
+import { BadRequestError, NotFoundError } from '../../../errors';
+import { AuthPayload, LicenceStatus, PosStatus, TerminalStatus, UpdatePosDTO } from '@lotaria-nacional/lotto';
 
 export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO & { user: AuthPayload }) {
   await prisma.$transaction(async tx => {
     const pos = await tx.pos.findUnique({
-      where: {
-        id: data.id,
-      },
+      where: { id: data.id },
     });
 
-    if (!pos) {
-      throw new NotFoundError('POS não encontrado ');
+    if (!pos) throw new NotFoundError('POS não encontrado');
+
+    if (!data.licence_reference && !data.agent_id_reference) {
+      throw new BadRequestError('É necessário fornecer licença ou agente para associar.');
     }
 
-    let posUpdated;
+    let hasAgent = false;
+    let hasLicence = false;
+    let posUpdated = pos;
 
-    if (data.licence_id) {
-      if (pos.licence_id && pos.licence_id !== data.licence_id) {
+    // --- Associação de licença ---
+    if (data.licence_reference) {
+      if (pos.licence_reference && pos.licence_reference !== data.licence_reference) {
         throw new BadRequestError('Este POS já possui outra licença atribuída');
       }
 
       const licence = await tx.licence.findUnique({
-        where: { id: data.licence_id },
+        where: { reference: data.licence_reference },
         include: { pos: { select: { id: true } } },
       });
 
-      if (!licence) {
-        throw new NotFoundError('Licença não encontrada');
-      }
+      if (!licence) throw new NotFoundError('Licença não encontrada');
 
       const posWithThisLicenceCount = licence.pos.length;
       const limitCount = licence.limit;
@@ -39,62 +40,75 @@ export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO & 
       }
 
       const limitStatus: LicenceStatus =
-        posWithThisLicenceCount + (pos.licence_id ? 0 : 1) >= limitCount ? 'used' : 'free';
+        posWithThisLicenceCount + (pos.licence_reference ? 0 : 1) >= limitCount ? 'used' : 'free';
 
       await tx.licence.update({
-        where: { id: data.licence_id },
+        where: { reference: data.licence_reference },
         data: {
           status: limitStatus,
-          ...(pos.licence_id ? {} : { pos: { connect: { id: pos.id } } }),
-          coordinates: `${pos.latitude},${pos.longitude}}`,
+          ...(pos.licence_reference ? {} : { pos: { connect: { id: pos.id } } }),
+          coordinates: `${pos.latitude},${pos.longitude}`,
         },
       });
 
-      posUpdated = await tx.pos.update({
-        where: { id: data.id },
-        data: {
-          status: 'approved',
-        },
-      });
+      hasLicence = true;
     }
 
-    if (data.agent_id) {
-      if (pos.agent_id && pos.agent_id !== data.agent_id) {
+    // --- Associação de agente ---
+    if (data.agent_id_reference) {
+      if (pos.agent_id_reference && pos.agent_id_reference !== data.agent_id_reference) {
         throw new BadRequestError('Este POS já está associado a outro agente');
       }
 
       const agent = await tx.agent.findUnique({
-        where: { id: data.agent_id },
-        include: {
-          terminal: { select: { id: true } },
-        },
+        where: { id_reference: data.agent_id_reference },
+        include: { terminal: { select: { id: true, status: true } } },
       });
 
-      if (!agent) {
-        throw new NotFoundError('Agente não encontrado');
-      }
+      if (!agent) throw new NotFoundError('Agente não encontrado');
 
       await tx.agent.update({
-        where: { id: data.agent_id },
-        data: {
-          status: agent.terminal ? 'active' : agent.status,
-        },
+        where: { id_reference: data.agent_id_reference },
+        data: { status: 'active' },
       });
 
-      posUpdated = await tx.pos.update({
-        where: { id: pos.id },
-        data: {
-          agent_id: data.agent_id,
-          status: 'active',
-        },
-      });
+      // 🔹 Atualizar terminal do agente, se existir
+      if (agent.terminal) {
+        await tx.terminal.update({
+          where: { id: agent.terminal.id },
+          data: { status: 'on_field' },
+        });
+      }
 
-      await audit(tx, 'ASSOCIATE', {
-        user: data.user,
-        entity: 'POS',
-        after: posUpdated,
-        before: pos,
-      });
+      hasAgent = true;
     }
+
+    // --- Decide status final do POS ---
+    let newPosStatus: PosStatus = pos.status as any;
+
+    if (hasAgent && hasLicence) {
+      newPosStatus = 'active'; // 👈 prioridade para agente
+    } else if (hasAgent) {
+      newPosStatus = 'active';
+    } else if (hasLicence) {
+      newPosStatus = 'approved';
+    }
+
+    posUpdated = await tx.pos.update({
+      where: { id: pos.id },
+      data: {
+        agent_id_reference: data.agent_id_reference ?? pos.agent_id_reference,
+        licence_reference: data.licence_reference ?? pos.licence_reference,
+        status: newPosStatus,
+      },
+    });
+
+    // --- Audit log ---
+    await audit(tx, 'ASSOCIATE', {
+      user: data.user,
+      entity: 'POS',
+      before: pos,
+      after: posUpdated,
+    });
   });
 }

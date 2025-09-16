@@ -1,21 +1,12 @@
+import { SimCardStatus } from '@lotaria-nacional/lotto';
 import { PaginationParams } from '../../../@types/pagination-params';
 import prisma from '../../../lib/prisma';
-import { Prisma, SimCardStatus } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 export async function fetchSimCardsService(params: PaginationParams) {
   const offset = (params.page - 1) * params.limit;
 
-  let where: Prisma.SimCardWhereInput = {};
-
-  if (params.status === 'stock') {
-    where.status = {
-      in: [SimCardStatus.stock],
-    };
-  } else if (params.status === 'active') {
-    where.status = {
-      in: [SimCardStatus.active],
-    };
-  }
+  const where = buildSimCardWhereInput(params);
 
   const simCards = await prisma.simCard.findMany({
     where,
@@ -33,3 +24,38 @@ export async function fetchSimCardsService(params: PaginationParams) {
 
   return { data: simCards, nextPage };
 }
+
+const createSimCardSearchFilters = (query: string): Prisma.SimCardWhereInput[] => {
+  const filters: Prisma.SimCardWhereInput[] = [];
+
+  if (!query) return filters;
+
+  filters.push({ number: { contains: query } });
+
+  return filters;
+};
+
+const getStatus = (status: SimCardStatus): Prisma.SimCardWhereInput[] => {
+  if (!status) return [];
+
+  switch (status) {
+    case 'stock':
+      return [{ status: 'stock' }];
+    case 'active':
+      return [{ status: 'active' }];
+    default:
+      return [];
+  }
+};
+
+const buildSimCardWhereInput = (params: PaginationParams): Prisma.SimCardWhereInput => {
+  const filters = createSimCardSearchFilters(params.query);
+  let where: Prisma.SimCardWhereInput = {
+    AND: [
+      ...(filters.length ? [{ OR: filters }] : []),
+      ...(params.status ? getStatus(params.status as SimCardStatus) : []),
+    ],
+  };
+
+  return where;
+};

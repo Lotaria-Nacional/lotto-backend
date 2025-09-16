@@ -3,23 +3,23 @@ import { AuthPayload } from '../../../@types/auth-payload';
 import { HttpStatus } from '../../../constants/http';
 import { paramsSchema } from '../../../schemas/common/query.schema';
 import { hasPermission } from '../../../middleware/auth/permissions';
-import { fetchAgentsService } from '../services';
+import { fetchAgentsHistoryService } from '../services/fetch-agents-history.service';
 
-export async function fetchAgentsInTrainingController(req: Request, res: Response) {
+export async function fetchAgentsHistoryController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
 
-  await hasPermission({
-    res,
-    userId: user.id,
-    permission: {
-      action: 'READ',
-      subject: 'AGENT',
-    },
-  });
+  // await hasPermission({
+  //   res,
+  //   userId: user.id,
+  //   permission: {
+  //     action: 'READ',
+  //     subject: 'AGENT',
+  //   },
+  // });
 
   const query = paramsSchema.parse(req.query);
 
-  const response = await fetchAgentsService({ ...query, status: 'scheduled' });
+  const response = await fetchAgentsHistoryService(query);
 
   return res.status(HttpStatus.OK).json(response);
 }

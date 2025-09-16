@@ -1,72 +1,56 @@
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
-import { RedisKeys, deleteCache } from '../../../utils/redis';
 import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 
 export async function resetAgentService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const agent = await tx.agent.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
       include: {
         pos: { select: { id: true } },
         terminal: { select: { id: true } },
       },
     });
 
-    if (!agent) {
-      throw new NotFoundError('Agente não encontrado');
+    if (!agent) throw new NotFoundError('Agente não encontrado');
+
+    // Resetar TERMINAL (se existir)
+    if (agent.terminal?.id) {
+      await tx.terminal.update({
+        where: { id: agent.terminal.id },
+        data: {
+          status: 'ready',
+          agent_id_reference: null,
+        },
+      });
     }
 
-    const terminal = await tx.terminal.findUnique({
-      where: { id: agent.terminal?.id },
-    });
+    // Resetar POS (se existir)
+    if (agent.pos?.id) {
+      await tx.pos.update({
+        where: { id: agent.pos.id },
+        data: {
+          status: 'approved',
+          agent_id_reference: null,
+        },
+      });
+    }
 
-    if (!terminal) throw new NotFoundError('Terminal não encontrado');
-
-    await tx.terminal.update({
-      where: { id: terminal.id },
-      data: {
-        status: 'ready',
-        agent_id: null,
-      },
-    });
-
-    const pos = await tx.pos.findUnique({
-      where: { id: agent.pos?.id },
-    });
-
-    if (!pos) throw new NotFoundError('Pos não encontrado');
-
-    await tx.pos.update({
-      where: { id: pos.id },
-      data: {
-        status: 'pending',
-        agent_id: null,
-      },
-    });
-
+    // Atualizar AGENTE
     const agentUpdated = await tx.agent.update({
       where: { id },
       data: {
-        status: 'approved',
+        status: 'discontinued',
       },
     });
 
+    // Audit log
     await audit(tx, 'RESET', {
-      user: user,
+      user,
       before: agent,
       after: agentUpdated,
       entity: 'AGENT',
     });
   });
-
-  await Promise.all([
-    deleteCache(RedisKeys.pos.all()),
-    deleteCache(RedisKeys.agents.all()),
-    deleteCache(RedisKeys.terminals.all()),
-    deleteCache(RedisKeys.auditLogs.all()),
-  ]);
 }

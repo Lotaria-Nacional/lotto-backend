@@ -5,7 +5,7 @@ import { AuthPayload } from '../../../@types/auth-payload';
 import { Terminal, TerminalStatus, UpdateTerminalDTO } from '@lotaria-nacional/lotto';
 
 export async function updateTerminalService({ user, ...data }: UpdateTerminalDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const terminal = await tx.terminal.findUnique({
       where: { id: data.id },
       include: { sim_card: true, agent: { select: { pos: true } } },
@@ -23,9 +23,9 @@ export async function updateTerminalService({ user, ...data }: UpdateTerminalDTO
       }
     }
 
-    if (data.agent_id) {
+    if (data.agent_id_reference) {
       const agent = await tx.agent.findUnique({
-        where: { id: data.agent_id },
+        where: { id_reference: data.agent_id_reference },
       });
 
       if (!agent) {
@@ -42,7 +42,7 @@ export async function updateTerminalService({ user, ...data }: UpdateTerminalDTO
         status,
         note: data.note,
         leaved_at: data.leaved_at,
-        agent_id: status === 'broken' ? null : terminal.agent_id,
+        agent_id_reference: status === 'broken' ? null : terminal.agent_id_reference,
       },
     });
 

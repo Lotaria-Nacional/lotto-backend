@@ -95,7 +95,7 @@ describe('E2E - Terminal', () => {
     const { id: simCardId } = await createSimCard();
 
     const data = updateTerminal({
-      agent_id: agentId,
+      agent_id_reference: Number(agentId),
       sim_card_id: simCardId,
     });
 

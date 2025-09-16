@@ -3,7 +3,7 @@ import { HttpStatus } from '../../../constants/http';
 import { idSchema } from '../../../schemas/common/id.schema';
 import { hasPermission } from '../../../middleware/auth/permissions';
 import { AuthPayload, updateTerminalSchema } from '@lotaria-nacional/lotto';
-import { associateAgentAndSimCardOnTerminalService } from '../services/associate-agent-and-sim-card-on-terminal.service';
+import { associateSimCardOnTerminalService } from '../services/associate-agent-and-sim-card-on-terminal.service';
 
 export async function associateAgentAndSimCardOnTerminalController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
@@ -21,7 +21,7 @@ export async function associateAgentAndSimCardOnTerminalController(req: Request,
 
   const body = updateTerminalSchema.parse(req.body);
 
-  await associateAgentAndSimCardOnTerminalService({ ...body, id, user });
+  await associateSimCardOnTerminalService({ ...body, id, user });
 
   return res.status(HttpStatus.OK).json({
     message: 'Operação bem sucedida',

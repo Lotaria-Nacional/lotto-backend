@@ -4,29 +4,7 @@ import { TerminalStatus } from '@lotaria-nacional/lotto';
 import { PaginationParams } from '../../../@types/pagination-params';
 
 export async function fetchTerminalsService(params: PaginationParams) {
-  let start: Date | undefined;
-  let end: Date | undefined;
-  let isValidDate = false;
-
-  if (params.delivery_date) {
-    const parsedDate = new Date(params.delivery_date);
-    isValidDate = !isNaN(parsedDate.getTime());
-
-    if (isValidDate) {
-      start = new Date(parsedDate);
-      end = new Date(parsedDate);
-      end.setDate(end.getDate() + 1);
-    }
-  }
-
-  const filters = buildFilters(params.query);
-
-  let where: Prisma.TerminalWhereInput = {
-    AND: [
-      ...(filters.length ? [{ OR: filters }] : []),
-      ...(params.status ? getStatus(params.status as TerminalStatus | 'stock-ready') : []),
-    ],
-  };
+  const where = buildTermninalWhereInput(params);
 
   const offset = (params.page - 1) * params.limit;
 
@@ -38,6 +16,7 @@ export async function fetchTerminalsService(params: PaginationParams) {
     include: {
       sim_card: {
         select: {
+          id: true,
           number: true,
         },
       },
@@ -58,13 +37,15 @@ export async function fetchTerminalsService(params: PaginationParams) {
 }
 
 // Função auxiliar de filtros
-function buildFilters(query: string): Prisma.TerminalWhereInput[] {
+function createTerminalSearchFilters(query: string): Prisma.TerminalWhereInput[] {
   const filters: Prisma.TerminalWhereInput[] = [];
+
   if (!query) return filters;
 
   const numericQuery = Number(query);
   const isNumeric = !isNaN(numericQuery);
 
+  filters.push({ sim_card: { number: { contains: query } } });
   filters.push({ serial: { contains: query, mode: 'insensitive' } });
   filters.push({ device_id: { contains: query, mode: 'insensitive' } });
 
@@ -78,21 +59,41 @@ function buildFilters(query: string): Prisma.TerminalWhereInput[] {
 function getStatus(status: TerminalStatus | 'stock-ready'): Prisma.TerminalWhereInput[] {
   if (!status) return [];
 
-  if (status === 'stock') {
-    return [{ status: { in: ['stock'] } }];
+  switch (status) {
+    case 'stock':
+      return [{ status: 'stock' }];
+    case 'on_field':
+      return [{ status: { in: ['on_field', 'ready'] } }];
+    case 'broken':
+      return [{ status: 'broken' }];
+    case 'stock-ready':
+      return [{ status: { in: ['stock', 'ready'] } }];
+    default:
+      return [];
   }
+}
 
-  if (status === 'on_field') {
-    return [{ status: { in: ['on_field', 'ready'] } }];
-  }
+function buildTermninalWhereInput(params: PaginationParams): Prisma.TerminalWhereInput {
+  const filters = createTerminalSearchFilters(params.query);
 
-  if (status === 'broken') {
-    return [{ status: { in: ['broken'] } }];
-  }
+  let where: Prisma.TerminalWhereInput = {
+    AND: [
+      // Filtros textuais ou numéricos
+      ...(filters.length ? [{ OR: filters }] : []),
 
-  if (status === 'stock-ready') {
-    return [{ status: { in: ['stock', 'ready'] } }];
-  }
+      // Filtro de status do terminal
+      ...(params.status ? getStatus(params.status as TerminalStatus | 'stock-ready') : []),
 
-  return [];
+      // Filtros relacionais
+      ...(params.admin_name ? [{ agent: { pos: { admin: { name: params.admin_name } } } }] : []),
+      ...(params.area_name ? [{ agent: { pos: { area: { name: params.area_name } } } }] : []),
+      ...(params.zone_number ? [{ agent: { pos: { zone: { number: params.zone_number } } } }] : []),
+      ...(params.type_name ? [{ agent: { pos: { type: { name: params.type_name } } } }] : []),
+      ...(params.subtype_name ? [{ agent: { pos: { subtype: { name: params.subtype_name } } } }] : []),
+      ...(params.province_name ? [{ agent: { pos: { province: { name: params.province_name } } } }] : []),
+      ...(params.city_name ? [{ agent: { pos: { city: { name: params.city_name } } } }] : []),
+    ],
+  };
+
+  return where;
 }

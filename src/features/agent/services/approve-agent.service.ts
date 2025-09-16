@@ -13,7 +13,10 @@ export async function approveAgentService(id: string, user: AuthPayload) {
 
     const agentApproved = await tx.agent.update({
       where: { id },
-      data: { status: 'approved' },
+      data: {
+        status: 'approved',
+        approved_at: new Date(),
+      },
     });
 
     await audit(tx, 'APPROVE', {

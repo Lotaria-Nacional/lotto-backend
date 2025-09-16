@@ -6,73 +6,69 @@ import { audit } from '../../../utils/audit-log';
 export async function resetPosService(id: string, user: AuthPayload) {
   await prisma.$transaction(async tx => {
     const pos = await tx.pos.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
     });
 
-    if (!pos) {
-      throw new NotFoundError('POS não encontrado ');
-    }
+    if (!pos) throw new NotFoundError('POS não encontrado');
 
-    if (pos.agent_id) {
+    // Resetar agente
+    if (pos.agent_id_reference) {
       const agent = await tx.agent.findUnique({
-        where: { id: pos.agent_id },
+        where: { id_reference: pos.agent_id_reference },
         select: { id: true },
       });
 
-      if (!agent) {
-        throw new NotFoundError('Agente não encontrado');
-      }
+      if (!agent) throw new NotFoundError('Agente não encontrado');
 
       await tx.agent.update({
-        where: { id: pos.agent_id },
-        data: {
-          status: 'denied',
-        },
+        where: { id_reference: pos.agent_id_reference },
+        data: { status: 'ready' }, // 👈 fica ready em vez de denied
       });
     }
 
-    if (pos.licence_id) {
+    // Resetar licença
+    if (pos.licence_reference) {
       const licence = await tx.licence.findUnique({
-        where: { id: pos.licence_id },
+        where: { reference: pos.licence_reference },
         select: {
           id: true,
           limit: true,
+          status: true,
           pos: { select: { id: true } },
         },
       });
 
-      if (!licence) {
-        throw new NotFoundError('Licencee não encontrado');
-      }
+      if (!licence) throw new NotFoundError('Licença não encontrada');
 
-      const posWithThisLicenceCount = licence.pos.length - 1; // -1 pq este POS vai ser removido
+      const posWithThisLicenceCount = licence.pos.length - 1; // -1 pq este POS será removido
       const limitCount = licence.limit;
 
-      const limitStatus: LicenceStatus = posWithThisLicenceCount >= limitCount ? 'used' : 'free';
+      let newLicenceStatus: LicenceStatus = licence.status;
+
+      // Se o limite estava estourado e agora liberou, volta para "free"
+      if (licence.status === 'used' && posWithThisLicenceCount < limitCount) {
+        newLicenceStatus = 'free';
+      }
 
       await tx.licence.update({
-        where: { id: pos.licence_id },
-        data: {
-          status: limitStatus,
-        },
+        where: { reference: pos.licence_reference },
+        data: { status: newLicenceStatus },
       });
     }
 
+    // Resetar POS
     const posUpdated = await tx.pos.update({
-      where: {
-        id: pos.id,
-      },
+      where: { id: pos.id },
       data: {
-        status: 'pending',
-        agent_id: null,
-        licence_id: null,
+        status: 'discontinued',
+        agent_id_reference: null,
+        licence_reference: null,
       },
     });
 
+    // Audit
     await audit(tx, 'RESET', {
-      user: user,
+      user,
       entity: 'POS',
       before: pos,
       after: posUpdated,
