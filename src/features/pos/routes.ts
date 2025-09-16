@@ -17,6 +17,7 @@ import catchErrors from '../../utils/catch-errors';
 import { uploadPosService } from './services/import-pos-sevice';
 import { denyPosController } from './controllers/deny-pos.controller';
 import { approvePosController } from './controllers/approve-pos.controller';
+import { exportPosController } from './controllers/export-pos-controller';
 
 const posRouter = Router();
 
@@ -32,10 +33,11 @@ posRouter.put('/:id', catchErrors(updatePosController));
 posRouter.delete('/bulk', catchErrors(deleteManyPosController));
 posRouter.delete('/:id', catchErrors(deletePosController));
 
+posRouter.get('/export', catchErrors(exportPosController));
 posRouter.get('/history', catchErrors(fetchPosHistoryController));
-
 posRouter.get('/pending', catchErrors(fetchPendingPosController));
 posRouter.get('/bounded', catchErrors(fetchBoundedPosController));
+
 posRouter.get('/', catchErrors(fetchPosController));
 posRouter.get('/:id', catchErrors(getPosController));
 

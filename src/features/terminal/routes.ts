@@ -15,6 +15,7 @@ import multer from 'multer';
 import { activateTerminalController } from './controllers/activate-terminal.controller';
 import { associateAgentAndSimCardOnTerminalController } from './controllers/associate-agent-and-sim-card-on-terminal.controller';
 import { markTerminalAsFixedController } from './controllers/mark-terminal-as-fixed.controller';
+import { exportTerminalController } from './controllers/export-terminals';
 
 const terminalRouter = Router();
 
@@ -32,6 +33,7 @@ terminalRouter.put('/:id', catchErrors(updateTerminalController));
 terminalRouter.delete('/bulk', catchErrors(deleteManyTerminalsController));
 terminalRouter.delete('/:id', catchErrors(deleteTerminalController));
 
+terminalRouter.get('/agents/export', catchErrors(exportTerminalController));
 terminalRouter.get('/history', catchErrors(fetchTerminalsHistoryController));
 terminalRouter.get('/:id', catchErrors(getTerminalController));
 terminalRouter.get('/', catchErrors(fetchTerminalsController));
