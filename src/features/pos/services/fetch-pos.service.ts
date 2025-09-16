@@ -35,7 +35,14 @@ export async function fetchPoService(params: PaginationParams) {
       type: true,
       subtype: true,
       province: true,
-      city: true,
+      city: {
+        include: {
+          administration: true,
+          area: true,
+          province: true,
+          zone: true,
+        },
+      },
     },
   });
 
