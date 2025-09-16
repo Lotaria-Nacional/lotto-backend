@@ -32,6 +32,7 @@ export async function fetchAgentsService(params: PaginationParams) {
       afrimoney_number: true,
       terminal: {
         select: {
+          id: true,
           serial: true,
           device_id: true,
           sim_card: {

@@ -16,6 +16,7 @@ export async function fetchTerminalsService(params: PaginationParams) {
     include: {
       sim_card: {
         select: {
+          id: true,
           number: true,
         },
       },
