@@ -4,4 +4,4 @@ export * from './reset-agent.controller';
 export * from './delete-agent.controller';
 export * from './get-agent.controller';
 export * from './fetch-agents.controller';
-export * from './fetch-agents-in-training.controller';
+export * from './fetch-agents-history.controller';

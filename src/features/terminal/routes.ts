@@ -6,6 +6,7 @@ import {
   deleteTerminalController,
   deleteManyTerminalsController,
   fetchTerminalsController,
+  fetchTerminalsHistoryController,
 } from './controllers';
 import { Router } from 'express';
 import catchErrors from '../../utils/catch-errors';
@@ -31,7 +32,8 @@ terminalRouter.put('/:id', catchErrors(updateTerminalController));
 terminalRouter.delete('/bulk', catchErrors(deleteManyTerminalsController));
 terminalRouter.delete('/:id', catchErrors(deleteTerminalController));
 
-terminalRouter.get('/', catchErrors(fetchTerminalsController));
+terminalRouter.get('/history', catchErrors(fetchTerminalsHistoryController));
 terminalRouter.get('/:id', catchErrors(getTerminalController));
+terminalRouter.get('/', catchErrors(fetchTerminalsController));
 
 export default terminalRouter;

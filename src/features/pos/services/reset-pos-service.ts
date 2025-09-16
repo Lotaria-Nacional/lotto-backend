@@ -4,7 +4,7 @@ import { AuthPayload, LicenceStatus } from '@lotaria-nacional/lotto';
 import { audit } from '../../../utils/audit-log';
 
 export async function resetPosService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const pos = await tx.pos.findUnique({
       where: { id },
     });
@@ -29,7 +29,7 @@ export async function resetPosService(id: string, user: AuthPayload) {
     // Resetar licença
     if (pos.licence_reference) {
       const licence = await tx.licence.findUnique({
-        where: { id: pos.licence_reference },
+        where: { reference: pos.licence_reference },
         select: {
           id: true,
           limit: true,
@@ -51,7 +51,7 @@ export async function resetPosService(id: string, user: AuthPayload) {
       }
 
       await tx.licence.update({
-        where: { id: pos.licence_reference },
+        where: { reference: pos.licence_reference },
         data: { status: newLicenceStatus },
       });
     }

@@ -1,8 +1,7 @@
-import { HttpStatus } from '../../constants/http';
 import type { Response } from 'express';
 import { Actions, Subjects } from '../../permissions';
 import { buildUserAbillity } from '../../permissions/build-abillity';
-import { BadRequestError, ForbiddenError } from '../../errors';
+import { ForbiddenError } from '../../errors';
 
 type HasPermisisonsProps = {
   userId: string;

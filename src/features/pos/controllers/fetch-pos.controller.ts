@@ -8,8 +8,6 @@ import { hasPermission } from '../../../middleware/auth/permissions';
 export async function fetchPosController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
 
-  console.log(user);
-
   await hasPermission({
     res,
     userId: user.id,
