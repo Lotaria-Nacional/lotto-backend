@@ -19,7 +19,7 @@ export async function exportTerminalService(res: Response) {
     if (batch.length === 0) break;
 
     for (const terminal of batch) {
-      const line = [
+      const line = [  
         terminal.id,
         terminal.serial,
         terminal.device_id,
@@ -30,7 +30,7 @@ export async function exportTerminalService(res: Response) {
         terminal.leaved_at?.toISOString() ?? '',
         terminal.agent_id_reference,
       ]
-        .map(v => `"${v ?? ''}"`)
+        .map((v) => `"${v ?? ''}"`)
         .join(',');
 
       res.write(line + '\n');

@@ -105,7 +105,7 @@ export async function exportPosService(res: Response, { buffered = false }: { bu
     }
   });
 
-  await new Promise<void>(resolve => stringifier.on('end', resolve));
+  await new Promise<void>((resolve) => stringifier.on('end', resolve));
 
   res.setHeader('Content-Length', Buffer.byteLength(csv));
   res.end(csv);

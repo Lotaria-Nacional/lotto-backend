@@ -14,15 +14,15 @@ import {
 import { Router } from 'express';
 import { upload } from '../agent/routes';
 import catchErrors from '../../utils/catch-errors';
-import { uploadPosService } from './services/import-pos-sevice';
 import { denyPosController } from './controllers/deny-pos.controller';
 import { approvePosController } from './controllers/approve-pos.controller';
 import { exportPosController } from './controllers/export-pos-controller';
+import { importPosController } from './controllers/import-pos.controller';
 
 const posRouter = Router();
 
+posRouter.post('/upload', upload.single('file'), catchErrors(importPosController));
 posRouter.post('/', catchErrors(createPosController));
-posRouter.post('/upload', upload.single('file'), catchErrors(uploadPosService));
 
 posRouter.put('/deny/:id', catchErrors(denyPosController));
 posRouter.put('/approve/:id', catchErrors(approvePosController));
