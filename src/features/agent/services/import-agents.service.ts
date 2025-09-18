@@ -1,6 +1,6 @@
 import fs from 'fs';
 import csvParser from 'csv-parser';
-import prisma from '../../../lib/prisma';
+import { processAgentsBatch } from '../utils/process-batch-agents';
 import { AuthPayload, CreateAgentDTO, createAgentSchema } from '@lotaria-nacional/lotto';
 
 interface ImportAgentsFromCsvServiceResponse {
@@ -13,15 +13,16 @@ export async function importAgentsFromCsvService(
   user: AuthPayload,
   onProgress?: (progress: number) => void
 ): Promise<ImportAgentsFromCsvServiceResponse> {
-  const agentsBatch: any[] = [];
   const errors: any[] = [];
+  let imported = 0;
   const BATCH_SIZE = 500;
 
   const stream = fs.createReadStream(filePath).pipe(csvParser());
+  const agentsBatch: CreateAgentDTO[] = [];
 
   for await (const row of stream) {
     try {
-      const input: CreateAgentDTO = {
+      const input: CreateAgentDTO & { terminal_id?: number } = {
         id_reference: Number(row.id_reference),
         first_name: row.first_name,
         last_name: row.last_name,
@@ -36,25 +37,19 @@ export async function importAgentsFromCsvService(
       agentsBatch.push(parsed);
 
       if (agentsBatch.length >= BATCH_SIZE) {
-        await prisma.agent.createMany({
-          data: agentsBatch,
-          skipDuplicates: true,
-        });
-
+        await processAgentsBatch({ agents: agentsBatch, user, errors });
+        imported += agentsBatch.length;
         agentsBatch.length = 0;
       }
     } catch (err: any) {
       errors.push({ row, error: err.errors || err.message });
-      console.error(err);
     }
   }
 
   if (agentsBatch.length > 0) {
-    await prisma.agent.createMany({
-      data: agentsBatch,
-      skipDuplicates: true,
-    });
+    await processAgentsBatch({ agents: agentsBatch, user, errors });
+    imported += agentsBatch.length;
   }
 
-  return { errors, imported: agentsBatch.length + errors.length };
+  return { errors, imported };
 }

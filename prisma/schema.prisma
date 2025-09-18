@@ -65,7 +65,7 @@ model Terminal {
 model SimCard {
   id String @id @default(uuid())
 
-  number     String
+  number     String        @unique
   pin        String?
   puk        String?
   status     SimCardStatus @default(stock)
