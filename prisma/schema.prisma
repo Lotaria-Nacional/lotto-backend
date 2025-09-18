@@ -137,8 +137,8 @@ model Licence {
   file        String?
   coordinates String?
 
-  admin_id Int?
-  admin    Administration? @relation(fields: [admin_id], references: [id])
+  admin_name String?
+  admin      Administration? @relation(fields: [admin_name], references: [name])
 
   pos Pos[]
 

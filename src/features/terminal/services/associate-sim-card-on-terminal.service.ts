@@ -1,10 +1,10 @@
 import prisma from '../../../lib/prisma';
-import { AuthPayload, UpdateTerminalDTO } from '@lotaria-nacional/lotto';
 import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
+import { AuthPayload, UpdateTerminalDTO } from '@lotaria-nacional/lotto';
 
 export async function associateSimCardOnTerminalService(data: UpdateTerminalDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const terminal = await tx.terminal.findUnique({
       where: { id: data.id },
       include: { sim_card: true },
@@ -29,7 +29,7 @@ export async function associateSimCardOnTerminalService(data: UpdateTerminalDTO 
         });
       }
 
-      // Associa o novo
+      // Associa o novo //
       await tx.simCard.update({
         where: { id: data.sim_card_id },
         data: { status: 'stock', terminal_id: data.id },

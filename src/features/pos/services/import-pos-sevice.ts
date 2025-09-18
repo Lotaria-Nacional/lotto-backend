@@ -1,62 +1,62 @@
-import { CreatePosDTO, createPosSchema } from '@lotaria-nacional/lotto';
-import path from 'path';
-import { parseCsvFile, parseExcelFile } from '../utils/parser';
+import fs from 'fs';
+import csvParser from 'csv-parser';
+import { CreatePosDTO, createPosSchema, PosStatus } from '@lotaria-nacional/lotto';
 import prisma from '../../../lib/prisma';
 
-export async function importPosFromFileService(file: Express.Multer.File): Promise<CreatePosDTO[]> {
-  const ext = path.extname(file.originalname).toLowerCase();
-  let rows: any[] = [];
+interface ImportPosResponse {
+  imported: number;
+  errors: { row: any; error: any }[];
+}
 
-  // Parse do arquivo
-  if (ext === '.csv') {
-    rows = await parseCsvFile(file.path);
-  } else if (ext === '.xlsx' || ext === '.xls') {
-    rows = await parseExcelFile(file.path);
-  } else {
-    throw new Error('Formato de arquivo não suportado');
-  }
+export async function importPosFromCsvService(filePath: string): Promise<ImportPosResponse> {
+  const posBatch: any[] = [];
+  const errors: any[] = [];
+  const BATCH_SIZE = 500;
 
-  const importedPOS: CreatePosDTO[] = [];
+  const stream = fs.createReadStream(filePath).pipe(csvParser());
 
-  for (const row of rows) {
+  for await (const row of stream) {
     try {
-      // Validação e transformação dos dados
-      const dto: CreatePosDTO = createPosSchema.parse({
-        city_name: row.city_name,
+      const status: PosStatus = row.agent_id_reference ? 'active' : row.licence_reference ? 'approved' : 'pending';
+
+      const input: CreatePosDTO & { status: PosStatus } = {
+        status,
         admin_name: row.admin_name,
         province_name: row.province_name,
-        latitude: Number(row.latitude),
-        longitude: Number(row.longitude),
-        licence_reference: row.licence_reference || undefined, // <--- torna opcional
-        agent_id_reference: row.agent_id_reference ? Number(row.agent_id_reference) : undefined,
-        area_name: row.area_name || undefined,
-        zone_number: row.zone_number ? Number(row.zone_number) : undefined,
-        type_name: row.type_name || undefined,
+        city_name: row.city_name,
+        area_name: row.area_name,
+        zone_number: row.zone_number,
+        latitude: row.latitude,
+        longitude: row.longitude,
+        type_name: row.type_name,
         subtype_name: row.subtype_name || undefined,
-      });
+        licence_reference: row.licence_reference || undefined,
+        agent_id_reference: row.agent_id_reference || undefined,
+      };
 
-      // Garantir que a licença existe
-      if (dto.licence_reference) {
-        await prisma.licence.upsert({
-          where: { reference: dto.licence_reference },
-          update: {},
-          create: {
-            reference: dto.licence_reference,
-            number: dto.licence_reference,
-            description: 'Licença criada via import',
-            emitted_at: new Date(),
-            expires_at: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
-          },
+      const parsed = createPosSchema.parse(input);
+      posBatch.push(parsed);
+
+      if (posBatch.length >= BATCH_SIZE) {
+        await prisma.pos.createMany({
+          data: posBatch,
+          skipDuplicates: true,
         });
-      }
 
-      // Salvar POS
-      await prisma.pos.create({ data: dto });
-      importedPOS.push(dto);
-    } catch (err) {
-      console.error('Erro na linha:', row, err);
+        posBatch.length = 0;
+      }
+    } catch (err: any) {
+      errors.push({ row, error: err.errors || err.message });
+      console.error(err);
     }
   }
 
-  return importedPOS;
+  if (posBatch.length > 0) {
+    await prisma.pos.createMany({
+      data: posBatch,
+      skipDuplicates: true,
+    });
+  }
+
+  return { errors, imported: posBatch.length + errors.length };
 }

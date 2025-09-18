@@ -10,7 +10,7 @@ import {
 } from './controllers';
 import { Router } from 'express';
 import catchErrors from '../../utils/catch-errors';
-import { uploadTerminalsController } from './controllers/upload-terminals.controller';
+import { importTerminalsController } from './controllers/import-terminals.controller';
 import multer from 'multer';
 import { activateTerminalController } from './controllers/activate-terminal.controller';
 import { associateAgentAndSimCardOnTerminalController } from './controllers/associate-agent-and-sim-card-on-terminal.controller';
@@ -22,7 +22,7 @@ const terminalRouter = Router();
 export const upload = multer({ dest: 'uploads/' });
 
 terminalRouter.post('/', catchErrors(createTerminalController));
-terminalRouter.post('/upload', upload.single('file'), catchErrors(uploadTerminalsController));
+terminalRouter.post('/import', upload.single('file'), catchErrors(importTerminalsController));
 
 terminalRouter.put('/fix/:id', catchErrors(markTerminalAsFixedController));
 terminalRouter.put('/reset/:id', catchErrors(resetTerminalController));

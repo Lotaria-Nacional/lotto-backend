@@ -13,7 +13,7 @@ export async function fetchManyLicencesService(params: PaginationParams) {
     take: params.limit,
     orderBy: { emitted_at: 'desc' },
     include: { admin: { select: { id: true, name: true } } },
-    omit: { admin_id: true },
+    omit: { admin_name: true },
   });
 
   const nextPage = licences.length === params.limit ? params.page + 1 : null;

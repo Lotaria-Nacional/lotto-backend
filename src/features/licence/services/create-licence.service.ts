@@ -3,12 +3,11 @@ import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
 import { CreateLicenceDTO } from '@lotaria-nacional/lotto';
 import { AuthPayload } from '../../../@types/auth-payload';
-import { connectIfDefined } from '../../../utils/connect-disconnect';
 
 export async function createLicenceService(data: CreateLicenceDTO & { user: AuthPayload }) {
-  const id = await prisma.$transaction(async tx => {
+  const id = await prisma.$transaction(async (tx) => {
     const admin = await prisma.administration.findUnique({
-      where: { id: data.admin_id },
+      where: { name: data.admin_name },
       select: { name: true },
     });
 
@@ -24,7 +23,7 @@ export async function createLicenceService(data: CreateLicenceDTO & { user: Auth
         emitted_at: data.emitted_at,
         expires_at: data.expires_at,
         limit: data.limit,
-        ...connectIfDefined('admin', data.admin_id),
+        admin_name: data.admin_name,
       },
     });
 

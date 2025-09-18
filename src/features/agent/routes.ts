@@ -19,11 +19,10 @@ import { associatePosAndTerminalOnAgentController } from './controllers/associat
 
 const agentRouter = Router();
 
-//TODO: mudar o uploads/ para algo fora do servidor
 export const upload = multer({ dest: 'uploads/' });
 
 agentRouter.post('/', catchErrors(createAgentController));
-agentRouter.post('/upload', upload.single('file'), catchErrors(importAgentsController));
+agentRouter.post('/import', upload.single('file'), catchErrors(importAgentsController));
 
 agentRouter.put('/associate/:id', catchErrors(associatePosAndTerminalOnAgentController));
 agentRouter.put('/approve/:id', catchErrors(approveAgentController));

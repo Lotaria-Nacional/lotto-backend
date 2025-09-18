@@ -9,14 +9,13 @@ import {
 } from './controllers';
 import { Router } from 'express';
 import catchErrors from '../../utils/catch-errors';
-import { uploadSimCardsController } from './controllers/upload-sim-cards.controller';
-import multer from 'multer';
+import { importSimCardsController } from './controllers/import-sim-cards.controller';
 import { upload } from '../agent/routes';
 
 const simCardRouter = Router();
 
 simCardRouter.post('/', catchErrors(createSimCardController));
-simCardRouter.post('/upload', upload.single('file'), catchErrors(uploadSimCardsController));
+simCardRouter.post('/import', upload.single('file'), catchErrors(importSimCardsController));
 
 simCardRouter.put('/reset/:id', catchErrors(resetSimCardController));
 simCardRouter.put('/:id', catchErrors(updateSimCardController));

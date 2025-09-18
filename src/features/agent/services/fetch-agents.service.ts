@@ -28,6 +28,7 @@ export async function fetchAgentsService(params: PaginationParams) {
       genre: true,
       phone_number: true,
       training_date: true,
+      agent_type: true,
       id_reference: true,
       afrimoney_number: true,
       terminal: {

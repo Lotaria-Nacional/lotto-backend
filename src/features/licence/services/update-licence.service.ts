@@ -4,10 +4,9 @@ import { audit } from '../../../utils/audit-log';
 import { UpdateLicenceDTO } from '@lotaria-nacional/lotto';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { makeLicenceReference } from './create-licence.service';
-import { connectOrDisconnect } from '../../../utils/connect-disconnect';
 
 export async function updateLicenceService(data: UpdateLicenceDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const licence = await tx.licence.findUnique({
       where: { id: data.id },
       include: { pos: { select: { id: true } } },
@@ -16,7 +15,7 @@ export async function updateLicenceService(data: UpdateLicenceDTO & { user: Auth
     if (!licence) throw new NotFoundError('Licença não encontrada');
 
     const admin = await tx.administration.findUnique({
-      where: { id: data.admin_id },
+      where: { name: data.admin_name },
     });
 
     if (!admin) throw new NotFoundError('Administração não encontrada');
@@ -45,7 +44,7 @@ export async function updateLicenceService(data: UpdateLicenceDTO & { user: Auth
         expires_at: data.expires_at,
         limit: data.limit,
         status: newStatus,
-        ...connectOrDisconnect('admin', data.admin_id),
+        admin_name: data.admin_name,
       },
     });
 

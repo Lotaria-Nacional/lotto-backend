@@ -1,41 +1,60 @@
+import fs from 'fs';
+import csvParser from 'csv-parser';
 import prisma from '../../../lib/prisma';
-import { agentBulkSchema, AuthPayload } from '@lotaria-nacional/lotto';
-import { audit } from '../../../utils/audit-log';
+import { AuthPayload, CreateAgentDTO, createAgentSchema } from '@lotaria-nacional/lotto';
 
-export async function importAgentsService(data: any[], user: AuthPayload) {
-  await prisma.$transaction(async (tx) => {
-    const validAgents = [];
-    const errors = [];
+interface ImportAgentsFromCsvServiceResponse {
+  imported: number;
+  errors: { row: any; error: any }[];
+}
 
-    for (let i = 0; i < data.length; i++) {
-      const row = data[i];
-      const parsed = agentBulkSchema.safeParse(row);
+export async function importAgentsFromCsvService(
+  filePath: string,
+  user: AuthPayload,
+  onProgress?: (progress: number) => void
+): Promise<ImportAgentsFromCsvServiceResponse> {
+  const agentsBatch: any[] = [];
+  const errors: any[] = [];
+  const BATCH_SIZE = 500;
 
-      if (!parsed.success) {
-        errors.push({ row: i + 1, issues: parsed.error.format });
-        continue;
+  const stream = fs.createReadStream(filePath).pipe(csvParser());
+
+  for await (const row of stream) {
+    try {
+      const input: CreateAgentDTO = {
+        id_reference: Number(row.id_reference),
+        first_name: row.first_name,
+        last_name: row.last_name,
+        genre: row.genre,
+        bi_number: row.bi_number || undefined,
+        phone_number: row.phone_number || undefined,
+        agent_type: row.agent_type,
+        training_date: new Date(row.training_date),
+      };
+
+      const parsed = createAgentSchema.parse(input);
+      agentsBatch.push(parsed);
+
+      if (agentsBatch.length >= BATCH_SIZE) {
+        await prisma.agent.createMany({
+          data: agentsBatch,
+          skipDuplicates: true,
+        });
+
+        agentsBatch.length = 0;
       }
-
-      validAgents.push(parsed.data);
+    } catch (err: any) {
+      errors.push({ row, error: err.errors || err.message });
+      console.error(err);
     }
+  }
 
-    if (validAgents.length > 0) {
-      await tx.agent.createMany({
-        data: validAgents,
-        skipDuplicates: true,
-      });
-    }
-
-    await audit(tx, 'IMPORT', {
-      user,
-      before: null,
-      after: null,
-      entity: 'AGENT',
+  if (agentsBatch.length > 0) {
+    await prisma.agent.createMany({
+      data: agentsBatch,
+      skipDuplicates: true,
     });
+  }
 
-    return {
-      inserted: validAgents.length,
-      errors,
-    };
-  });
+  return { errors, imported: agentsBatch.length + errors.length };
 }

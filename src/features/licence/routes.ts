@@ -8,13 +8,13 @@ import {
 } from './controllers';
 import { Router } from 'express';
 import catchErrors from '../../utils/catch-errors';
-import { uploadLicencesController } from './controllers/upload-licence.controller';
+import { importLicencesController } from './controllers/import-licence.controller';
 import { upload } from '../agent/routes';
 
 const licenceRouter = Router();
 
 licenceRouter.post('/', catchErrors(createLicenceController));
-licenceRouter.post('/upload', upload.single('file'), catchErrors(uploadLicencesController));
+licenceRouter.post('/import', upload.single('file'), catchErrors(importLicencesController));
 
 licenceRouter.put('/:id', catchErrors(updateLicenceController));
 

@@ -3,7 +3,7 @@ import { HttpStatus } from '../../../constants/http';
 import { idSchema } from '../../../schemas/common/id.schema';
 import { hasPermission } from '../../../middleware/auth/permissions';
 import { AuthPayload, updateTerminalSchema } from '@lotaria-nacional/lotto';
-import { associateSimCardOnTerminalService } from '../services/associate-agent-and-sim-card-on-terminal.service';
+import { associateSimCardOnTerminalService } from '../services/associate-sim-card-on-terminal.service';
 
 export async function associateAgentAndSimCardOnTerminalController(req: Request, res: Response) {
   const user = req.user as AuthPayload;

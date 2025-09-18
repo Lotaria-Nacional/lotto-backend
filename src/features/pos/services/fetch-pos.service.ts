@@ -46,8 +46,6 @@ export async function fetchPoService(params: PaginationParams) {
     },
   });
 
-  console.log(pos);
-
   const nextPage = pos.length === params.limit ? params.page + 1 : null;
 
   return { data: pos, nextPage };
@@ -64,12 +62,10 @@ const createPosSearchFilters = (query: string | undefined) => {
   });
 
   if (!isNaN(numericQuery)) {
-    filters.push({
-      agent: { id_reference: numericQuery },
-      latitude: numericQuery,
-      longitude: numericQuery,
-      zone_number: numericQuery,
-    });
+    filters.push({ latitude: numericQuery });
+    filters.push({ longitude: numericQuery });
+    filters.push({ zone_number: numericQuery });
+    filters.push({ agent: { id_reference: numericQuery } });
   }
 
   return filters;

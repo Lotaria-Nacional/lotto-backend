@@ -21,7 +21,7 @@ import { importPosController } from './controllers/import-pos.controller';
 
 const posRouter = Router();
 
-posRouter.post('/upload', upload.single('file'), catchErrors(importPosController));
+posRouter.post('/import', upload.single('file'), catchErrors(importPosController));
 posRouter.post('/', catchErrors(createPosController));
 
 posRouter.put('/deny/:id', catchErrors(denyPosController));

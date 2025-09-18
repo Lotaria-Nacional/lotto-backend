@@ -1,34 +1,17 @@
 import { Request, Response } from 'express';
-import { parseCsvAgents, parseExcelAgents } from '../utils/parser';
-import { importAgentsService } from '../services/import-agents.service';
 import { HttpStatus } from '../../../constants/http';
-import { hasPermission } from '../../../middleware/auth/permissions';
 import { AuthPayload } from '@lotaria-nacional/lotto';
+import { importAgentsFromCsvService } from '../services/import-agents.service';
 
 export async function importAgentsController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
 
-  await hasPermission({
-    res,
-    userId: user.id,
-    permission: {
-      action: 'IMPORT',
-      subject: 'AGENT',
-    },
-  });
-
   if (!req.file) return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Ficheiro é obrigatório' });
+  const filePath = req.file.path;
 
-  let data;
-  if (req.file.originalname.endsWith('.csv')) {
-    data = await parseCsvAgents(req.file.path);
-  } else if (req.file.originalname.endsWith('.xlsx')) {
-    data = await parseExcelAgents(req.file.path);
-  } else {
-    return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Formato inválido (use CSV ou Excel)' });
-  }
-
-  const result = await importAgentsService(data, user);
+  const result = await importAgentsFromCsvService(filePath, user, (progressed) => {
+    console.log(`Progress: ${progressed}%`);
+  });
 
   return res.status(HttpStatus.OK).json({ result, message: 'Upload feito com sucesso' });
 }

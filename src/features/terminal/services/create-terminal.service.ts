@@ -7,7 +7,7 @@ export async function createTerminalService({
   user,
   ...data
 }: CreateTerminalDTO & { user: AuthPayload }): Promise<{ id: string }> {
-  const response = await prisma.$transaction(async tx => {
+  const response = await prisma.$transaction(async (tx) => {
     const terminal = await tx.terminal.create({
       data: {
         note: data.note,
