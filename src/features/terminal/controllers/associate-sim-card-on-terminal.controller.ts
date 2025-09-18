@@ -5,7 +5,7 @@ import { hasPermission } from '../../../middleware/auth/permissions';
 import { AuthPayload, updateTerminalSchema } from '@lotaria-nacional/lotto';
 import { associateSimCardOnTerminalService } from '../services/associate-sim-card-on-terminal.service';
 
-export async function associateAgentAndSimCardOnTerminalController(req: Request, res: Response) {
+export async function associateSimCardOnTerminalController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
 
   await hasPermission({

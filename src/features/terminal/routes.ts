@@ -13,7 +13,7 @@ import catchErrors from '../../utils/catch-errors';
 import { importTerminalsController } from './controllers/import-terminals.controller';
 import multer from 'multer';
 import { activateTerminalController } from './controllers/activate-terminal.controller';
-import { associateAgentAndSimCardOnTerminalController } from './controllers/associate-agent-and-sim-card-on-terminal.controller';
+import { associateSimCardOnTerminalController } from './controllers/associate-sim-card-on-terminal.controller';
 import { markTerminalAsFixedController } from './controllers/mark-terminal-as-fixed.controller';
 import { exportTerminalController } from './controllers/export-terminals.controller';
 
@@ -26,7 +26,7 @@ terminalRouter.post('/import', upload.single('file'), catchErrors(importTerminal
 
 terminalRouter.put('/fix/:id', catchErrors(markTerminalAsFixedController));
 terminalRouter.put('/reset/:id', catchErrors(resetTerminalController));
-terminalRouter.put('/associate/:id', catchErrors(associateAgentAndSimCardOnTerminalController));
+terminalRouter.put('/associate/:id', catchErrors(associateSimCardOnTerminalController));
 terminalRouter.put('/activate/:id', catchErrors(activateTerminalController));
 terminalRouter.put('/:id', catchErrors(updateTerminalController));
 
