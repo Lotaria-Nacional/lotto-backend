@@ -8,14 +8,14 @@ import { deleteCache } from '../../../utils/redis/delete-cache';
 export async function createAgentService({ user, ...data }: CreateAgentDTO & { user: AuthPayload }) {
   const id = await prisma.$transaction(async (tx) => {
     const { counter } = await tx.idReference.update({
-      where: { type: data.type },
+      where: { type: data.agent_type },
       data: { counter: { increment: 1 } },
     });
 
     let agent = await tx.agent.create({
       data: {
         id_reference: counter,
-        agent_type: data.type,
+        agent_type: data.agent_type,
         first_name: data.first_name,
         last_name: data.last_name,
         bi_number: data.bi_number,

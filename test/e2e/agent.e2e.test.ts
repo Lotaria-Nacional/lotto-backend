@@ -76,7 +76,7 @@ describe('E2E - Agent', () => {
       createAgent({
         first_name: 'Délcio',
         last_name: 'Issanzo',
-        type: 'revendedor',
+        agent_type: 'revendedor',
       }),
     ]);
 

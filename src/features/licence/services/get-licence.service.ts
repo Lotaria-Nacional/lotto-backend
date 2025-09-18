@@ -11,7 +11,7 @@ export async function getLicenceService(id: string) {
   const licence = await prisma.licence.findUnique({
     where: { id },
     include: { admin: { select: { id: true, name: true } } },
-    omit: { admin_id: true },
+    omit: { admin_name: true },
   });
 
   if (!licence) throw new NotFoundError('Licença não encontrada');
