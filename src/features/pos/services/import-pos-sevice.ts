@@ -22,11 +22,10 @@ export async function importPosFromCsvService(filePath: string, user: AuthPayloa
       const input: CreatePosDTO & { agent_id_reference?: number; licence_reference?: string } = {
         admin_name: row.admin_name,
         province_name: row.province_name,
+        coordinates: row.coordinates,
         city_name: row.city_name,
         area_name: row.area_name,
         zone_number: row.zone_number,
-        latitude: row.latitude,
-        longitude: row.longitude,
         type_name: row.type_name,
         subtype_name: row.subtype_name || undefined,
         licence_reference: row.licence_reference || undefined,
@@ -34,6 +33,7 @@ export async function importPosFromCsvService(filePath: string, user: AuthPayloa
       };
 
       const parsed = createPosSchema.parse(input);
+
       posBatch.push(parsed);
 
       if (posBatch.length >= BATCH_SIZE) {
@@ -43,7 +43,6 @@ export async function importPosFromCsvService(filePath: string, user: AuthPayloa
       }
     } catch (err: any) {
       errors.push({ row, error: err.errors || err.message });
-      console.error(err);
     }
   }
 

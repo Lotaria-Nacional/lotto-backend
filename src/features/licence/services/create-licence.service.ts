@@ -3,6 +3,7 @@ import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
 import { CreateLicenceDTO } from '@lotaria-nacional/lotto';
 import { AuthPayload } from '../../../@types/auth-payload';
+import { makeLicenceReference } from '../utils/make-licence-reference';
 
 export async function createLicenceService(data: CreateLicenceDTO & { user: AuthPayload }) {
   const id = await prisma.$transaction(async (tx) => {
@@ -21,7 +22,9 @@ export async function createLicenceService(data: CreateLicenceDTO & { user: Auth
         number: data.number,
         description: data.description,
         emitted_at: data.emitted_at,
-        coordinates: '',
+        coordinates: data.coordinates,
+        latitude: data.latitude!,
+        longitude: data.longitude!,
         expires_at: data.expires_at,
         limit: data.limit,
         admin_name: data.admin_name,
@@ -40,11 +43,3 @@ export async function createLicenceService(data: CreateLicenceDTO & { user: Auth
 
   return { id };
 }
-
-export const makeLicenceReference = (data: Partial<CreateLicenceDTO>, admin: string) => {
-  const { emitted_at, number, description } = data;
-  const emitted_at_year = emitted_at?.getFullYear();
-
-  const reference = `${admin}-N${number}-PT${description}-${emitted_at_year}`.toUpperCase();
-  return { reference };
-};

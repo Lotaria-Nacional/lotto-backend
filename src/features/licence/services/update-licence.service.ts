@@ -1,9 +1,9 @@
 import prisma from '../../../lib/prisma';
-import { BadRequestError, NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
 import { UpdateLicenceDTO } from '@lotaria-nacional/lotto';
 import { AuthPayload } from '../../../@types/auth-payload';
-import { makeLicenceReference } from './create-licence.service';
+import { BadRequestError, NotFoundError } from '../../../errors';
+import { makeLicenceReference } from '../utils/make-licence-reference';
 
 export async function updateLicenceService(data: UpdateLicenceDTO & { user: AuthPayload }) {
   await prisma.$transaction(async (tx) => {
@@ -39,6 +39,9 @@ export async function updateLicenceService(data: UpdateLicenceDTO & { user: Auth
       data: {
         reference,
         number: data.number,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        coordinates: data.coordinates,
         description: data.description,
         emitted_at: data.emitted_at,
         expires_at: data.expires_at,

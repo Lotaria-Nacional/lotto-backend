@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { paramsSchema } from '../../../schemas/common/query.schema';
-import { fetchManyLicencesService } from '../services';
+import { fetchLicencesService } from '../services';
 import { hasPermission } from '../../../middleware/auth/permissions';
 
 export async function fetchManyLicencesController(req: Request, res: Response) {
@@ -18,7 +18,7 @@ export async function fetchManyLicencesController(req: Request, res: Response) {
 
   const query = paramsSchema.parse(req.query);
 
-  const response = await fetchManyLicencesService(query);
+  const response = await fetchLicencesService(query);
 
   return res.status(200).json(response);
 }

@@ -3,8 +3,12 @@ import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
 import { AuthPayload, UpdatePosDTO } from '@lotaria-nacional/lotto';
 
-export async function updatePosService(data: UpdatePosDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async (tx) => {
+interface UpdatePosServiceResponse {
+  id: string;
+}
+
+export async function updatePosService(data: UpdatePosDTO & { user: AuthPayload }): Promise<UpdatePosServiceResponse> {
+  const result = await prisma.$transaction(async (tx) => {
     const pos = await tx.pos.findUnique({ where: { id: data.id } });
 
     if (!pos) throw new NotFoundError('POS não encontrado.');
@@ -29,6 +33,7 @@ export async function updatePosService(data: UpdatePosDTO & { user: AuthPayload 
     const posUpdated = await tx.pos.update({
       where: { id: data.id },
       data: {
+        coordinates: data.coordinates,
         latitude: data.latitude,
         longitude: data.longitude,
         admin_name: data.admin_name,
@@ -50,5 +55,9 @@ export async function updatePosService(data: UpdatePosDTO & { user: AuthPayload 
       before: pos,
       after: posUpdated,
     });
+
+    return posUpdated.id;
   });
+
+  return { id: result };
 }

@@ -1,8 +1,8 @@
+import z from 'zod';
 import fs from 'fs';
 import csvParser from 'csv-parser';
 import prisma from '../../../lib/prisma';
 import { CreateLicenceDTO, createLicenceSchema } from '@lotaria-nacional/lotto';
-import z from 'zod';
 
 interface ImportLicenceResponse {
   imported: number;
@@ -18,8 +18,9 @@ export async function importLicencesFromCsvService(filePath: string): Promise<Im
 
   for await (const row of stream) {
     try {
-      const input: CreateLicenceDTO & { reference: string } = {
+      const input: Partial<CreateLicenceDTO> & { reference: string } = {
         reference: row.reference,
+        coordinates: row.coordinates,
         description: row.description,
         emitted_at: new Date(row.emitted_at),
         expires_at: new Date(row.expires_at),
@@ -28,7 +29,7 @@ export async function importLicencesFromCsvService(filePath: string): Promise<Im
         admin_name: row.admin_name,
       };
 
-      const parsed = createLicenceSchema.extend({ reference: z.string() }).parse(input);
+      const parsed = createLicenceSchema.safeExtend({ reference: z.string() }).parse(input);
       licencesBatch.push(parsed);
 
       if (licencesBatch.length >= BATCH_SIZE) {

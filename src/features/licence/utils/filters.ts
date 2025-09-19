@@ -1,27 +1,7 @@
-import prisma from '../../../lib/prisma';
 import { Prisma, LicenceStatus } from '@prisma/client';
 import { PaginationParams } from '../../../@types/pagination-params';
 
-export async function fetchManyLicencesService(params: PaginationParams) {
-  const where = buildLicenceWhereInput(params);
-
-  const offset = (params.page - 1) * params.limit;
-
-  const licences = await prisma.licence.findMany({
-    where,
-    skip: offset,
-    take: params.limit,
-    orderBy: { emitted_at: 'desc' },
-    include: { admin: { select: { id: true, name: true } } },
-    omit: { admin_name: true },
-  });
-
-  const nextPage = licences.length === params.limit ? params.page + 1 : null;
-
-  return { data: licences, nextPage };
-}
-
-const createLicenceSearchFilters = (query: string): Prisma.LicenceWhereInput[] => {
+export const createLicenceSearchFilters = (query: string): Prisma.LicenceWhereInput[] => {
   const filters: Prisma.LicenceWhereInput[] = [];
 
   filters.push({ number: { contains: query, mode: 'insensitive' } });
@@ -44,7 +24,7 @@ const createLicenceSearchFilters = (query: string): Prisma.LicenceWhereInput[] =
   return filters;
 };
 
-const buildLicenceWhereInput = (params: PaginationParams): Prisma.LicenceWhereInput => {
+export const buildLicenceWhereInput = (params: PaginationParams): Prisma.LicenceWhereInput => {
   const filters = createLicenceSearchFilters(params.query);
 
   let where = {

@@ -79,11 +79,12 @@ model SimCard {
 }
 
 model Pos {
-  id         String    @id @default(uuid())
-  latitude   Float
-  longitude  Float
-  status     PosStatus @default(pending)
-  created_at DateTime  @default(now())
+  id          String    @id @default(uuid())
+  coordinates String
+  latitude    Float
+  longitude   Float
+  status      PosStatus @default(pending)
+  created_at  DateTime  @default(now())
 
   /// Administração pelo nome
   admin_name String
@@ -135,7 +136,9 @@ model Licence {
   created_at  DateTime      @default(now())
 
   file        String?
-  coordinates String?
+  coordinates String
+  latitude    Float
+  longitude   Float
 
   admin_name String?
   admin      Administration? @relation(fields: [admin_name], references: [name])

@@ -1,7 +1,7 @@
 import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
 import { BadRequestError, NotFoundError } from '../../../errors';
-import { AuthPayload, LicenceStatus, PosStatus, TerminalStatus, UpdatePosDTO } from '@lotaria-nacional/lotto';
+import { AuthPayload, LicenceStatus, PosStatus, UpdatePosDTO } from '@lotaria-nacional/lotto';
 
 export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO & { user: AuthPayload }) {
   await prisma.$transaction(async (tx) => {
@@ -47,7 +47,6 @@ export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO & 
         data: {
           status: limitStatus,
           ...(pos.licence_reference ? {} : { pos: { connect: { id: pos.id } } }),
-          coordinates: `${pos.latitude},${pos.longitude}`,
         },
       });
 
