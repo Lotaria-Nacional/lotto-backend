@@ -21,6 +21,7 @@ export async function createLicenceService(data: CreateLicenceDTO & { user: Auth
         number: data.number,
         description: data.description,
         emitted_at: data.emitted_at,
+        coordinates: '',
         expires_at: data.expires_at,
         limit: data.limit,
         admin_name: data.admin_name,

@@ -22,6 +22,8 @@ export async function fecthBoundedPosService({ minLat, maxLat, minLng, maxLng }:
       created_at: 'desc',
     },
     select: {
+      latitude: true,
+      longitude: true,
       licence: {
         select: {
           admin: { select: { name: true } },
