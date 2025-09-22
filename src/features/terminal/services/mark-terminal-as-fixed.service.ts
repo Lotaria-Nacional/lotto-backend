@@ -14,7 +14,7 @@ export async function markTerminalAsFixedService(id: string, user: AuthPayload) 
     const terminalUpdated = await tx.terminal.update({
       where: { id },
       data: {
-        status: 'stock',
+        status: 'fixed',
         note: null,
       },
     });

@@ -1,9 +1,11 @@
 import prisma from '../../../lib/prisma';
-import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
+import { BadRequestError, NotFoundError } from '../../../errors';
 import { AuthPayload, UpdateTerminalDTO } from '@lotaria-nacional/lotto';
 
 export async function associateSimCardOnTerminalService(data: UpdateTerminalDTO & { user: AuthPayload }) {
+  if (!data.sim_card_id) throw new BadRequestError('Nenhum SIM card foi atribuído');
+
   await prisma.$transaction(async (tx) => {
     const terminal = await tx.terminal.findUnique({
       where: { id: data.id },

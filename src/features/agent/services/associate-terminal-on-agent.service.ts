@@ -48,6 +48,7 @@ export async function associateTerminalOnAgentService(data: UpdateAgentDTO & { u
       data: {
         agent_id_reference: agent.id_reference,
         status: agent.pos ? 'on_field' : terminal.status, // <--- ajustado
+        delivery_at: new Date(),
       },
     });
 

@@ -7,9 +7,13 @@ export const createPosSearchFilters = (query: string | undefined) => {
 
   if (!query?.trim()) return filters;
 
-  filters.push({
-    licence_reference: { equals: query },
-  });
+  filters.push({ admin: { name: { equals: query, mode: 'insensitive' } } });
+  filters.push({ city: { name: { equals: query, mode: 'insensitive' } } });
+  filters.push({ province: { name: { equals: query, mode: 'insensitive' } } });
+  filters.push({ licence_reference: { equals: query, mode: 'insensitive' } });
+  filters.push({ type: { name: { equals: query, mode: 'insensitive' } } });
+  filters.push({ subtype: { name: { equals: query, mode: 'insensitive' } } });
+  filters.push({ area: { name: { equals: query, mode: 'insensitive' } } });
 
   if (!isNaN(numericQuery)) {
     filters.push({ latitude: numericQuery });

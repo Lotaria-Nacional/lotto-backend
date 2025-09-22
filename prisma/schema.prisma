@@ -46,14 +46,16 @@ model Agent {
 }
 
 model Terminal {
-  id         String          @id @default(uuid())
-  serial     String          @unique
-  device_id  String?
-  note       String?
-  status     TerminalStatus? @default(stock)
-  created_at DateTime        @default(now())
-  arrived_at DateTime
-  leaved_at  DateTime?
+  id        String          @id @default(uuid())
+  serial    String          @unique
+  device_id String?
+  note      String?
+  status    TerminalStatus? @default(stock)
+
+  created_at  DateTime  @default(now())
+  arrived_at  DateTime
+  leaved_at   DateTime?
+  delivery_at DateTime?
 
   agent_id_reference Int?     @unique
   agent              Agent?   @relation(fields: [agent_id_reference], references: [id_reference])
@@ -305,6 +307,7 @@ enum AgentStatus {
 
 enum TerminalStatus {
   ready
+  fixed
   on_field
   training
   stock

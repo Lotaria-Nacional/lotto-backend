@@ -1,10 +1,10 @@
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
-import { AuthPayload, LicenceStatus } from '@lotaria-nacional/lotto';
 import { audit } from '../../../utils/audit-log';
+import { AuthPayload, LicenceStatus } from '@lotaria-nacional/lotto';
 
 export async function resetPosService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const pos = await tx.pos.findUnique({
       where: { id },
     });
@@ -15,10 +15,25 @@ export async function resetPosService(id: string, user: AuthPayload) {
     if (pos.agent_id_reference) {
       const agent = await tx.agent.findUnique({
         where: { id_reference: pos.agent_id_reference },
-        select: { id: true },
+        select: {
+          id: true,
+          terminal: {
+            select: {
+              id: true,
+              status: true,
+            },
+          },
+        },
       });
 
       if (!agent) throw new NotFoundError('Agente não encontrado');
+
+      if (agent.terminal) {
+        await tx.terminal.update({
+          where: { id: agent.terminal.id },
+          data: { status: 'ready' },
+        });
+      }
 
       await tx.agent.update({
         where: { id_reference: pos.agent_id_reference },

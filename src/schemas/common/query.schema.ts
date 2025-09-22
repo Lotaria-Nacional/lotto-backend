@@ -17,6 +17,9 @@ export const paramsSchema = z.object({
   emitted_at: z.string().optional(),
   expires_at: z.string().optional(),
   training_date: z.string().optional(),
+  arrived_at: z.string().optional(),
+  leaved_at: z.string().optional(),
+  approved_at: z.string().optional(),
   coordinates: z.string().optional(),
 });
 

@@ -1,7 +1,7 @@
 import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
-import { BadRequestError, NotFoundError } from '../../../errors';
+import { NotFoundError } from '../../../errors';
 
 export async function resetTerminalService(id: string, user: AuthPayload) {
   await prisma.$transaction(async (tx) => {
@@ -14,9 +14,9 @@ export async function resetTerminalService(id: string, user: AuthPayload) {
       throw new NotFoundError('Terminal não encontrado');
     }
 
-    if (!terminal.agent_id_reference && !terminal.sim_card) {
-      throw new BadRequestError('Não há nada para resetar');
-    }
+    // if (!terminal.agent_id_reference && !terminal.sim_card) {
+    //   throw new BadRequestError('Não há nada para resetar');
+    // }
 
     // Atualizar terminal
     const terminalUpdated = await tx.terminal.update({
