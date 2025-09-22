@@ -47,7 +47,6 @@ export const buildTermninalWhereInput = (params: PaginationParams): Prisma.Termi
   const filters = createTerminalSearchFilters(params.query);
   const filterByDate: Prisma.TerminalWhereInput[] = [];
 
-  // data de chegada
   if (params.arrived_at) {
     const date = new Date(params.arrived_at);
 
@@ -67,7 +66,6 @@ export const buildTermninalWhereInput = (params: PaginationParams): Prisma.Termi
     }
   }
 
-  // data de saída
   if (params.leaved_at) {
     const date = new Date(params.leaved_at);
 
@@ -87,7 +85,6 @@ export const buildTermninalWhereInput = (params: PaginationParams): Prisma.Termi
     }
   }
 
-  // data de entrega
   if (params.delivery_date) {
     const date = new Date(params.delivery_date);
 
@@ -109,13 +106,10 @@ export const buildTermninalWhereInput = (params: PaginationParams): Prisma.Termi
 
   let where: Prisma.TerminalWhereInput = {
     AND: [
-      // Filtros textuais ou numéricos
       ...(filters.length ? [{ OR: filters }] : []),
 
-      // Filtro de status do terminal
       ...(params.status ? getStatus(params.status as TerminalStatus | 'stock-ready') : []),
 
-      // Filtros relacionais
       ...(params.admin_name ? [{ agent: { pos: { admin: { name: params.admin_name } } } }] : []),
       ...(params.area_name ? [{ agent: { pos: { area: { name: params.area_name } } } }] : []),
       ...(params.zone_number ? [{ agent: { pos: { zone: { number: params.zone_number } } } }] : []),

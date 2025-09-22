@@ -43,8 +43,6 @@ export const buildLicenceWhereInput = (params: PaginationParams): Prisma.Licence
     }
   }
 
-  console.log(params.status);
-
   let where: Prisma.LicenceWhereInput = {
     AND: [
       ...(filters.length ? [{ OR: filters }] : []),

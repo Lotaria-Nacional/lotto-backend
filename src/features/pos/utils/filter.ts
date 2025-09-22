@@ -43,13 +43,10 @@ export const buildPosWhereInput = (params: PaginationParams): Prisma.PosWhereInp
 
   let where: Prisma.PosWhereInput = {
     AND: [
-      // Filtros textuais ou numéricos
       ...(filters.length ? [{ OR: filters }] : []),
 
-      // Filtro de status do pos
       ...(params.status ? getStatus(params.status as PosStatus) : []),
 
-      // Filtros relacionais
       ...(params.type_name ? [{ type_name: params.type_name }] : []),
       ...(params.area_name ? [{ area_name: params.area_name }] : []),
       ...(params.admin_name ? [{ admin_name: params.admin_name }] : []),
