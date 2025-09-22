@@ -43,6 +43,7 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
             where: { reference: posData.licence_reference },
             include: { pos: { select: { id: true } } },
           });
+
           if (!licence) throw new NotFoundError(`Licença ${posData.licence_reference} não encontrada`);
 
           const posWithThisLicenceCount = licence.pos.length;
@@ -105,7 +106,7 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
         //   user,
         //   entity: 'POS',
         //   before: null,
-        //   after: pos,
+        //   after: null,
         // });
       });
     } catch (err: any) {

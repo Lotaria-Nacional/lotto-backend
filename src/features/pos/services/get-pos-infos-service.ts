@@ -4,7 +4,7 @@ export async function getPosInfoService() {
   const total = await prisma.pos.count();
 
   const licenced = await prisma.pos.count({ where: { licence_reference: { not: null } } });
-  const approved = await prisma.pos.count({ where: { status: 'approved' } });
+  const active = await prisma.pos.count({ where: { status: 'active' } });
 
-  return { total, approved, licenced };
+  return { total, active, licenced };
 }

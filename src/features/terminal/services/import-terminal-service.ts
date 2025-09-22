@@ -15,6 +15,7 @@ export async function importTerminalsFromCsvService(filePath: string): Promise<I
   const BATCH_SIZE = 500;
 
   const stream = fs.createReadStream(filePath).pipe(csvParser());
+
   for await (const row of stream) {
     let status: TerminalStatus = 'ready';
 
