@@ -6,6 +6,7 @@ import {
   fetchAgentsController,
   resetAgentController,
   fetchAgentsHistoryController,
+  getAgentsInfoController,
 } from './controllers';
 import multer from 'multer';
 import { Router } from 'express';
@@ -33,6 +34,7 @@ agentRouter.put('/:id', catchErrors(updateAgentController));
 
 agentRouter.delete('/:id', catchErrors(deleteAgentController));
 
+agentRouter.get('/info', catchErrors(getAgentsInfoController));
 agentRouter.get('/export', catchErrors(exportAgentController));
 agentRouter.get('/history', catchErrors(fetchAgentsHistoryController));
 agentRouter.get('/', catchErrors(fetchAgentsController));

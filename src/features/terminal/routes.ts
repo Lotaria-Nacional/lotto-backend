@@ -16,6 +16,7 @@ import { activateTerminalController } from './controllers/activate-terminal.cont
 import { associateSimCardOnTerminalController } from './controllers/associate-sim-card-on-terminal.controller';
 import { markTerminalAsFixedController } from './controllers/mark-terminal-as-fixed.controller';
 import { exportTerminalController } from './controllers/export-terminals.controller';
+import { getTerminalsInfoController } from './controllers/get-terminals-info.controller';
 
 const terminalRouter = Router();
 
@@ -33,6 +34,7 @@ terminalRouter.put('/:id', catchErrors(updateTerminalController));
 terminalRouter.delete('/bulk', catchErrors(deleteManyTerminalsController));
 terminalRouter.delete('/:id', catchErrors(deleteTerminalController));
 
+terminalRouter.get('/info', catchErrors(getTerminalsInfoController));
 terminalRouter.get('/export', catchErrors(exportTerminalController));
 terminalRouter.get('/history', catchErrors(fetchTerminalsHistoryController));
 terminalRouter.get('/:id', catchErrors(getTerminalController));
