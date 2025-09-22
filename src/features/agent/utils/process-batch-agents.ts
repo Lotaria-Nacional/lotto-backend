@@ -1,5 +1,4 @@
 import prisma from '../../../lib/prisma';
-import { audit } from '../../../utils/audit-log';
 import { AgentStatus, AuthPayload, CreateAgentDTO } from '@lotaria-nacional/lotto';
 
 type ProcessAgentsBatch = {
@@ -49,12 +48,12 @@ export async function processAgentsBatch({ agents, errors, user }: ProcessAgents
           });
 
           // Audit log
-          await audit(tx, 'IMPORT', {
-            user,
-            before: null,
-            after: null,
-            entity: 'AGENT',
-          });
+          // await audit(tx, 'IMPORT', {
+          //   user,
+          //   before: null,
+          //   after: null,
+          //   entity: 'AGENT',
+          // });
         }
       });
     } catch (err: any) {

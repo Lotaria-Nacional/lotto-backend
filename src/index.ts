@@ -15,9 +15,10 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const allowedOrigins =
-  process.env.NODE_ENV === 'production' ? ['https://mtjogos.co.ao'] : ['*', 'http://localhost:5173'];
-// const allowedOrigins = ['https://mtjogos.co.ao'];
+// const allowedOrigins =
+//   process.env.NODE_ENV === 'production' ? ['https://mtjogos.co.ao'] : ['*', 'http://localhost:5173'];
+
+const allowedOrigins = ['https://mtjogos.co.ao'];
 
 app.use(
   cors({

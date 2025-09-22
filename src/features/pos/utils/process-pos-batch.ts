@@ -1,5 +1,4 @@
 import prisma from '../../../lib/prisma';
-import { audit } from '../../../utils/audit-log';
 import { BadRequestError, NotFoundError } from '../../../errors';
 import { AuthPayload, CreatePosDTO, PosStatus } from '@lotaria-nacional/lotto';
 
@@ -101,13 +100,13 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
           data: { status: newPosStatus },
         });
 
-        // --- Audit log ---
-        await audit(tx, 'IMPORT', {
-          user,
-          entity: 'POS',
-          before: null,
-          after: pos,
-        });
+        // // --- Audit log ---
+        // await audit(tx, 'IMPORT', {
+        //   user,
+        //   entity: 'POS',
+        //   before: null,
+        //   after: pos,
+        // });
       });
     } catch (err: any) {
       errors.push({ row: posData, error: err.message || err });
