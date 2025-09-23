@@ -10,7 +10,7 @@ export async function importTerminalsController(req: Request, res: Response) {
     return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Ficheiro é obrigatório' });
   }
   const filePath = req.file.path;
-  const result = await importTerminalsFromCsvService(filePath);
+  const result = await importTerminalsFromCsvService(filePath, user);
 
   return res.status(HttpStatus.OK).json({ result, message: 'Terminais importados com sucesso' });
 }

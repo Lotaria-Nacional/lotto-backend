@@ -17,6 +17,8 @@ export async function fetchTerminalsService(params: PaginationParams) {
         select: {
           id: true,
           number: true,
+          pin: true,
+          puk: true,
         },
       },
       agent: {

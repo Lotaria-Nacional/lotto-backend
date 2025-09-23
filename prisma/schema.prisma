@@ -81,16 +81,16 @@ model SimCard {
 }
 
 model Pos {
-  id          String    @id @default(uuid())
-  coordinates String
-  latitude    Float
-  longitude   Float
-  status      PosStatus @default(pending)
-  created_at  DateTime  @default(now())
+  id          String     @id @default(uuid())
+  coordinates String?
+  latitude    Float?
+  longitude   Float?
+  status      PosStatus? @default(pending)
+  created_at  DateTime   @default(now())
 
   /// Administração pelo nome
-  admin_name String
-  admin      Administration @relation(fields: [admin_name], references: [name])
+  admin_name String?
+  admin      Administration? @relation(fields: [admin_name], references: [name])
 
   licence_reference String?
   licence           Licence? @relation(fields: [licence_reference], references: [reference])
@@ -108,12 +108,12 @@ model Pos {
   zone        Zone? @relation(fields: [zone_number], references: [number])
 
   /// Cidade pelo nome
-  city_name String
-  city      City   @relation(fields: [city_name], references: [name])
+  city_name String?
+  city      City?   @relation(fields: [city_name], references: [name])
 
   /// Província pelo nome
-  province_name String
-  province      Province @relation(fields: [province_name], references: [name])
+  province_name String?
+  province      Province? @relation(fields: [province_name], references: [name])
 
   /// Tipo pelo nome
   type_name String?
@@ -130,6 +130,7 @@ model Licence {
   id          String        @id @default(uuid())
   number      String
   description String
+  district    String?
   reference   String        @unique
   limit       Int           @default(1)
   status      LicenceStatus @default(free)
@@ -138,9 +139,9 @@ model Licence {
   created_at  DateTime      @default(now())
 
   file        String?
-  coordinates String
-  latitude    Float
-  longitude   Float
+  coordinates String?
+  latitude    Float?
+  longitude   Float?
 
   admin_name String?
   admin      Administration? @relation(fields: [admin_name], references: [name])

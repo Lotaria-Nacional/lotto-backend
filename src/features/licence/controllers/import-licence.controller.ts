@@ -10,7 +10,7 @@ export async function importLicencesController(req: Request, res: Response) {
 
   const filePath = req.file.path;
 
-  const result = await importLicencesFromCsvService(filePath);
+  const result = await importLicencesFromCsvService(filePath, user);
 
   return res.status(HttpStatus.OK).json({ result, message: 'Licenças importadas com sucesso.' });
 }

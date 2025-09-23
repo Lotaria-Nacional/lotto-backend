@@ -1,9 +1,11 @@
 import prisma from '../../../lib/prisma';
+import { audit } from '../../../utils/audit-log';
 import { BadRequestError, NotFoundError } from '../../../errors';
 import { AuthPayload, CreatePosDTO, PosStatus } from '@lotaria-nacional/lotto';
+import { ImportPosDTO } from '../services/import-pos-sevice';
 
 type ProcessPosBatchParams = {
-  posList: CreatePosDTO[]; // array de CreatePosDTO com possíveis referências de agente/licença
+  posList: ImportPosDTO[];
   user: AuthPayload;
   errors: any[];
 };
@@ -13,18 +15,27 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
     try {
       await prisma.$transaction(async (tx) => {
         // --- Criar POS ---
+        let latitude = 0;
+        let longitude = 0;
 
-        console.log({
-          coord: posData.coordinates,
-          lat: posData.latitude,
-          lng: posData.longitude,
-        });
+        if (posData.coordenadas) {
+          const [lat, lng] = posData.coordenadas.trim().split(',').map(Number);
+          latitude = latitude;
+          latitude = latitude;
+        }
 
         const pos = await tx.pos.create({
           data: {
-            ...posData,
-            latitude: posData.latitude!,
-            longitude: posData.longitude!,
+            coordinates: posData.coordenadas,
+            admin_name: posData.administracao,
+            province_name: posData.provincia,
+            city_name: posData.cidade,
+            area_name: posData.area,
+            zone_number: posData.zona,
+            type_name: posData.tipologia,
+            licence_reference: posData.licenca,
+            latitude,
+            longitude,
             status: 'pending', // status inicial
           },
           include: {
@@ -102,12 +113,12 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
         });
 
         // // --- Audit log ---
-        // await audit(tx, 'IMPORT', {
-        //   user,
-        //   entity: 'POS',
-        //   before: null,
-        //   after: null,
-        // });
+        await audit(tx, 'IMPORT', {
+          user,
+          entity: 'POS',
+          before: null,
+          after: null,
+        });
       });
     } catch (err: any) {
       errors.push({ row: posData, error: err.message || err });

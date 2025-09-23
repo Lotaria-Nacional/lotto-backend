@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { HttpStatus } from '../../../constants/http';
-import { importPosFromCsvService } from '../services/import-pos-sevice';
 import { AuthPayload } from '@lotaria-nacional/lotto';
+import { importPosFromCsvService } from '../services/import-pos-sevice';
 
 export async function importPosController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
@@ -23,7 +23,7 @@ export async function importPosController(req: Request, res: Response) {
   }
 
   return res.status(HttpStatus.OK).json({
-    message: 'POS importados com sucesso',
+    message: 'POS importados com sucesso.',
     imported: result.imported,
   });
 }

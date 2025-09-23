@@ -1,8 +1,9 @@
 import prisma from '../../../lib/prisma';
-import { AgentStatus, AuthPayload, CreateAgentDTO } from '@lotaria-nacional/lotto';
+import { ImportAgentDTO } from '../services/import-agents.service';
+import { AgentType, AuthPayload, Genre } from '@lotaria-nacional/lotto';
 
 type ProcessAgentsBatch = {
-  agents: CreateAgentDTO[];
+  agents: ImportAgentDTO[];
   user: AuthPayload;
   errors: any[];
 };
@@ -12,49 +13,27 @@ export async function processAgentsBatch({ agents, errors, user }: ProcessAgents
     try {
       await prisma.$transaction(async (tx) => {
         // --- Criar agente ---
-        const agent = await tx.agent.create({
+        const id_reference = agentData.id_reference.toString();
+        const agent_type: AgentType = id_reference.startsWith('1') ? 'revendedor' : 'lotaria_nacional';
+        const genre: Genre = agentData.gender;
+
+        await tx.agent.create({
           data: {
-            ...agentData,
-            status: agentData.terminal_id ? 'ready' : 'ready', // default inicial
+            id_reference: agentData.id_reference,
+            first_name: agentData.name,
+            last_name: agentData.last_name,
+            bi_number: agentData.bi_number,
+            genre,
+            status: agentData.status,
+            phone_number: agentData.phone_number,
+            training_date: agentData.training_date,
+            agent_type,
           },
           include: {
             pos: true,
             terminal: true,
           },
         });
-
-        // --- Se houver terminal, associar e atualizar estados ---
-        if (agentData.terminal_id) {
-          const terminal = await tx.terminal.findUnique({ where: { id: agentData.terminal_id } });
-          if (!terminal) throw new Error(`Terminal ${agentData.terminal_id} não encontrado`);
-          if (terminal.agent_id_reference && terminal.agent_id_reference !== agent.id_reference) {
-            throw new Error(`Terminal ${agentData.terminal_id} já está associado a outro agente`);
-          }
-
-          // Atualizar estado do terminal
-          await tx.terminal.update({
-            where: { id: terminal.id },
-            data: {
-              agent_id_reference: agent.id_reference,
-              status: agent.pos ? 'on_field' : terminal.status,
-            },
-          });
-
-          // Atualizar estado do agente
-          let newAgentStatus: AgentStatus = agent.pos ? 'active' : 'ready';
-          await tx.agent.update({
-            where: { id: agent.id },
-            data: { status: newAgentStatus },
-          });
-
-          // Audit log
-          // await audit(tx, 'IMPORT', {
-          //   user,
-          //   before: null,
-          //   after: null,
-          //   entity: 'AGENT',
-          // });
-        }
       });
     } catch (err: any) {
       errors.push({ row: agentData, error: err.message || err });

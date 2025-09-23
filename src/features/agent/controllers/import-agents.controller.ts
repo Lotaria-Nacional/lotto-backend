@@ -9,9 +9,7 @@ export async function importAgentsController(req: Request, res: Response) {
   if (!req.file) return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Ficheiro é obrigatório' });
   const filePath = req.file.path;
 
-  const result = await importAgentsFromCsvService(filePath, user, (progressed) => {
-    console.log(`Progress: ${progressed}%`);
-  });
+  const result = await importAgentsFromCsvService(filePath, user);
 
   return res.status(HttpStatus.OK).json({ result, message: 'Upload feito com sucesso' });
 }
