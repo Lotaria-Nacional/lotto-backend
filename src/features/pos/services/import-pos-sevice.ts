@@ -1,8 +1,8 @@
 import fs from 'fs';
-import csvParser from 'csv-parser';
-import { processPosBatch } from '../utils/process-pos-batch';
-import { AuthPayload } from '@lotaria-nacional/lotto';
 import z from 'zod';
+import csvParser from 'csv-parser';
+import { AuthPayload } from '@lotaria-nacional/lotto';
+import { processPosBatch } from '../utils/process-pos-batch';
 
 interface ImportPosResponse {
   imported: number;
@@ -56,7 +56,7 @@ export async function importPosFromCsvService(filePath: string, user: AuthPayloa
 // ID REVENDEDOR | PROVINCIA | ADMINISTRACAO | CIDADE | AREA | ZONA | ESTADO | TIPOLOGIA | LICENCA | COORDENADAS
 
 const importPosSchema = z.object({
-  idRevendedor: z.string().optional(),
+  idRevendedor: z.coerce.number().int().optional(),
   provincia: z.string().optional(),
   administracao: z.string().optional(),
   cidade: z.string().optional(),

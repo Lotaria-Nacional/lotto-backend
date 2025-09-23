@@ -1,8 +1,8 @@
 import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
-import { BadRequestError, NotFoundError } from '../../../errors';
-import { AuthPayload, CreatePosDTO, PosStatus } from '@lotaria-nacional/lotto';
 import { ImportPosDTO } from '../services/import-pos-sevice';
+import { AuthPayload, PosStatus } from '@lotaria-nacional/lotto';
+import { BadRequestError, NotFoundError } from '../../../errors';
 
 type ProcessPosBatchParams = {
   posList: ImportPosDTO[];
@@ -20,23 +20,51 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
 
         if (posData.coordenadas) {
           const [lat, lng] = posData.coordenadas.trim().split(',').map(Number);
-          latitude = latitude;
-          latitude = latitude;
+          latitude = lat;
+          longitude = lng;
+        }
+
+        let typeName: string | null = null;
+
+        if (posData.tipologia) {
+          // 1. Verifica se é um type
+          const existingType = await tx.type.findUnique({
+            where: { name: posData.tipologia },
+            include: { subtypes: true },
+          });
+
+          if (existingType) {
+            typeName = existingType.name;
+          } else {
+            const subtype = await tx.subtype.findUnique({
+              where: { name: posData.tipologia },
+              include: { type: true },
+            });
+
+            if (subtype) {
+              typeName = subtype.type.name;
+            }
+          }
+        }
+
+        if (!typeName) {
+          throw new Error(`Tipologia inválida: ${posData.tipologia}`);
         }
 
         const pos = await tx.pos.create({
           data: {
+            agent_id_reference: posData.idRevendedor,
             coordinates: posData.coordenadas,
             admin_name: posData.administracao,
             province_name: posData.provincia,
             city_name: posData.cidade,
             area_name: posData.area,
             zone_number: posData.zona,
-            type_name: posData.tipologia,
+            type_name: typeName,
             licence_reference: posData.licenca,
             latitude,
             longitude,
-            status: 'pending', // status inicial
+            status: 'pending',
           },
           include: {
             agent: { include: { terminal: true } },
@@ -49,25 +77,25 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
         let newPosStatus: PosStatus = 'pending';
 
         // --- Associação de licença ---
-        if (posData.licence_reference) {
+        if (posData.licenca) {
           const licence = await tx.licence.findUnique({
-            where: { reference: posData.licence_reference },
+            where: { reference: posData.licenca },
             include: { pos: { select: { id: true } } },
           });
 
-          if (!licence) throw new NotFoundError(`Licença ${posData.licence_reference} não encontrada`);
+          if (!licence) throw new NotFoundError(`Licença ${posData.licenca} não encontrada`);
 
           const posWithThisLicenceCount = licence.pos.length;
           const limitCount = licence.limit;
 
           if (posWithThisLicenceCount >= limitCount) {
-            throw new BadRequestError(`Licença ${posData.licence_reference} atingiu o limite de uso`);
+            throw new BadRequestError(`Licença ${posData.licenca} atingiu o limite de uso`);
           }
 
           const limitStatus = posWithThisLicenceCount + (pos.licence_reference ? 0 : 1) >= limitCount ? 'used' : 'free';
 
           await tx.licence.update({
-            where: { reference: posData.licence_reference },
+            where: { reference: posData.licenca },
             data: {
               status: limitStatus,
               ...(pos.licence_reference ? {} : { pos: { connect: { id: pos.id } } }),
@@ -78,12 +106,12 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
         }
 
         // --- Associação de agente ---
-        if (posData.agent_id_reference) {
+        if (posData.idRevendedor) {
           const agent = await tx.agent.findUnique({
-            where: { id_reference: posData.agent_id_reference },
+            where: { id_reference: posData.idRevendedor },
             include: { terminal: { select: { id: true, status: true } } },
           });
-          if (!agent) throw new NotFoundError(`Agente ${posData.agent_id_reference} não encontrado`);
+          if (!agent) throw new NotFoundError(`Agente ${posData.idRevendedor} não encontrado`);
 
           // Atualizar terminal, se existir
           if (agent.terminal) {
