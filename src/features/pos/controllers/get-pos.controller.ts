@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { HttpStatus } from '../../../constants/http';
-import { getPosService } from '../services/get-pos.service';
+import { getPosService } from '../services/get-pos-service';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { idSchema } from '../../../schemas/common/id.schema';
 import { hasPermission } from '../../../middleware/auth/permissions';

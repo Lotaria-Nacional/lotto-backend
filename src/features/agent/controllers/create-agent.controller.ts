@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { HttpStatus } from '../../../constants/http';
 import { AuthPayload } from '../../../@types/auth-payload';
-import { createAgentService } from '../services/create-agent.service';
+import { createAgentService } from '../services/create-agent-service';
 import { createAgentSchema } from '@lotaria-nacional/lotto';
 import { hasPermission } from '../../../middleware/auth/permissions';
 

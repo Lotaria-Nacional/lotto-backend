@@ -1,5 +1,5 @@
 import prisma from '../../../lib/prisma';
-import { ImportAgentDTO } from '../services/import-agents.service';
+import { ImportAgentDTO } from '../services/import-agents-service';
 import { AgentType, AuthPayload, Genre } from '@lotaria-nacional/lotto';
 
 type ProcessAgentsBatch = {
@@ -11,7 +11,7 @@ type ProcessAgentsBatch = {
 export async function processAgentsBatch({ agents, errors, user }: ProcessAgentsBatch) {
   for (const agentData of agents) {
     try {
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async tx => {
         // --- Criar agente ---
         const id_reference = agentData.id_reference.toString();
         const agent_type: AgentType = id_reference.startsWith('1') ? 'revendedor' : 'lotaria_nacional';

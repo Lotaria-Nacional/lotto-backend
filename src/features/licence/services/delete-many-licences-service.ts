@@ -2,7 +2,6 @@ import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
 import { BadRequestError } from '../../../errors';
 import { AuthPayload } from '../../../@types/auth-payload';
-import { deleteCache, RedisKeys } from '../../../utils/redis';
 
 export async function deleteManyLicencesService(ids: string[], user: AuthPayload) {
   await prisma.$transaction(async tx => {
@@ -25,11 +24,4 @@ export async function deleteManyLicencesService(ids: string[], user: AuthPayload
       after: null,
     });
   });
-
-  await Promise.all([
-    deleteCache(RedisKeys.pos.all()),
-    deleteCache(RedisKeys.admins.all()),
-    deleteCache(RedisKeys.licences.all()),
-    deleteCache(RedisKeys.auditLogs.all()),
-  ]);
 }

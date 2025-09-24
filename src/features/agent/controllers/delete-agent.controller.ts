@@ -3,7 +3,7 @@ import { HttpStatus } from '../../../constants/http';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { idSchema } from '../../../schemas/common/id.schema';
 import { hasPermission } from '../../../middleware/auth/permissions';
-import { deleteAgentService } from '../services/delete-agent.service';
+import { deleteAgentService } from '../services/delete-agent-service';
 
 export async function deleteAgentController(req: Request, res: Response) {
   const user = req.user as AuthPayload;

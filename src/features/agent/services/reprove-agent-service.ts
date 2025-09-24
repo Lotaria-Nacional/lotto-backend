@@ -3,27 +3,25 @@ import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 
-export async function approveAgentService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async (tx) => {
+export async function reproveAgentService(id: string, user: AuthPayload) {
+  await prisma.$transaction(async tx => {
     const agent = await tx.agent.findUnique({
       where: { id },
     });
 
     if (!agent) throw new NotFoundError('Agente não encontrado');
 
-    const agentApproved = await tx.agent.update({
+    const agentUpdated = await tx.agent.update({
       where: { id },
-      data: {
-        status: 'approved',
-        approved_at: new Date(),
-      },
+      data: { status: 'denied' },
     });
 
-    await audit(tx, 'APPROVE', {
-      user,
+    await audit(tx, 'REPROVE', {
+      user: user,
       before: agent,
-      after: agentApproved,
       entity: 'AGENT',
+      after: agentUpdated,
+      description: 'Reprovou um agente',
     });
   });
 }

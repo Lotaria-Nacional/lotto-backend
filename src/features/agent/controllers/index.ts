@@ -6,3 +6,4 @@ export * from './get-agent.controller';
 export * from './fetch-agents.controller';
 export * from './get-agents-info.controller';
 export * from './fetch-agents-history.controller';
+export * from './re-schedule-training-agent.controller';

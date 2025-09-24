@@ -37,7 +37,7 @@ export async function exportAgentService(res: Response) {
         agent.approved_at?.toISOString() ?? '',
         agent.created_at.toISOString(),
       ]
-        .map((v) => `"${v ?? ''}"`)
+        .map(v => `"${v ?? ''}"`)
         .join(',');
 
       res.write(line + '\n');

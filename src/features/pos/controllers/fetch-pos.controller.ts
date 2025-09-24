@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { HttpStatus } from '../../../constants/http';
 import { AuthPayload } from '../../../@types/auth-payload';
-import { fetchPoService } from '../services/fetch-pos.service';
+import { fetchPoService } from '../services/fetch-pos-service';
 import { paramsSchema } from '../../../schemas/common/query.schema';
 import { hasPermission } from '../../../middleware/auth/permissions';
 

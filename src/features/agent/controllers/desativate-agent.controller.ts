@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { HttpStatus } from '../../../constants/http';
 import { idSchema } from '../../../schemas/common/id.schema';
-import { desativateAgentService } from '../services/desativate-agent.service';
+import { desativateAgentService } from '../services/desativate-agent-service';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 import { hasPermission } from '../../../middleware/auth/permissions';
 

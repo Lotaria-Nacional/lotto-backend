@@ -222,13 +222,14 @@ model Subtype {
 }
 
 model AuditLog {
-  id         String   @id @default(uuid())
-  entity     Modules
-  user_name  String
-  user_email String
-  action     Actions
-  changes    Json
-  created_at DateTime @default(now())
+  id          String   @id @default(uuid())
+  entity      Modules
+  user_name   String
+  user_email  String
+  description String?
+  action      Actions
+  changes     Json
+  created_at  DateTime @default(now())
 
   @@map("audit_logs")
 }
@@ -371,4 +372,8 @@ enum Actions {
   RESET
   ASSOCIATE
   manage
+  RESCHEDULE
+  DISCONTINUE
+  ACTIVATE
+  DEACTIVATE
 }

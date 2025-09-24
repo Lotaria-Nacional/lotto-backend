@@ -5,7 +5,7 @@ import { BadRequestError, NotFoundError } from '../../../errors';
 import { AgentStatus, AuthPayload, UpdateAgentDTO } from '@lotaria-nacional/lotto';
 
 export async function associateTerminalOnAgentService(data: UpdateAgentDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const agent = await tx.agent.findUnique({
       where: { id: data.id },
       include: { pos: true, terminal: true },
@@ -64,6 +64,7 @@ export async function associateTerminalOnAgentService(data: UpdateAgentDTO & { u
       before: agent,
       after: agentUpdated,
       entity: 'AGENT',
+      description: 'Atribuiu um terminal a um agente',
     });
   });
 }

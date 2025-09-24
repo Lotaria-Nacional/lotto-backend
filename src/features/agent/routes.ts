@@ -16,6 +16,7 @@ import { exportAgentController } from './controllers/export-agents-controller';
 import { approveAgentController } from './controllers/approve-agent.controller';
 import { importAgentsController } from './controllers/import-agents.controller';
 import { desativateAgentController } from './controllers/desativate-agent.controller';
+import { reScheduleTrainingController } from './controllers/re-schedule-training-agent.controller';
 import { associatePosAndTerminalOnAgentController } from './controllers/associate-pos-and-terminal-on-agent.controller';
 
 const agentRouter = Router();
@@ -25,6 +26,7 @@ export const upload = multer({ dest: 'uploads/' });
 agentRouter.post('/', catchErrors(createAgentController));
 agentRouter.post('/import', upload.single('file'), catchErrors(importAgentsController));
 
+agentRouter.put('/re-schedule-training/:id', catchErrors(reScheduleTrainingController));
 agentRouter.put('/associate/:id', catchErrors(associatePosAndTerminalOnAgentController));
 agentRouter.put('/approve/:id', catchErrors(approveAgentController));
 agentRouter.put('/desativate/:id', catchErrors(desativateAgentController));

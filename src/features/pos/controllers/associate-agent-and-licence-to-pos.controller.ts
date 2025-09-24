@@ -3,7 +3,7 @@ import { HttpStatus } from '../../../constants/http';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { updatePosSchema } from '@lotaria-nacional/lotto';
 import { idSchema } from '../../../schemas/common/id.schema';
-import { associateAgentAndLicenceToPosService } from '../services/associate-agent-and-licence-to-pos.service';
+import { associateAgentAndLicenceToPosService } from '../services/associate-agent-and-licence-to-pos-service';
 import { hasPermission } from '../../../middleware/auth/permissions';
 
 export async function associateAgentAndLicenceToPosController(req: Request, res: Response) {

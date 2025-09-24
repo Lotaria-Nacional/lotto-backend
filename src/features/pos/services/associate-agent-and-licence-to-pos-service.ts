@@ -4,7 +4,7 @@ import { BadRequestError, NotFoundError } from '../../../errors';
 import { AuthPayload, LicenceStatus, PosStatus, UpdatePosDTO } from '@lotaria-nacional/lotto';
 
 export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const pos = await tx.pos.findUnique({
       where: { id: data.id },
     });

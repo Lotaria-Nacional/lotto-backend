@@ -1,14 +1,12 @@
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
-import { RedisKeys } from '../../../utils/redis/keys';
 import { AuthPayload } from '../../../@types/auth-payload';
-import { deleteCache } from '../../../utils/redis/delete-cache';
 import { AgentStatus, UpdateAgentDTO } from '@lotaria-nacional/lotto';
 import { connectOrDisconnect } from '../../../utils/connect-disconnect';
 
 export async function updateAgentService({ user, ...data }: UpdateAgentDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const agent = await tx.agent.findUnique({
       where: {
         id: data.id,
@@ -69,13 +67,7 @@ export async function updateAgentService({ user, ...data }: UpdateAgentDTO & { u
       entity: 'AGENT',
       before: agent,
       after: updated,
+      description: `Atualizou os dados do agente ${updated.id_reference}`,
     });
   });
-
-  await Promise.all([
-    deleteCache(RedisKeys.agents.all()),
-    deleteCache(RedisKeys.pos.all()),
-    deleteCache(RedisKeys.terminals.all()),
-    deleteCache(RedisKeys.auditLogs.all()),
-  ]);
 }

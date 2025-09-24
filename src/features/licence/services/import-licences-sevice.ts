@@ -20,7 +20,7 @@ export async function importLicencesFromCsvService(
 
   const stream = fs.createReadStream(filePath).pipe(csvParser());
 
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async tx => {
     for await (const row of stream) {
       try {
         const input: Partial<ImportLicenceDTO> & { reference: string } = {
@@ -79,7 +79,7 @@ export async function importLicencesFromCsvService(
 
 const importLicenceSchema = z.object({
   reference: z.string(),
-  admin_name: z.string().transform((val) => {
+  admin_name: z.string().transform(val => {
     const v = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
     return v;
   }),

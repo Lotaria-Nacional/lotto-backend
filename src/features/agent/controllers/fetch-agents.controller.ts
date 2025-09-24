@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { AuthPayload } from '../../../@types/auth-payload';
 import { HttpStatus } from '../../../constants/http';
-import { paramsSchema } from '../../../schemas/common/query.schema';
-import { fetchAgentsService } from '../services/fetch-agents.service';
-import { hasPermission } from '../../../middleware/auth/permissions';
 import { AgentStatus } from '@lotaria-nacional/lotto';
+import { AuthPayload } from '../../../@types/auth-payload';
+import { paramsSchema } from '../../../schemas/common/query.schema';
+import { hasPermission } from '../../../middleware/auth/permissions';
+import { fetchAgentsService } from '../services/fetch-agents-service';
 
 export async function fetchAgentsController(req: Request, res: Response) {
   const user = req.user as AuthPayload;

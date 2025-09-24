@@ -1,21 +1,21 @@
 import { Request, Response } from 'express';
-import { AuthPayload } from '../../../@types/auth-payload';
 import { HttpStatus } from '../../../constants/http';
+import { AuthPayload } from '../../../@types/auth-payload';
 import { paramsSchema } from '../../../schemas/common/query.schema';
 import { hasPermission } from '../../../middleware/auth/permissions';
-import { fetchAgentsHistoryService } from '../services/fetch-agents-history.service';
+import { fetchAgentsHistoryService } from '../services/fetch-agents-history-service';
 
 export async function fetchAgentsHistoryController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
 
-  // await hasPermission({
-  //   res,
-  //   userId: user.id,
-  //   permission: {
-  //     action: 'READ',
-  //     subject: 'AGENT',
-  //   },
-  // });
+  await hasPermission({
+    res,
+    userId: user.id,
+    permission: {
+      action: 'READ',
+      subject: 'AGENT',
+    },
+  });
 
   const query = paramsSchema.parse(req.query);
 

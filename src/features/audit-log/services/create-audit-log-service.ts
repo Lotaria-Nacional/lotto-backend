@@ -9,6 +9,7 @@ export async function createAuditLogService(tx: Prisma.TransactionClient, data: 
       action: data.action,
       entity: data.entity,
       changes: data.changes,
+      description: data.description,
     },
   });
 }

@@ -8,7 +8,7 @@ interface UpdatePosServiceResponse {
 }
 
 export async function updatePosService(data: UpdatePosDTO & { user: AuthPayload }): Promise<UpdatePosServiceResponse> {
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async tx => {
     const pos = await tx.pos.findUnique({ where: { id: data.id } });
 
     if (!pos) throw new NotFoundError('POS não encontrado.');

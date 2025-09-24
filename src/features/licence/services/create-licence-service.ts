@@ -6,7 +6,7 @@ import { AuthPayload } from '../../../@types/auth-payload';
 import { makeLicenceReference } from '../utils/make-licence-reference';
 
 export async function createLicenceService(data: CreateLicenceDTO & { user: AuthPayload }) {
-  const id = await prisma.$transaction(async (tx) => {
+  const id = await prisma.$transaction(async tx => {
     const admin = await prisma.administration.findUnique({
       where: { name: data.admin_name },
       select: { name: true },
