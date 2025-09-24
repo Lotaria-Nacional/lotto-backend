@@ -4,7 +4,7 @@ import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '../../../@types/auth-payload';
 
 export async function deletePosService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const pos = await tx.pos.findUnique({ where: { id } });
 
     if (!pos) throw new NotFoundError(`O POS não foi encontrado.`);
@@ -16,6 +16,7 @@ export async function deletePosService(id: string, user: AuthPayload) {
       entity: 'POS',
       before: pos,
       after: null,
+      description: 'Removeu um ponto de venda',
     });
   });
 }

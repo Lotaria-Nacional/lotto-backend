@@ -2,11 +2,11 @@ import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '../../../@types/auth-payload';
-import { AgentStatus, UpdateAgentDTO } from '@lotaria-nacional/lotto';
 import { connectOrDisconnect } from '../../../utils/connect-disconnect';
+import { AgentStatus, UpdateAgentDTO } from '@lotaria-nacional/lotto';
 
 export async function updateAgentService({ user, ...data }: UpdateAgentDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const agent = await tx.agent.findUnique({
       where: {
         id: data.id,

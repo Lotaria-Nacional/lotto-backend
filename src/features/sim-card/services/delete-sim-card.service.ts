@@ -5,7 +5,7 @@ import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 
 export async function deleteSimCardService(id: string, user: AuthPayload) {
-  const simCardId = await prisma.$transaction(async tx => {
+  const simCardId = await prisma.$transaction(async (tx) => {
     const simCard = await tx.simCard.findUnique({
       where: {
         id,
@@ -25,6 +25,7 @@ export async function deleteSimCardService(id: string, user: AuthPayload) {
       entity: 'SIM_CARD',
       before: simCard,
       after: null,
+      description: 'Removeu um sim card do inventário',
     });
     return id;
   });

@@ -1,5 +1,4 @@
 import prisma from '../../../lib/prisma';
-import { audit } from '../../../utils/audit-log';
 import { ImportPosDTO } from '../services/import-pos-sevice';
 import { AuthPayload, PosStatus } from '@lotaria-nacional/lotto';
 import { BadRequestError, NotFoundError } from '../../../errors';
@@ -51,9 +50,10 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
           throw new Error(`Tipologia inválida: ${posData.tipologia}`);
         }
 
+        console.log(posData.cidade);
+
         const pos = await tx.pos.create({
           data: {
-            agent_id_reference: posData.idRevendedor,
             coordinates: posData.coordenadas,
             admin_name: posData.administracao,
             province_name: posData.provincia,
@@ -65,6 +65,7 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
             latitude,
             longitude,
             status: 'pending',
+            ...(posData.idRevendedor && posData.idRevendedor !== 0 ? { agent_id_reference: posData.idRevendedor } : {}),
           },
           include: {
             agent: { include: { terminal: true } },
@@ -138,14 +139,6 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
         await tx.pos.update({
           where: { id: pos.id },
           data: { status: newPosStatus },
-        });
-
-        // // --- Audit log ---
-        await audit(tx, 'IMPORT', {
-          user,
-          entity: 'POS',
-          before: null,
-          after: null,
         });
       });
     } catch (err: any) {

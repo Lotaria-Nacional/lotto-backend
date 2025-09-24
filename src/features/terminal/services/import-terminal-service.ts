@@ -11,6 +11,8 @@ interface ImportTerminalsResponse {
   errors: { row: any; error: any }[];
 }
 
+//TODO: add status on import
+
 export async function importTerminalsFromCsvService(file: string, user: AuthPayload): Promise<ImportTerminalsResponse> {
   const terminalsBatch: ImportTerminalsDTO[] = [];
   const errors: any[] = [];
@@ -134,6 +136,7 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
       entity: 'TERMINAL',
       before: null,
       after: null,
+      description: `Importou ${terminalsBatch.length + errors.length} terminais`,
     });
 
     return { errors, imported: terminalsBatch.length + errors.length };

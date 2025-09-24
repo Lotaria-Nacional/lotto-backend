@@ -48,7 +48,7 @@ export async function importAgentsFromCsvService(
       if (err instanceof ZodError) {
         errors.push({
           row,
-          error: err.issues.map(issue => ({
+          error: err.issues.map((issue) => ({
             campo: issue.path.join('.'),
             mensagem: issue.message,
           })),
@@ -64,7 +64,7 @@ export async function importAgentsFromCsvService(
     imported += agentsBatch.length;
   }
 
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     await audit(tx, 'IMPORT', {
       user,
       before: null,
@@ -81,7 +81,7 @@ const importAgentsSchema = z.object({
   id_reference: z.coerce.number().int(),
   name: z.string().trim(),
   last_name: z.string().trim(),
-  gender: z.string().transform(val => {
+  gender: z.string().transform((val) => {
     const v = val.toLowerCase();
     if (v === 'm' || v === 'masculino') return 'male';
     if (v === 'f' || v === 'feminino') return 'female';

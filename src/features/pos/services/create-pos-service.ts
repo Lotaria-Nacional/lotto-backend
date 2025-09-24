@@ -10,7 +10,7 @@ export async function createPosService({
   user,
   ...data
 }: CreatePosDTO & { user: AuthPayload }): Promise<CreatePosServiceResponse> {
-  const response = await prisma.$transaction(async tx => {
+  const response = await prisma.$transaction(async (tx) => {
     const posCreated = await tx.pos.create({
       data: {
         coordinates: data.coordinates,
@@ -33,6 +33,7 @@ export async function createPosService({
       user,
       after: posCreated,
       before: null,
+      description: 'Criou um ponto de venda',
     });
 
     return posCreated.id;

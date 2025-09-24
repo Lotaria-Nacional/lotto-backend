@@ -8,7 +8,7 @@ export async function updateUserService(data: UpdateUserDTO) {
 
   if (!user) throw new NotFoundError('Usuário não encontrado.');
 
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const updatedUser = await prisma.user.update({
       where: { id: data.id },
       data: {
@@ -23,6 +23,7 @@ export async function updateUserService(data: UpdateUserDTO) {
       user: data.user,
       before: user,
       after: updatedUser,
+      description: 'Atualizou os dados de um usuário',
     });
   });
 }

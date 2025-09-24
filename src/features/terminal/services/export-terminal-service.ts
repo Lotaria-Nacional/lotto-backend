@@ -19,7 +19,7 @@ export async function exportTerminalService(res: Response) {
     if (batch.length === 0) break;
 
     for (const terminal of batch) {
-      const line = [  
+      const line = [
         terminal.id,
         terminal.serial,
         terminal.device_id,

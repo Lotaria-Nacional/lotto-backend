@@ -1,8 +1,9 @@
 import prisma from '../../../lib/prisma';
-import { CreateGroupDTO } from '@lotaria-nacional/lotto';
+import { AuthPayload, CreateGroupDTO } from '@lotaria-nacional/lotto';
+import { audit } from '../../../utils/audit-log';
 
-export async function createGroupService(data: CreateGroupDTO) {
-  return await prisma.$transaction(async tx => {
+export async function createGroupService(data: CreateGroupDTO, user: AuthPayload) {
+  return await prisma.$transaction(async (tx) => {
     const group = await tx.group.create({
       data: {
         name: data.name,
@@ -12,7 +13,7 @@ export async function createGroupService(data: CreateGroupDTO) {
         ...(data.users_id &&
           data.users_id.length > 0 && {
             memberships: {
-              create: data.users_id.map(userId => ({
+              create: data.users_id.map((userId) => ({
                 user: { connect: { id: userId } },
               })),
             },
@@ -22,7 +23,7 @@ export async function createGroupService(data: CreateGroupDTO) {
         ...(data.permissions &&
           data.permissions.length > 0 && {
             permissions: {
-              create: data.permissions.map(permission => ({
+              create: data.permissions.map((permission) => ({
                 module: permission.module,
                 action: permission.actions,
               })),
@@ -34,6 +35,15 @@ export async function createGroupService(data: CreateGroupDTO) {
         permissions: true,
       },
     });
+
+    // await audit(tx, 'CREATE', {
+    //   // entity: 'GROUP',
+    //   entity: 'GROUP',
+    //   user: user,
+    //   before: null,
+    //   after: group,
+    //   description: 'Criou um grupo',
+    // });
 
     return group.id;
   });

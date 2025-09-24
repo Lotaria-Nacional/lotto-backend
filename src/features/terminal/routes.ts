@@ -17,6 +17,7 @@ import { associateSimCardOnTerminalController } from './controllers/associate-si
 import { markTerminalAsFixedController } from './controllers/mark-terminal-as-fixed.controller';
 import { exportTerminalController } from './controllers/export-terminals.controller';
 import { getTerminalsInfoController } from './controllers/get-terminals-info.controller';
+import { reporTerminalMalFunctionController } from './controllers/report-terminal-mal-function.controller';
 
 const terminalRouter = Router();
 
@@ -25,6 +26,7 @@ export const upload = multer({ dest: 'uploads/' });
 terminalRouter.post('/', catchErrors(createTerminalController));
 terminalRouter.post('/import', upload.single('file'), catchErrors(importTerminalsController));
 
+terminalRouter.put('/report-mal-function/:id', catchErrors(reporTerminalMalFunctionController));
 terminalRouter.put('/fix/:id', catchErrors(markTerminalAsFixedController));
 terminalRouter.put('/reset/:id', catchErrors(resetTerminalController));
 terminalRouter.put('/associate/:id', catchErrors(associateSimCardOnTerminalController));

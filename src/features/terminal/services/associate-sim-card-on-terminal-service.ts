@@ -44,14 +44,22 @@ export async function associateSimCardOnTerminalService(data: UpdateTerminalDTO 
       data: {
         status: 'ready',
       },
+      include: {
+        sim_card: true,
+      },
     });
 
+    const after: any = {
+      ...terminalUpdated,
+      sim_card: terminalUpdated.sim_card?.number ?? null,
+    };
     // Audit log
     await audit(tx, 'ASSOCIATE', {
       entity: 'TERMINAL',
       user: data.user,
       before: terminal,
-      after: terminalUpdated,
+      after,
+      description: 'Atribuiu um sim card a uma Máquina Sunmi v2',
     });
   });
 }

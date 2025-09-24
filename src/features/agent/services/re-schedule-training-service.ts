@@ -4,7 +4,7 @@ import { audit } from '../../../utils/audit-log';
 import { AuthPayload, UpdateAgentDTO } from '@lotaria-nacional/lotto';
 
 export async function reScheduleTrainingService(data: UpdateAgentDTO, user: AuthPayload) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const agent = await prisma.agent.findUnique({
       where: {
         id: data.id,
@@ -14,6 +14,9 @@ export async function reScheduleTrainingService(data: UpdateAgentDTO, user: Auth
     if (!agent) {
       throw new NotFoundError('Agente não encontrado.');
     }
+
+    console.log(data);
+    console.log(data.training_date);
 
     const agentUpdated = await prisma.agent.update({
       where: {
@@ -30,7 +33,7 @@ export async function reScheduleTrainingService(data: UpdateAgentDTO, user: Auth
       before: agent,
       after: agentUpdated,
       entity: 'AGENT',
-      description: `Re-agendou a formação do agente`,
+      description: `Reagendou a formação de um agente`,
     });
   });
 }

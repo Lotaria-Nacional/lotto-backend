@@ -4,7 +4,7 @@ import { BadRequestError, NotFoundError } from '../../../errors';
 import { AuthPayload, LicenceStatus, PosStatus, UpdatePosDTO } from '@lotaria-nacional/lotto';
 
 export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const pos = await tx.pos.findUnique({
       where: { id: data.id },
     });
@@ -102,12 +102,28 @@ export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO & 
       },
     });
 
+    let description = '';
+
+    const addedAgent = data.agent_id_reference && !pos.agent_id_reference;
+    const addedLicence = data.licence_reference && !pos.licence_reference;
+
+    if (addedAgent && addedLicence) {
+      description = 'Atribuiu um agente e uma licença ao Ponto de venda';
+    } else if (addedAgent) {
+      description = 'Atribuiu um agente ao Ponto de venda';
+    } else if (addedLicence) {
+      description = 'Atribuiu uma licença ao Ponto de venda';
+    } else {
+      description = 'Nenhuma atribuição nova feita ao Ponto de venda';
+    }
+
     // --- Audit log ---
     await audit(tx, 'ASSOCIATE', {
       user: data.user,
       entity: 'POS',
       before: pos,
       after: posUpdated,
+      description,
     });
   });
 }

@@ -304,6 +304,7 @@ enum AgentStatus {
   scheduled
   approved
   ready
+  disapproved
   discontinued
 }
 

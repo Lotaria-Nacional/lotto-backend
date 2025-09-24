@@ -3,18 +3,19 @@ import { AuthPayload } from '../../../@types/auth-payload';
 import { HttpStatus } from '../../../constants/http';
 import { paramsSchema } from '../../../schemas/common/query.schema';
 import { fetchTerminalsHistoryService } from '../services/fetch-terminals-history-service';
+import { hasPermission } from '../../../middleware/auth/permissions';
 
 export async function fetchTerminalsHistoryController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
 
-  // await hasPermission({
-  //   res,
-  //   userId: user.id,
-  //   permission: {
-  //     action: 'READ',
-  //     subject: 'AGENT',
-  //   },
-  // });
+  await hasPermission({
+    res,
+    userId: user.id,
+    permission: {
+      action: 'READ',
+      subject: 'TERMINAL',
+    },
+  });
 
   const query = paramsSchema.parse(req.query);
 

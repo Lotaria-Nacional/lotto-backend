@@ -4,7 +4,7 @@ import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '../../../@types/auth-payload';
 
 export async function deleteLicenceService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const licence = await tx.licence.findUnique({
       where: { id },
     });
@@ -18,6 +18,7 @@ export async function deleteLicenceService(id: string, user: AuthPayload) {
       entity: 'LICENCE',
       before: licence,
       after: null,
+      description: 'Removeu uma licença',
     });
   });
 }

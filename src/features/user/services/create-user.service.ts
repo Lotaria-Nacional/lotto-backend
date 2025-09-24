@@ -12,7 +12,7 @@ export async function createUserService({ user, ...data }: CreateUserDTO) {
   const salt = bcrypt.genSaltSync(10);
   const hashedPassword = await bcrypt.hash(data.password, salt);
 
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const userCreated = await tx.user.create({
       data: {
         first_name: data.first_name,
@@ -42,6 +42,7 @@ export async function createUserService({ user, ...data }: CreateUserDTO) {
       user,
       before: null,
       after: userCreated,
+      description: 'Criou um usuário',
     });
   });
 }

@@ -1,4 +1,5 @@
 import prisma from '../../../lib/prisma';
+
 import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
@@ -24,6 +25,7 @@ export async function markTerminalAsFixedService(id: string, user: AuthPayload) 
       user: user,
       before: terminal,
       after: terminalUpdated,
+      description: 'Concertou um terminal',
     });
   });
 }

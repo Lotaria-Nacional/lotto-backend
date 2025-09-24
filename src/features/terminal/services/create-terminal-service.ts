@@ -17,11 +17,19 @@ export async function createTerminalService({
       },
     });
 
+    let description = '';
+    if (data.note) {
+      description = 'Adicionou uma máquina SUNMI V2 e reportou uma avaria';
+    } else {
+      description = 'Adicionou uma máquina SUNMI V2 ao inventário';
+    }
+
     await audit(tx, 'CREATE', {
       entity: 'TERMINAL',
       user,
       before: null,
       after: terminal,
+      description,
     });
 
     return terminal;

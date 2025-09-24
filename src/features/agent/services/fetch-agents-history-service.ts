@@ -12,7 +12,7 @@ export async function fetchAgentsHistoryService(params: PaginationParams) {
 
   const agents = await prisma.agent.findMany({
     where: {
-      status: { in: ['discontinued', 'denied'] },
+      status: { in: ['discontinued', 'disapproved', 'denied'] },
     },
     take: params.limit,
     skip: offset,

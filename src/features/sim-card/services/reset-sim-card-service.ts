@@ -4,7 +4,7 @@ import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 
 export async function resetSimCardService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const simCard = await tx.simCard.findUnique({
       where: {
         id,
@@ -41,6 +41,7 @@ export async function resetSimCardService(id: string, user: AuthPayload) {
       user: user,
       after: simCard,
       before: simCardUpdated,
+      description: 'Resetou um sim card',
     });
   });
 }

@@ -4,7 +4,7 @@ import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 
 export async function resetAgentService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const agent = await tx.agent.findUnique({
       where: { id },
       include: {
@@ -14,6 +14,10 @@ export async function resetAgentService(id: string, user: AuthPayload) {
     });
 
     if (!agent) throw new NotFoundError('Agente não encontrado');
+
+    if (!agent.pos?.id && !agent.terminal?.id) {
+      throw new NotFoundError('Não há nada para resetar');
+    }
 
     // Resetar TERMINAL (se existir)
     if (agent.terminal?.id) {
@@ -36,12 +40,12 @@ export async function resetAgentService(id: string, user: AuthPayload) {
         },
       });
     }
-
+    
     // Atualizar AGENTE
     const agentUpdated = await tx.agent.update({
       where: { id },
       data: {
-        status: 'discontinued',
+        status: 'approved',
       },
     });
 

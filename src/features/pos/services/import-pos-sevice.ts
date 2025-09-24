@@ -1,6 +1,8 @@
 import fs from 'fs';
 import z from 'zod';
 import csvParser from 'csv-parser';
+import prisma from '../../../lib/prisma';
+import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 import { processPosBatch } from '../utils/process-pos-batch';
 
@@ -51,22 +53,41 @@ export async function importPosFromCsvService(filePath: string, user: AuthPayloa
     imported += posBatch.length;
   }
 
+  await prisma.$transaction(async (tx) => {
+    await audit(tx, 'IMPORT', {
+      user,
+      entity: 'POS',
+      before: null,
+      after: null,
+      description: `Importou ${imported} pontos de venda`,
+    });
+  });
+
   return { errors, imported };
 }
 // ID REVENDEDOR | PROVINCIA | ADMINISTRACAO | CIDADE | AREA | ZONA | ESTADO | TIPOLOGIA | LICENCA | COORDENADAS
 
 const importPosSchema = z.object({
   idRevendedor: z.coerce.number().int().optional(),
-  provincia: z.string().optional(),
-  administracao: z.string().optional(),
-  cidade: z.string().optional(),
+  provincia: z
+    .string()
+    .transform((val) => val?.trim().normalize('NFC'))
+    .optional(),
+  administracao: z
+    .string()
+    .optional()
+    .transform((val) => val?.trim()),
+  cidade: z
+    .string()
+    .optional()
+    .transform((val) => val?.trim().normalize('NFC')),
   area: z
     .string()
     .optional()
     .transform((val) => val?.toUpperCase()),
   zona: z.coerce.number().int().optional(),
   estado: z.string().optional(),
-  tipologia: z.string().optional(),
+  tipologia: z.string().min(1, 'Tipologia obrigatória'),
   licenca: z.string().optional(),
   coordenadas: z.string().optional(),
 });

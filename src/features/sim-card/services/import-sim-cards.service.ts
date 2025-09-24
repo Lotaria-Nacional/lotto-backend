@@ -1,14 +1,18 @@
 import fs from 'fs';
 import csvParser from 'csv-parser';
 import prisma from '../../../lib/prisma';
-import { CreateSimCardDTO, createSimCardSchema } from '@lotaria-nacional/lotto';
+import { AuthPayload, CreateSimCardDTO, createSimCardSchema } from '@lotaria-nacional/lotto';
+import { audit } from '../../../utils/audit-log';
 
 interface ImportSimCardResponse {
   imported: number;
   errors: { row: any; errors: any }[];
 }
 
-export async function importSimCardsFromCsvService(filePath: string): Promise<ImportSimCardResponse> {
+export async function importSimCardsFromCsvService(
+  filePath: string,
+  user: AuthPayload
+): Promise<ImportSimCardResponse> {
   const simCardsBatch: any[] = [];
   const errors: any[] = [];
   const BATCH_SIZE = 500;
@@ -46,6 +50,16 @@ export async function importSimCardsFromCsvService(filePath: string): Promise<Im
       skipDuplicates: true,
     });
   }
+
+  await prisma.$transaction(async (tx) => {
+    await audit(tx, 'IMPORT', {
+      entity: 'SIM_CARD',
+      user,
+      after: null,
+      before: null,
+      description: `Importou ${simCardsBatch.length + errors.length} sim cards no inventário`,
+    });
+  });
 
   return { errors, imported: simCardsBatch.length + errors.length };
 }

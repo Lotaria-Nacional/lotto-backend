@@ -6,7 +6,7 @@ import { BadRequestError, NotFoundError } from '../../../errors';
 import { makeLicenceReference } from '../utils/make-licence-reference';
 
 export async function updateLicenceService(data: UpdateLicenceDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const licence = await tx.licence.findUnique({
       where: { id: data.id },
       include: { pos: { select: { id: true } } },
@@ -56,6 +56,7 @@ export async function updateLicenceService(data: UpdateLicenceDTO & { user: Auth
       entity: 'LICENCE',
       before: licence,
       after: licenceUpdated,
+      description: `Atualizou os dados de uma licença`,
     });
   });
 }

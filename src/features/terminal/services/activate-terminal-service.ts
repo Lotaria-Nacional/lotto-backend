@@ -23,6 +23,7 @@ export async function activateTerminalService(id: string, user: AuthPayload) {
       user,
       before: terminal,
       after: terminalUpdated,
+      description: 'Ativou um terminal',
     });
   });
 }

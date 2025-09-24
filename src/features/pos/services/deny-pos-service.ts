@@ -4,7 +4,7 @@ import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 
 export async function denyPosService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const pos = await tx.pos.findUnique({
       where: {
         id,
@@ -24,11 +24,12 @@ export async function denyPosService(id: string, user: AuthPayload) {
       },
     });
 
-    await audit(tx, 'REPROVE', {
+    await audit(tx, 'DENY', {
       user: user,
       entity: 'POS',
       before: pos,
       after: posUpdated,
+      description: 'Negou um ponto de venda',
     });
   });
 }

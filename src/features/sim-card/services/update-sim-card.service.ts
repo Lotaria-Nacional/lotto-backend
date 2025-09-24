@@ -5,7 +5,7 @@ import { UpdateSimCardDTO } from '@lotaria-nacional/lotto';
 import { AuthPayload } from '../../../@types/auth-payload';
 
 export async function updateSimCardService({ user, ...data }: UpdateSimCardDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const simCard = await tx.simCard.findUnique({
       where: {
         id: data.id,
@@ -50,6 +50,7 @@ export async function updateSimCardService({ user, ...data }: UpdateSimCardDTO &
       user: user,
       before: simCard,
       after: updated,
+      description: 'Atualizou os dados de um sim card',
     });
   });
 }
