@@ -17,7 +17,7 @@ export async function fetchAgentsService(params: PaginationParams) {
     where,
     take: params.limit,
     skip: offset,
-    orderBy: { created_at: 'desc' },
+    orderBy: { first_name: 'asc' },
     select: {
       status: true,
       id: true,

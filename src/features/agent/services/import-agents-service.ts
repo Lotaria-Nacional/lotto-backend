@@ -1,10 +1,11 @@
 import fs from 'fs';
 import z, { ZodError } from 'zod';
 import csvParser from 'csv-parser';
+import prisma from '../../../lib/prisma';
+import { audit } from '../../../utils/audit-log';
 import { processAgentsBatch } from '../utils/process-batch-agents';
 import { AgentStatus, AuthPayload } from '@lotaria-nacional/lotto';
-import { audit } from '../../../utils/audit-log';
-import prisma from '../../../lib/prisma';
+import uploadCsvToImageKit from '../../../utils/upload-csv-to-image-kit';
 
 interface ImportAgentsFromCsvServiceResponse {
   imported: number;
@@ -48,7 +49,7 @@ export async function importAgentsFromCsvService(
       if (err instanceof ZodError) {
         errors.push({
           row,
-          error: err.issues.map((issue) => ({
+          error: err.issues.map(issue => ({
             campo: issue.path.join('.'),
             mensagem: issue.message,
           })),
@@ -64,13 +65,18 @@ export async function importAgentsFromCsvService(
     imported += agentsBatch.length;
   }
 
-  await prisma.$transaction(async (tx) => {
+  const url = await uploadCsvToImageKit(file);
+
+  await prisma.$transaction(async tx => {
     await audit(tx, 'IMPORT', {
       user,
       before: null,
       after: null,
       entity: 'AGENT',
       description: `Importou ${imported} agentes`,
+      metadata: {
+        file: url,
+      },
     });
   });
 
@@ -81,7 +87,7 @@ const importAgentsSchema = z.object({
   id_reference: z.coerce.number().int(),
   name: z.string().trim(),
   last_name: z.string().trim(),
-  gender: z.string().transform((val) => {
+  gender: z.string().transform(val => {
     const v = val.toLowerCase();
     if (v === 'm' || v === 'masculino') return 'male';
     if (v === 'f' || v === 'feminino') return 'female';

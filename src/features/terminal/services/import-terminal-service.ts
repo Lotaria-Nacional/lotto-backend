@@ -5,6 +5,7 @@ import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
 import { NotFoundError } from '../../../errors';
 import { AuthPayload, TerminalStatus, terminalStatusSchema } from '@lotaria-nacional/lotto';
+import uploadCsvToImageKit from '../../../utils/upload-csv-to-image-kit';
 
 interface ImportTerminalsResponse {
   imported: number;
@@ -20,7 +21,7 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
 
   const stream = fs.createReadStream(file).pipe(csvParser());
 
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async tx => {
     let status: TerminalStatus = 'ready';
 
     for await (const row of stream) {
@@ -100,7 +101,7 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
 
           if (terminalsBatch.length >= BATCH_SIZE) {
             await tx.terminal.createMany({
-              data: terminalsBatch.map((t) => ({
+              data: terminalsBatch.map(t => ({
                 serial: t.serialNumber,
                 device_id: t.deviceId,
                 status,
@@ -120,7 +121,7 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
 
     if (terminalsBatch.length > 0) {
       await tx.terminal.createMany({
-        data: terminalsBatch.map((t) => ({
+        data: terminalsBatch.map(t => ({
           serial: t.serialNumber,
           device_id: t.deviceId,
           status,
@@ -131,12 +132,17 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
       });
     }
 
+    const url = await uploadCsvToImageKit(file);
+
     await audit(tx, 'IMPORT', {
       user,
       entity: 'TERMINAL',
       before: null,
       after: null,
       description: `Importou ${terminalsBatch.length + errors.length} terminais`,
+      metadata: {
+        file: url,
+      },
     });
 
     return { errors, imported: terminalsBatch.length + errors.length };

@@ -3,10 +3,9 @@ import { audit } from '../../../utils/audit-log';
 import { UpdateLicenceDTO } from '@lotaria-nacional/lotto';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { BadRequestError, NotFoundError } from '../../../errors';
-import { makeLicenceReference } from '../utils/make-licence-reference';
 
 export async function updateLicenceService(data: UpdateLicenceDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const licence = await tx.licence.findUnique({
       where: { id: data.id },
       include: { pos: { select: { id: true } } },
@@ -29,15 +28,13 @@ export async function updateLicenceService(data: UpdateLicenceDTO & { user: Auth
       );
     }
 
-    const { reference } = makeLicenceReference(data, admin.name);
-
     const usedPosCount = licence.pos.length;
     const newStatus: 'free' | 'used' = usedPosCount >= newLimit ? 'used' : 'free';
 
     const licenceUpdated = await tx.licence.update({
       where: { id: data.id },
       data: {
-        reference,
+        reference: data.reference,
         number: data.number,
         latitude: data.latitude,
         longitude: data.longitude,

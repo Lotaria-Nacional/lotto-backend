@@ -4,6 +4,7 @@ import csvParser from 'csv-parser';
 import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
+import uploadCsvToImageKit from '../../../utils/upload-csv-to-image-kit';
 
 interface ImportLicenceResponse {
   imported: number;
@@ -20,7 +21,7 @@ export async function importLicencesFromCsvService(
 
   const stream = fs.createReadStream(filePath).pipe(csvParser());
 
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async tx => {
     for await (const row of stream) {
       try {
         const input: Partial<ImportLicenceDTO> & { reference: string } = {
@@ -62,12 +63,17 @@ export async function importLicencesFromCsvService(
       });
     }
 
+    const url = await uploadCsvToImageKit(filePath);
+
     await audit(tx, 'IMPORT', {
       user,
       before: null,
       after: null,
       entity: 'LICENCE',
       description: `Importou ${licencesBatch.length} licenças`,
+      metadata: {
+        file: url,
+      },
     });
 
     return { errors, imported: licencesBatch.length + errors.length };
@@ -80,7 +86,7 @@ export async function importLicencesFromCsvService(
 
 const importLicenceSchema = z.object({
   reference: z.string(),
-  admin_name: z.string().transform((val) => {
+  admin_name: z.string().transform(val => {
     const v = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
     return v;
   }),

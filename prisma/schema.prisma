@@ -227,6 +227,7 @@ model AuditLog {
   user_name   String
   user_email  String
   description String?
+  metadata    Json?
   action      Actions
   changes     Json
   created_at  DateTime @default(now())

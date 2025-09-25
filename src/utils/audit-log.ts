@@ -8,6 +8,7 @@ type AuditOptions<T> = {
   entity: Module;
   user: AuthPayload;
   description?: string;
+  metadata?: Record<any, any>;
   before?: T | null;
   after?: T | null;
 };
@@ -19,6 +20,7 @@ export async function audit<T>(tx: Prisma.TransactionClient, action: Action, opt
     user_name: options.user.name,
     user_email: options.user.email,
     description: options.description,
+    metadata: options.metadata,
     changes: {
       before: options.before ?? null,
       after: options.after ?? null,

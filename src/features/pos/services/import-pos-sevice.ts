@@ -5,6 +5,7 @@ import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 import { processPosBatch } from '../utils/process-pos-batch';
+import uploadCsvToImageKit from '../../../utils/upload-csv-to-image-kit';
 
 interface ImportPosResponse {
   imported: number;
@@ -53,13 +54,18 @@ export async function importPosFromCsvService(filePath: string, user: AuthPayloa
     imported += posBatch.length;
   }
 
-  await prisma.$transaction(async (tx) => {
+  const url = await uploadCsvToImageKit(filePath);
+
+  await prisma.$transaction(async tx => {
     await audit(tx, 'IMPORT', {
       user,
       entity: 'POS',
       before: null,
       after: null,
       description: `Importou ${imported} pontos de venda`,
+      metadata: {
+        file: url,
+      },
     });
   });
 
@@ -71,20 +77,20 @@ const importPosSchema = z.object({
   idRevendedor: z.coerce.number().int().optional(),
   provincia: z
     .string()
-    .transform((val) => val?.trim().normalize('NFC'))
+    .transform(val => val?.trim().normalize('NFC'))
     .optional(),
   administracao: z
     .string()
     .optional()
-    .transform((val) => val?.trim()),
+    .transform(val => val?.trim()),
   cidade: z
     .string()
     .optional()
-    .transform((val) => val?.trim().normalize('NFC')),
+    .transform(val => val?.trim().normalize('NFC')),
   area: z
     .string()
     .optional()
-    .transform((val) => val?.toUpperCase()),
+    .transform(val => val?.toUpperCase()),
   zona: z.coerce.number().int().optional(),
   estado: z.string().optional(),
   tipologia: z.string().min(1, 'Tipologia obrigatória'),

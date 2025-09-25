@@ -3,10 +3,9 @@ import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
 import { CreateLicenceDTO } from '@lotaria-nacional/lotto';
 import { AuthPayload } from '../../../@types/auth-payload';
-import { makeLicenceReference } from '../utils/make-licence-reference';
 
 export async function createLicenceService(data: CreateLicenceDTO & { user: AuthPayload }) {
-  const id = await prisma.$transaction(async (tx) => {
+  const id = await prisma.$transaction(async tx => {
     const admin = await prisma.administration.findUnique({
       where: { name: data.admin_name },
       select: { name: true },
@@ -14,11 +13,9 @@ export async function createLicenceService(data: CreateLicenceDTO & { user: Auth
 
     if (!admin) throw new NotFoundError('A administração não foi encontrada');
 
-    const { reference } = makeLicenceReference(data, admin.name);
-
     const licenceCreated = await tx.licence.create({
       data: {
-        reference,
+        reference: data.reference,
         number: data.number,
         description: data.description,
         emitted_at: data.emitted_at,
