@@ -2,12 +2,23 @@ import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { CreateTerminalDTO } from '@lotaria-nacional/lotto';
+import { BadRequestError } from '../../../errors';
 
 export async function createTerminalService({
   user,
   ...data
 }: CreateTerminalDTO & { user: AuthPayload }): Promise<{ id: string }> {
   const response = await prisma.$transaction(async (tx) => {
+    const existingTerminal = await tx.terminal.findUnique({
+      where: {
+        serial: data.serial,
+      },
+    });
+
+    if (existingTerminal) {
+      throw new BadRequestError('Já existe um terminal com esse número de série');
+    }
+
     const terminal = await tx.terminal.create({
       data: {
         note: data.note,

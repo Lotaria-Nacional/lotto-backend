@@ -1,11 +1,17 @@
 import prisma from '../../../lib/prisma';
-import { NotFoundError } from '../../../errors';
+import { BadRequestError, NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
 import { CreateLicenceDTO } from '@lotaria-nacional/lotto';
 import { AuthPayload } from '../../../@types/auth-payload';
 
 export async function createLicenceService(data: CreateLicenceDTO & { user: AuthPayload }) {
-  const id = await prisma.$transaction(async tx => {
+  const id = await prisma.$transaction(async (tx) => {
+    const existingLicence = await prisma.licence.findUnique({
+      where: { reference: data.reference },
+    });
+
+    if (existingLicence) throw new BadRequestError('Já existe uma licença com esta referência');
+
     const admin = await prisma.administration.findUnique({
       where: { name: data.admin_name },
       select: { name: true },
