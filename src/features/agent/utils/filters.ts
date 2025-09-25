@@ -31,7 +31,7 @@ export const getAgentsByStatus = (status: AgentStatus): Prisma.AgentWhereInput[]
   if (status === 'approved') return [{ status: { in: ['approved'] } }];
   if (status === 'scheduled') return [{ status: { in: ['scheduled'] } }];
   if (status === 'discontinued') return [{ status: { in: ['discontinued'] } }];
-  if (status === 'disaproved') return [{ status: { in: ['disaproved'] } }];
+  if (status === 'disapproved') return [{ status: { in: ['disapproved'] } }];
   if (status === 'active') return [{ status: { in: ['approved', 'active', 'ready'] } }];
   return [];
 };

@@ -1,8 +1,7 @@
 import prisma from '../../../lib/prisma';
 import { AuthPayload, CreateGroupDTO } from '@lotaria-nacional/lotto';
-import { audit } from '../../../utils/audit-log';
 
-export async function createGroupService(data: CreateGroupDTO, user: AuthPayload) {
+export async function createGroupService(data: CreateGroupDTO, _user: AuthPayload) {
   return await prisma.$transaction(async (tx) => {
     const group = await tx.group.create({
       data: {
@@ -37,8 +36,7 @@ export async function createGroupService(data: CreateGroupDTO, user: AuthPayload
     });
 
     // await audit(tx, 'CREATE', {
-    //   // entity: 'GROUP',
-    //   entity: 'GROUP',
+    //   entity: '',
     //   user: user,
     //   before: null,
     //   after: group,

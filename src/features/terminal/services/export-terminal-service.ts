@@ -26,7 +26,7 @@ export async function exportTerminalService(res: Response) {
         terminal.note,
         terminal.status,
         terminal.created_at.toISOString(),
-        terminal.arrived_at.toISOString(),
+        terminal?.arrived_at?.toISOString(),
         terminal.leaved_at?.toISOString() ?? '',
         terminal.agent_id_reference,
       ]

@@ -18,7 +18,7 @@ export async function createGroupController(req: Request, res: Response) {
 
   const body = createGroupSchema.parse(req.body);
 
-  const response = await createGroupService(body);
+  const response = await createGroupService(body, user);
 
   return res.status(HttpStatus.CREATED).json({ id: response });
 }
