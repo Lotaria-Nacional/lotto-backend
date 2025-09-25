@@ -53,7 +53,7 @@ model Terminal {
   status    TerminalStatus? @default(stock)
 
   created_at  DateTime  @default(now())
-  arrived_at  DateTime
+  arrived_at  DateTime?
   leaved_at   DateTime?
   delivery_at DateTime?
 
