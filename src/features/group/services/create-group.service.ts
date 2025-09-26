@@ -5,7 +5,7 @@ export async function createGroupService(data: CreateGroupDTO, _user: AuthPayloa
   return await prisma.$transaction(async (tx) => {
     // 1. Obter o grupo "pendente"
     const pendingGroup = await tx.group.findFirst({
-      where: { name: { equals: 'pendente', mode: 'insensitive' } },
+      where: { name: { equals: 'pendentes', mode: 'insensitive' } },
     });
 
     // 2. Criar o novo grupo
