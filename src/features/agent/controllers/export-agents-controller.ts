@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
+import { AuthPayload } from '@lotaria-nacional/lotto';
 import { hasPermission } from '../../../middleware/auth/permissions';
 import { exportAgentService } from '../services/export-agent-service';
-import { AuthPayload } from '@lotaria-nacional/lotto';
 
 export async function exportAgentController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
