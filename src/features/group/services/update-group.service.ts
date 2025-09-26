@@ -1,6 +1,6 @@
-import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
 import { UpdateGroupDTO } from '@lotaria-nacional/lotto';
+import prisma from '../../../lib/prisma';
 
 export async function updateGroupService(data: UpdateGroupDTO) {
   return await prisma.$transaction(async (tx) => {
