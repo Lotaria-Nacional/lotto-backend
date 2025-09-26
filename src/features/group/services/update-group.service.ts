@@ -14,7 +14,7 @@ export async function updateGroupService(data: UpdateGroupDTO) {
     const pendingGroup = await tx.group.findFirst({
       where: {
         name: {
-          equals: 'pendente',
+          equals: 'pendentes',
           mode: 'insensitive', // caso o nome tenha maiúsculas/minúsculas diferentes
         },
       },
