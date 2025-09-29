@@ -1,17 +1,10 @@
-import { NotFoundError } from '../../../errors';
-<<<<<<< HEAD:src/features/group/services/update-group.service.ts
-import { UpdateGroupDTO } from '@lotaria-nacional/lotto';
 import prisma from '../../../lib/prisma';
-
-export async function updateGroupService(data: UpdateGroupDTO) {
-  return await prisma.$transaction(async (tx) => {
-=======
 import { audit } from '../../../utils/audit-log';
+import { NotFoundError } from '../../../errors';
 import { AuthPayload, UpdateGroupDTO } from '@lotaria-nacional/lotto';
 
 export async function updateGroupService(data: UpdateGroupDTO, user: AuthPayload) {
   return await prisma.$transaction(async tx => {
->>>>>>> development:src/features/group/services/update-group-service.ts
     const group = await tx.group.findUnique({
       where: { id: data.id },
     });
@@ -38,11 +31,7 @@ export async function updateGroupService(data: UpdateGroupDTO, user: AuthPayload
       include: { permissions: true, memberships: true },
     });
 
-<<<<<<< HEAD:src/features/group/services/update-group.service.ts
     // 3. Atualizar permissões
-=======
-    // Atualizar permissões
->>>>>>> development:src/features/group/services/update-group-service.ts
     if (data.permissions) {
       await tx.groupPermission.deleteMany({
         where: { group_id: data.id },
@@ -50,7 +39,7 @@ export async function updateGroupService(data: UpdateGroupDTO, user: AuthPayload
 
       if (data.permissions.length > 0) {
         await tx.groupPermission.createMany({
-          data: data.permissions.map((perm) => ({
+          data: data.permissions.map(perm => ({
             group_id: data.id,
             module: perm.module,
             action: perm.actions,
@@ -59,11 +48,7 @@ export async function updateGroupService(data: UpdateGroupDTO, user: AuthPayload
       }
     }
 
-<<<<<<< HEAD:src/features/group/services/update-group.service.ts
     // 4. Atualizar membros
-=======
-    // Atualizar memberships
->>>>>>> development:src/features/group/services/update-group-service.ts
     if (data.users_id) {
       // 1. Procurar grupo "Pendentes"
       const pendingGroup = await tx.group.findFirst({
@@ -99,7 +84,7 @@ export async function updateGroupService(data: UpdateGroupDTO, user: AuthPayload
 
         // Adicionar ao grupo atualizado
         await tx.membership.createMany({
-          data: data.users_id.map((userId) => ({
+          data: data.users_id.map(userId => ({
             group_id: data.id,
             user_id: userId,
           })),
