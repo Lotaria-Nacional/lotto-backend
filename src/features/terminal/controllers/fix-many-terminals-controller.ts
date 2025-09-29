@@ -1,27 +1,27 @@
 import type { Request, Response } from 'express';
 import { HttpStatus } from '../../../constants/http';
 import { AuthPayload } from '@lotaria-nacional/lotto';
-import { idSchema } from '../../../schemas/common/id.schema';
-import { markTerminalAsFixedService } from '../services/mark-terminal-as-fixed-service';
 import { hasPermission } from '../../../middleware/auth/permissions';
+import { fixManyTerminalsService } from '../services/fix-many-terminals-service';
+import { manyIdsSchema } from '../../agent/controllers/approve-many-agents.controller';
 
-export async function markTerminalAsFixedController(req: Request, res: Response) {
+export async function fixManyTerminalsController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
 
   await hasPermission({
     res,
     userId: user.id,
     permission: {
-      action: 'APPROVE',
+      action: 'FIX',
       subject: 'TERMINAL',
     },
   });
 
-  const { id } = idSchema.parse(req.params);
+  const { ids } = manyIdsSchema.parse(req.body);
 
-  await markTerminalAsFixedService(id, user);
+  await fixManyTerminalsService(ids, user);
 
   return res.status(HttpStatus.OK).json({
-    message: 'O terminal foi concertado',
+    message: 'Os terminais foram concertados',
   });
 }

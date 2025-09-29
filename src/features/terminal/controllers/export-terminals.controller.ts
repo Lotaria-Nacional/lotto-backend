@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
+import { AuthPayload } from '@lotaria-nacional/lotto';
+import { paramsSchema } from '../../../schemas/common/query.schema';
 import { hasPermission } from '../../../middleware/auth/permissions';
 import { exportTerminalService } from '../services/export-terminal-service';
-import { AuthPayload } from '@lotaria-nacional/lotto';
 
 export async function exportTerminalController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
@@ -15,5 +16,7 @@ export async function exportTerminalController(req: Request, res: Response) {
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename="terminals.csv"');
 
-  await exportTerminalService(res);
+  const filters = paramsSchema.parse(req.query);
+
+  await exportTerminalService(res, filters);
 }

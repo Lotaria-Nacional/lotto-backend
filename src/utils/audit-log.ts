@@ -1,7 +1,6 @@
 import { Prisma } from '@prisma/client';
-import { Action } from '@lotaria-nacional/lotto';
+import { Action, Module } from '@lotaria-nacional/lotto';
 import { AuthPayload } from '../@types/auth-payload';
-import { Module } from '../features/group/@types/modules.t';
 import { createAuditLogService } from '../features/audit-log/services/create-audit-log-service';
 
 type AuditOptions<T> = {

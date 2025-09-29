@@ -1,5 +1,5 @@
 import type { Response, Request } from 'express';
-import { fetchManyGroupsService } from '../services/fetch-groups.service';
+import { fetchManyGroupsService } from '../services/fetch-groups-service';
 import { HttpStatus } from '../../../constants/http';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 import { hasPermission } from '../../../middleware/auth/permissions';

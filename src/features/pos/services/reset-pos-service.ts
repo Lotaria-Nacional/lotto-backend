@@ -4,7 +4,7 @@ import { audit } from '../../../utils/audit-log';
 import { AuthPayload, LicenceStatus } from '@lotaria-nacional/lotto';
 
 export async function resetPosService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const pos = await tx.pos.findUnique({
       where: { id },
     });
@@ -75,7 +75,7 @@ export async function resetPosService(id: string, user: AuthPayload) {
     const posUpdated = await tx.pos.update({
       where: { id: pos.id },
       data: {
-        status: 'discontinued',
+        status: 'approved',
         agent_id_reference: null,
         licence_reference: null,
       },

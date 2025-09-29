@@ -13,7 +13,7 @@ export async function updateAgentController(req: Request, res: Response) {
     userId: user.id,
     permission: {
       action: 'UPDATE',
-      subject: 'TRAINING',
+      subject: 'AGENT',
     },
   });
 

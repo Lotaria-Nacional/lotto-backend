@@ -1,9 +1,9 @@
-import { Request, Response } from 'express';
-import { AuthPayload } from '../../../@types/auth-payload';
-import { getUserPermissionsService } from '../services/get-user-permissions.service';
 import redis from '../../../lib/redis';
-import { HttpStatus } from '../../../constants/http';
+import { Request, Response } from 'express';
 import { setCache } from '../../../utils/redis';
+import { HttpStatus } from '../../../constants/http';
+import { AuthPayload } from '../../../@types/auth-payload';
+import { getUserPermissionsService } from '../services/get-user-permissions-service';
 
 export async function getProfileController(req: Request, res: Response) {
   const user = req.user as AuthPayload;

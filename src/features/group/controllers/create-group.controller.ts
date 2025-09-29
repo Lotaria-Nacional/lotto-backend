@@ -1,8 +1,8 @@
 import type { Response, Request } from 'express';
-import { createGroupService } from '../services/create-group.service';
 import { HttpStatus } from '../../../constants/http';
-import { AuthPayload, createGroupSchema } from '@lotaria-nacional/lotto';
 import { hasPermission } from '../../../middleware/auth/permissions';
+import { createGroupService } from '../services/create-group-service';
+import { AuthPayload, createGroupSchema } from '@lotaria-nacional/lotto';
 
 export async function createGroupController(req: Request, res: Response) {
   const user = req.user as AuthPayload;

@@ -1,112 +1,52 @@
+import { Response } from 'express';
 import { Pos } from '@prisma/client';
 import prisma from '../../../lib/prisma';
-import { stringify } from 'csv-stringify';
-import type { Response } from 'express';
+import { buildPosWhereInput } from '../utils/filter';
+import { PaginationParams } from '../../../@types/pagination-params';
 
-export async function exportPosService(res: Response, { buffered = false }: { buffered?: boolean } = {}) {
-  // Busca POS em batches (para streaming)
-  if (!buffered) {
-    const cursorSize = 1000;
-    let cursor: string | null = null;
+export async function exportPosService(res: Response, filters: PaginationParams) {
+  const where = buildPosWhereInput(filters);
 
-    // Headers do CSV
-    res.write(
-      'id,latitude,longitude,status,created_at,admin_name,province_name,city_name,area_name,zone_number,type_name,subtype_name,agent_id_reference,licence_reference\n'
-    );
+  // Cabeçalhos CSV
+  res.write('LATITUDE,LONGITUDE,ESTADO,DATA CRIACAO,ADMINISTRACAO,PROVINCIA,CIDADE,AREA,ZONA,TIPO,ID AGENTE,LICENCA\n');
 
-    while (true) {
-      const batch: Pos[] = await prisma.pos.findMany({
-        take: cursorSize,
-        skip: cursor ? 1 : 0,
-        cursor: cursor ? { id: cursor } : undefined,
-      });
+  let cursor: string | null = null;
+  const batchSize = 500;
 
-      if (batch.length === 0) break;
-
-      for (const pos of batch) {
-        const line =
-          [
-            pos.id,
-            pos.latitude,
-            pos.longitude,
-            pos.status,
-            pos.created_at.toISOString(),
-            pos.admin_name,
-            pos.province_name,
-            pos.city_name,
-            pos.area_name ?? '',
-            pos.zone_number ?? '',
-            pos.type_name ?? '',
-            pos.subtype_name ?? '',
-            pos.agent_id_reference ?? '',
-            pos.licence_reference ?? '',
-          ].join(',') + '\n';
-
-        res.write(line);
-      }
-
-      cursor = batch[batch.length - 1].id;
-    }
-
-    res.end();
-    return;
-  }
-
-  // ---------------------------
-  // 📦 Modo "buffered" → gera tudo de uma vez
-  // ---------------------------
-  const allPos = await prisma.pos.findMany();
-  const stringifier = stringify({
-    header: true,
-    columns: [
-      'id',
-      'latitude',
-      'longitude',
-      'status',
-      'created_at',
-      'admin_name',
-      'province_name',
-      'city_name',
-      'area_name',
-      'zone_number',
-      'type_name',
-      'subtype_name',
-      'agent_id_reference',
-      'licence_reference',
-    ],
-  });
-
-  let csv = '';
-  for (const pos of allPos) {
-    stringifier.write({
-      id: pos.id,
-      latitude: pos.latitude,
-      longitude: pos.longitude,
-      status: pos.status,
-      created_at: pos.created_at.toISOString(),
-      admin_name: pos.admin_name,
-      province_name: pos.province_name,
-      city_name: pos.city_name,
-      area_name: pos.area_name ?? '',
-      zone_number: pos.zone_number ?? '',
-      type_name: pos.type_name ?? '',
-      subtype_name: pos.subtype_name ?? '',
-      agent_id_reference: pos.agent_id_reference ?? '',
-      licence_reference: pos.licence_reference ?? '',
+  while (true) {
+    const batch: Pos[] = await prisma.pos.findMany({
+      take: batchSize,
+      skip: cursor ? 1 : 0,
+      ...(cursor ? { cursor: { id: cursor } } : {}),
+      orderBy: { id: 'desc' },
+      where,
     });
+
+    if (batch.length === 0) break;
+
+    for (const pos of batch) {
+      const line = [
+        pos.latitude,
+        pos.longitude,
+        pos.status,
+        pos.created_at?.toISOString().split('T')[0] ?? '',
+        pos.admin_name,
+        pos.province_name,
+        pos.city_name,
+        pos.area_name ?? '',
+        pos.zone_number ?? '',
+        pos.subtype_name ?? pos.type_name,
+        pos.agent_id_reference ?? '',
+        pos.licence_reference ?? '',
+      ]
+        .map(v => `"${v ?? ''}"`)
+        .join(',');
+
+      res.write(line + '\n');
+    }
+
+    cursor = batch[batch.length - 1].id;
   }
 
-  stringifier.end();
-
-  stringifier.on('readable', () => {
-    let row;
-    while ((row = stringifier.read()) !== null) {
-      csv += row;
-    }
-  });
-
-  await new Promise<void>(resolve => stringifier.on('end', resolve));
-
-  res.setHeader('Content-Length', Buffer.byteLength(csv));
-  res.end(csv);
+  res.end();
 }

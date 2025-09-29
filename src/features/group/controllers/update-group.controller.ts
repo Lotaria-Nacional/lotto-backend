@@ -21,7 +21,7 @@ export async function updateGroupController(req: Request, res: Response) {
 
   const body = updateGroupSchema.parse({ ...req.body, id });
 
-  const response = updateGroupService(body);
+  const response = updateGroupService(body, user);
 
   return res.status(HttpStatus.OK).json({ message: 'Grupo atualizado com sucesso', id: response });
 }

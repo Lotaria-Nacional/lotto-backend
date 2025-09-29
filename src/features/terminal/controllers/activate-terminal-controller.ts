@@ -12,7 +12,7 @@ export async function associateSimCardOnTerminalController(req: Request, res: Re
     res,
     userId: user.id,
     permission: {
-      action: 'ASSOCIATE',
+      action: 'ACTIVATE',
       subject: 'TERMINAL',
     },
   });

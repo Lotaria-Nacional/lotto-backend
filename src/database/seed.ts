@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 async function seedData() {
   try {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
       /* RESET DATABASE */
       await resetDatabase(tx);
 
@@ -72,7 +72,7 @@ async function resetDatabase(tx: Prisma.TransactionClient) {
 async function seedAreas(tx: Prisma.TransactionClient) {
   const areasData = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-  const areas = await Promise.all(areasData.map((name) => tx.area.create({ data: { name } })));
+  const areas = await Promise.all(areasData.map(name => tx.area.create({ data: { name } })));
 
   return areas;
 }
@@ -81,16 +81,16 @@ async function seedAreas(tx: Prisma.TransactionClient) {
 async function seedZones(tx: Prisma.TransactionClient) {
   const zoneNumbers = Array.from({ length: 24 }, (_, i) => i + 1);
 
-  const zones = await Promise.all(zoneNumbers.map((number) => tx.zone.create({ data: { number } })));
+  const zones = await Promise.all(zoneNumbers.map(number => tx.zone.create({ data: { number } })));
 
   return zones;
 }
 
 /* ================= SEED ADMINISTRATIONS ================= */
 async function seedAdministrations(tx: Prisma.TransactionClient) {
-  const adminNames = ['Kilamba Kiaxi', 'Ingombotas', 'Samba', 'Talatona', 'Viana', 'Cacuaco', 'Cazenga', 'Sambizanga'];
+  const adminNames = ['Kilamba Kiaxi', 'Ingombota', 'Samba', 'Talatona', 'Viana', 'Cacuaco', 'Cazenga', 'Sambizanga'];
 
-  const administrations = await Promise.all(adminNames.map((name) => tx.administration.create({ data: { name } })));
+  const administrations = await Promise.all(adminNames.map(name => tx.administration.create({ data: { name } })));
 
   return administrations;
 }
@@ -100,8 +100,8 @@ async function seedProvinceAndCities(tx: Prisma.TransactionClient, areas: any[],
   const { id: luandaId } = await tx.province.create({ data: { name: 'Luanda' } });
 
   const citiesData = [
-    { name: 'Ingombotas', area: areas[0], zone: zones[0], adminName: 'Ingombotas' },
-    { name: 'Mutamba', area: areas[0], zone: zones[1], adminName: 'Ingombotas' },
+    { name: 'Ingombota', area: areas[0], zone: zones[0], adminName: 'Ingombota' },
+    { name: 'Mutamba', area: areas[0], zone: zones[1], adminName: 'Ingombota' },
     { name: 'Samba', area: areas[0], zone: zones[2], adminName: 'Samba' },
     { name: 'Morro bento', area: areas[0], zone: zones[3], adminName: 'Talatona' },
     { name: 'Nova vida', area: areas[1], zone: zones[4], adminName: 'Kilamba Kiaxi' },
@@ -127,7 +127,7 @@ async function seedProvinceAndCities(tx: Prisma.TransactionClient, areas: any[],
   ];
 
   for (const city of citiesData) {
-    const admin = administrations.find((a) => a.name === city.adminName);
+    const admin = administrations.find(a => a.name === city.adminName);
     await tx.city.create({
       data: {
         name: city.name,
