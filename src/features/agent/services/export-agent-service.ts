@@ -2,8 +2,13 @@ import { Response } from 'express';
 import { Agent } from '@prisma/client';
 import prisma from '../../../lib/prisma';
 import { AgentStatus } from '@lotaria-nacional/lotto';
+import { PaginationParams } from '../../../@types/pagination-params';
+import { buildAgentWhereInput } from '../utils/filters';
 
-export async function exportAgentService(res: Response) {
+export async function exportAgentService(res: Response, filters: PaginationParams) {
+  // Gerar WHERE com base nos filtros já existentes
+  const where = buildAgentWhereInput(filters);
+
   // Cabeçalho CSV
   res.write(`ID, NOME, SOBRENOME, GENERO, Nº TELEFONE, Nº BI, ESTADO, DATA DE FORMACAO\n`);
 
@@ -16,6 +21,7 @@ export async function exportAgentService(res: Response) {
       skip: cursor ? 1 : 0,
       ...(cursor ? { cursor: { id: cursor } } : {}),
       orderBy: { id: 'asc' },
+      where,
     });
 
     if (batch.length === 0) break;
@@ -42,7 +48,7 @@ export async function exportAgentService(res: Response) {
         agentStatus[agent.status],
         agent.training_date?.toISOString().split('T')[0] ?? '',
       ]
-        .map((v) => `"${v ?? ''}"`)
+        .map(v => `"${v ?? ''}"`)
         .join(',');
 
       res.write(line + '\n');

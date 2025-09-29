@@ -1,7 +1,6 @@
 import prisma from '../../../lib/prisma';
 import { ImportPosDTO } from '../services/import-pos-sevice';
 import { AuthPayload, PosStatus } from '@lotaria-nacional/lotto';
-import { BadRequestError } from '../../../errors';
 
 type ProcessPosBatchParams = {
   posList: ImportPosDTO[];
@@ -12,7 +11,7 @@ type ProcessPosBatchParams = {
 export async function processPosBatch({ posList, user, errors }: ProcessPosBatchParams) {
   for (const posData of posList) {
     try {
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async tx => {
         // --- Coordenadas ---
         let latitude = 0;
         let longitude = 0;
@@ -42,7 +41,7 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
             if (subtype) typeName = subtype.type.name;
           }
         }
-        if (!typeName) throw new Error(`Tipologia inválida: ${posData.tipologia}`);
+        // if (!typeName) throw new Error(`Tipologia inválida: ${posData.tipologia}`);
 
         // --- Criar POS (mesmo sem licença) ---
         const pos = await tx.pos.create({
@@ -92,7 +91,7 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
 
               hasLicence = true;
             } else {
-              throw new BadRequestError(`Licença ${posData.licenca} atingiu o limite de uso`);
+              // throw new BadRequestError(`Licença ${posData.licenca} atingiu o limite de uso`);
             }
           }
         }

@@ -24,6 +24,6 @@ export async function getUserPermissionsService(userId: string) {
 
   return permissions.map(p => ({
     action: p.action,
-    module: p.module,
+    feature: p.module,
   }));
 }

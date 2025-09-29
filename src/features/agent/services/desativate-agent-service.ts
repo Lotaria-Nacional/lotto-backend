@@ -4,7 +4,7 @@ import { AuthPayload } from '@lotaria-nacional/lotto';
 import { audit } from '../../../utils/audit-log';
 
 export async function desativateAgentService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const agent = await tx.agent.findUnique({
       where: { id },
       include: {

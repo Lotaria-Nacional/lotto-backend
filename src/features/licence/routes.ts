@@ -7,9 +7,10 @@ import {
   deleteManyLicencesController,
 } from './controllers';
 import { Router } from 'express';
+import { upload } from '../agent/routes';
 import catchErrors from '../../utils/catch-errors';
 import { importLicencesController } from './controllers/import-licence.controller';
-import { upload } from '../agent/routes';
+import { exportLicencesController } from './controllers/export-licences.controller';
 
 const licenceRouter = Router();
 
@@ -21,6 +22,7 @@ licenceRouter.put('/:id', catchErrors(updateLicenceController));
 licenceRouter.delete('/bulk', catchErrors(deleteManyLicencesController));
 licenceRouter.delete('/:id', catchErrors(deleteLicenceController));
 
+licenceRouter.get('/export', catchErrors(exportLicencesController));
 licenceRouter.get('/:id', catchErrors(getLicenceController));
 licenceRouter.get('/', catchErrors(fetchManyLicencesController));
 

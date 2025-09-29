@@ -5,7 +5,7 @@ import { AuthPayload } from '../../../@types/auth-payload';
 import { Terminal, TerminalStatus, UpdateTerminalDTO } from '@lotaria-nacional/lotto';
 
 export async function updateTerminalService({ user, ...data }: UpdateTerminalDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const terminal = await tx.terminal.findUnique({
       where: { id: data.id },
       include: { sim_card: true, agent: { select: { pos: true } } },

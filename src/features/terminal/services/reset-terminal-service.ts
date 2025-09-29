@@ -4,7 +4,7 @@ import { AuthPayload } from '@lotaria-nacional/lotto';
 import { BadRequestError, NotFoundError } from '../../../errors';
 
 export async function resetTerminalService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const terminal = await tx.terminal.findUnique({
       where: { id },
       include: { sim_card: true },

@@ -4,8 +4,8 @@ import { audit } from '../../../utils/audit-log';
 import { BadRequestError, NotFoundError } from '../../../errors';
 import { AgentStatus, AuthPayload, UpdateAgentDTO } from '@lotaria-nacional/lotto';
 
-export async function associateTerminalOnAgentService(data: UpdateAgentDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async (tx) => {
+export async function activateAgentService(data: UpdateAgentDTO & { user: AuthPayload }) {
+  await prisma.$transaction(async tx => {
     const agent = await tx.agent.findUnique({
       where: { id: data.id },
       include: { pos: true, terminal: true },
@@ -59,7 +59,7 @@ export async function associateTerminalOnAgentService(data: UpdateAgentDTO & { u
     });
 
     // --- Audit log ---
-    await audit(tx, 'ASSOCIATE', {
+    await audit(tx, 'ACTIVATE', {
       user: data.user,
       before: agent,
       after: agentUpdated,

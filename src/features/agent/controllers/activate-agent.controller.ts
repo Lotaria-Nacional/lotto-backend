@@ -3,16 +3,16 @@ import { HttpStatus } from '../../../constants/http';
 import { idSchema } from '../../../schemas/common/id.schema';
 import { hasPermission } from '../../../middleware/auth/permissions';
 import { AuthPayload, updateAgentSchema } from '@lotaria-nacional/lotto';
-import { associateTerminalOnAgentService } from '../services/associate-terminal-on-agent-service';
+import { activateAgentService } from '../services/activate-agent-service';
 
-export async function associatePosAndTerminalOnAgentController(req: Request, res: Response) {
+export async function activateAgentController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
 
   await hasPermission({
     res,
     userId: user.id,
     permission: {
-      action: 'ASSOCIATE',
+      action: 'ACTIVATE',
       subject: 'AGENT',
     },
   });
@@ -21,7 +21,7 @@ export async function associatePosAndTerminalOnAgentController(req: Request, res
 
   const body = updateAgentSchema.parse({ ...req.body, id });
 
-  await associateTerminalOnAgentService({ ...body, user });
+  await activateAgentService({ ...body, user });
 
   return res.status(HttpStatus.OK).json({ message: 'Agente ativado' });
 }

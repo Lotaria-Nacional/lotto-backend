@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { oneDayFromNowInMs } from '../../../utils/date';
 import { loginSchema } from '../schemas/login.schema';
-import { loginService } from '../services/login.service';
+import { loginService } from '../services/login-service';
 
 export async function loginController(req: Request, res: Response) {
   const body = loginSchema.parse(req.body);

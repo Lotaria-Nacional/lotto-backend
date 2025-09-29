@@ -3,8 +3,8 @@ import { audit } from '../../../utils/audit-log';
 import { BadRequestError, NotFoundError } from '../../../errors';
 import { AuthPayload, LicenceStatus, PosStatus, UpdatePosDTO } from '@lotaria-nacional/lotto';
 
-export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async (tx) => {
+export async function activatePosService(data: UpdatePosDTO & { user: AuthPayload }) {
+  await prisma.$transaction(async tx => {
     const pos = await tx.pos.findUnique({
       where: { id: data.id },
     });
@@ -118,7 +118,7 @@ export async function associateAgentAndLicenceToPosService(data: UpdatePosDTO & 
     }
 
     // --- Audit log ---
-    await audit(tx, 'ASSOCIATE', {
+    await audit(tx, 'ACTIVATE', {
       user: data.user,
       entity: 'POS',
       before: pos,

@@ -12,7 +12,7 @@ export async function reporTerminalMalFunctionController(req: Request, res: Resp
     res,
     userId: user.id,
     permission: {
-      action: 'UPDATE',
+      action: 'REPORT',
       subject: 'TERMINAL',
     },
   });

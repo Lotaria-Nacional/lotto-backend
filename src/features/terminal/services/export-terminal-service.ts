@@ -2,6 +2,8 @@ import { Response } from 'express';
 import prisma from '../../../lib/prisma';
 import { Terminal } from '@prisma/client';
 import { TerminalStatus } from '@lotaria-nacional/lotto';
+import { PaginationParams } from '../../../@types/pagination-params';
+import { buildTermninalWhereInput } from '../utils/filters';
 
 const terminalStatus: Record<TerminalStatus, string> = {
   ready: 'Pronto',
@@ -14,7 +16,9 @@ const terminalStatus: Record<TerminalStatus, string> = {
   maintenance: 'Em manuntencao',
 };
 
-export async function exportTerminalService(res: Response) {
+export async function exportTerminalService(res: Response, filters: PaginationParams) {
+  const where = buildTermninalWhereInput(filters);
+
   res.write('ID REVENDEDOR, Nº DE SERIE, DEVICE ID, ESTADO, DATA DE ENTRADA, DATA DE SAIDA\n');
 
   let cursor: string | null = null;
@@ -29,6 +33,7 @@ export async function exportTerminalService(res: Response) {
       include: {
         sim_card: true,
       },
+      where,
     });
 
     if (batch.length === 0) break;
@@ -42,7 +47,7 @@ export async function exportTerminalService(res: Response) {
         terminal?.arrived_at?.toISOString().split('T')[0] ?? '',
         terminal.leaved_at?.toISOString().split('T')[0] ?? '',
       ]
-        .map((v) => `"${v ?? ''}"`)
+        .map(v => `"${v ?? ''}"`)
         .join(',');
 
       res.write(line + '\n');
