@@ -95,7 +95,13 @@ const importAgentsSchema = z.object({
     if (v === 'f' || v === 'feminino') return 'female';
     return 'male';
   }),
-  training_date: z.coerce.date(),
+  training_date: z
+    .string()
+    .refine(val => /^(\d{2})\/(\d{2})\/(\d{4})$/.test(val), { message: 'Formato inválido DD/MM/YYYY' })
+    .transform(val => {
+      const [day, month, year] = val.split('/').map(Number);
+      return new Date(year, month - 1, day);
+    }),
   status: z
     .string()
     .transform((val): AgentStatus | undefined => {

@@ -22,20 +22,10 @@ const importTerminalsSchema = z.object({
   chipSerialNumber: z.string().optional(),
   activationDate: z
     .string()
-    .nullable()
+    .refine(val => /^(\d{2})\/(\d{2})\/(\d{4})$/.test(val), { message: 'Formato inválido DD/MM/YYYY' })
     .transform(val => {
-      if (!val) return null;
-      try {
-        if (val.includes('/')) {
-          const [day, month, year] = val.split('/');
-          const date = new Date(`${year}-${month}-${day}`);
-          return isNaN(date.getTime()) ? null : date;
-        }
-        const date = new Date(val);
-        return isNaN(date.getTime()) ? null : date;
-      } catch {
-        return null;
-      }
+      const [day, month, year] = val.split('/').map(Number);
+      return new Date(year, month - 1, day);
     })
     .optional(),
 });

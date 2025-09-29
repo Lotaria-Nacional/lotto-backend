@@ -16,8 +16,20 @@ export const importLicenceSchema = z.object({
   admin_name: z.string().transform(val => val.charAt(0).toUpperCase() + val.slice(1).toLowerCase()),
   coordinates: z.string().optional(),
   district: z.string().optional(),
-  emitted_at: z.coerce.date(),
-  expires_at: z.coerce.date(),
+  emitted_at: z
+    .string()
+    .refine(val => /^(\d{2})\/(\d{2})\/(\d{4})$/.test(val), { message: 'Formato inválido DD/MM/YYYY' })
+    .transform(val => {
+      const [day, month, year] = val.split('/').map(Number);
+      return new Date(year, month - 1, day);
+    }),
+  expires_at: z
+    .string()
+    .refine(val => /^(\d{2})\/(\d{2})\/(\d{4})$/.test(val), { message: 'Formato inválido DD/MM/YYYY' })
+    .transform(val => {
+      const [day, month, year] = val.split('/').map(Number);
+      return new Date(year, month - 1, day);
+    }),
   number: z.string(),
   description: z.string(),
   limit: z.coerce.number().default(1),
