@@ -18,7 +18,9 @@ export async function importPosFromCsvService(filePath: string, user: AuthPayloa
   const BATCH_SIZE = 500;
   let imported = 0;
 
-  const stream = fs.createReadStream(filePath).pipe(csvParser());
+  const stream = fs
+    .createReadStream(filePath)
+    .pipe(csvParser({ mapHeaders: ({ header }) => header.replace(/^\uFEFF/, '').trim() }));
 
   for await (const row of stream) {
     try {
@@ -76,23 +78,54 @@ const importPosSchema = z.object({
   idRevendedor: z.coerce.number().int().optional(),
   provincia: z
     .string()
-    .transform(val => val?.trim().normalize('NFC'))
+    .transform(val => {
+      if (!val) return undefined;
+      const trimmed = val.trim().normalize('NFC').toLowerCase();
+      return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+    })
     .optional(),
+
   administracao: z
     .string()
     .optional()
-    .transform(val => val?.trim()),
+    .transform(val => {
+      if (!val) return undefined;
+      const trimmed = val.trim().toLowerCase();
+      return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+    }),
+
   cidade: z
     .string()
     .optional()
-    .transform(val => val?.trim().normalize('NFC')),
+    .transform(val => {
+      if (!val) return undefined;
+      const trimmed = val.trim().normalize('NFC').toLowerCase();
+      return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+    }),
   area: z
     .string()
     .optional()
-    .transform(val => val?.toUpperCase()),
-  zona: z.coerce.number().int().optional(),
+    .transform(val => {
+      if (!val) return undefined;
+      // Converte para maiúsculas e remove espaços extras
+      const normalized = val.trim().toUpperCase();
+      // Remove a palavra "AREA" se existir e captura a letra seguinte
+      const match = normalized.match(/(?:AREA\s*)?([A-D])/);
+      return match ? match[1] : undefined;
+    }),
+  zona: z
+    .string()
+    .optional()
+    .transform(val => {
+      if (!val) return undefined;
+      // Remove espaços e deixa maiúsculas (opcional)
+      const normalized = val.trim().toUpperCase();
+      // Captura o número que vem depois de "ZONA"
+      const match = normalized.match(/(?:ZONA\s*)?(\d+)/);
+      return match ? parseInt(match[1], 10) : undefined;
+    }),
   estado: z.string().optional(),
-  tipologia: z.string().min(1, 'Tipologia obrigatória'),
+  tipologia: z.string().optional(),
   licenca: z.string().optional(),
   coordenadas: z.string().optional(),
 });

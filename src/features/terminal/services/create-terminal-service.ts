@@ -1,14 +1,14 @@
 import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
+import { BadRequestError } from '../../../errors';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { CreateTerminalDTO } from '@lotaria-nacional/lotto';
-import { BadRequestError } from '../../../errors';
 
 export async function createTerminalService({
   user,
   ...data
 }: CreateTerminalDTO & { user: AuthPayload }): Promise<{ id: string }> {
-  const response = await prisma.$transaction(async (tx) => {
+  const response = await prisma.$transaction(async tx => {
     const existingTerminal = await tx.terminal.findUnique({
       where: {
         serial: data.serial,
