@@ -83,17 +83,18 @@ export async function importLicencesFromCsvService(
   }
 
   const url = await uploadCsvToImageKit(filePath);
-
-  await prisma.$transaction(async tx => {
-    await audit(tx, 'IMPORT', {
-      user,
-      before: null,
-      after: null,
-      entity: 'LICENCE',
-      description: `Importou ${totalImported} licenças`,
-      metadata: { file: url },
+  if (totalImported > 0) {
+    await prisma.$transaction(async tx => {
+      await audit(tx, 'IMPORT', {
+        user,
+        before: null,
+        after: null,
+        entity: 'LICENCE',
+        description: `Importou ${totalImported} licenças`,
+        metadata: { file: url },
+      });
     });
-  });
+  }
 
   return { errors, imported: totalImported };
 }

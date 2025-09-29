@@ -67,18 +67,20 @@ export async function importAgentsFromCsvService(
 
   const url = await uploadCsvToImageKit(file);
 
-  await prisma.$transaction(async tx => {
-    await audit(tx, 'IMPORT', {
-      user,
-      before: null,
-      after: null,
-      entity: 'AGENT',
-      description: `Importou ${imported} agentes`,
-      metadata: {
-        file: url,
-      },
+  if (imported > 0) {
+    await prisma.$transaction(async tx => {
+      await audit(tx, 'IMPORT', {
+        user,
+        before: null,
+        after: null,
+        entity: 'AGENT',
+        description: `Importou ${imported} agentes`,
+        metadata: {
+          file: url,
+        },
+      });
     });
-  });
+  }
 
   return { errors, imported };
 }
