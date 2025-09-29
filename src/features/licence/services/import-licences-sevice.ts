@@ -11,85 +11,9 @@ interface ImportLicenceResponse {
   errors: { row: any; error: any }[];
 }
 
-export async function importLicencesFromCsvService(
-  filePath: string,
-  user: AuthPayload
-): Promise<ImportLicenceResponse> {
-  const licencesBatch: any[] = [];
-  const errors: any[] = [];
-  const BATCH_SIZE = 500;
-
-  const stream = fs.createReadStream(filePath).pipe(csvParser());
-
-  return await prisma.$transaction(async (tx) => {
-    for await (const row of stream) {
-      try {
-        const input: Partial<ImportLicenceDTO> & { reference: string } = {
-          reference: row['REFERENCIA'],
-          coordinates: row['COORDENADAS'],
-          description: row['DESCRICAO'],
-          emitted_at: row['DATA DE EMISSAO'],
-          district: row['DISTRITO'],
-          expires_at: row['DATA DE EXPIRACAO'],
-          number: row['Nº DOCUMENTO'],
-          limit: row['LIMITE'],
-          admin_name: row['ADMINISTRACAO'],
-        };
-
-        const parsed = importLicenceSchema.parse(input);
-
-        console.log(parsed.admin_name);
-
-        licencesBatch.push(parsed);
-
-        if (licencesBatch.length >= BATCH_SIZE) {
-          await tx.licence.createMany({
-            data: licencesBatch,
-            skipDuplicates: true,
-          });
-
-          licencesBatch.length = 0;
-        }
-      } catch (err: any) {
-        errors.push({ row, error: err.errors || err.message });
-        console.error(err);
-      }
-    }
-
-    if (licencesBatch.length > 0) {
-      await tx.licence.createMany({
-        data: licencesBatch,
-        skipDuplicates: true,
-      });
-    }
-
-    const url = await uploadCsvToImageKit(filePath);
-
-    await audit(tx, 'IMPORT', {
-      user,
-      before: null,
-      after: null,
-      entity: 'LICENCE',
-      description: `Importou ${licencesBatch.length} licenças`,
-      metadata: {
-        file: url,
-      },
-    });
-
-    return { errors, imported: licencesBatch.length + errors.length };
-  });
-}
-
-// REFERENCIA |	ADMINISTRACAO |	DISTRITO
-// DATA DE EMISSAO |	DATA DE EXPIRACAO
-// Nº DOCUMENTO |	DESCRICAO |	COORDENADAS |	LIMITE
-
-const importLicenceSchema = z.object({
+export const importLicenceSchema = z.object({
   reference: z.string(),
-  admin_name: z.string().transform((val) => {
-    const v = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
-    return v;
-  }),
+  admin_name: z.string().transform(val => val.charAt(0).toUpperCase() + val.slice(1).toLowerCase()),
   coordinates: z.string().optional(),
   district: z.string().optional(),
   emitted_at: z.coerce.date(),
@@ -100,3 +24,76 @@ const importLicenceSchema = z.object({
 });
 
 export type ImportLicenceDTO = z.infer<typeof importLicenceSchema>;
+
+export async function importLicencesFromCsvService(
+  filePath: string,
+  user: AuthPayload
+): Promise<ImportLicenceResponse> {
+  const errors: { row: any; error: any }[] = [];
+  const BATCH_SIZE = 500;
+  const stream = fs.createReadStream(filePath).pipe(csvParser());
+
+  let totalImported = 0;
+  const licencesBatch: ImportLicenceDTO[] = [];
+
+  for await (const row of stream) {
+    try {
+      const parsed = importLicenceSchema.parse({
+        reference: row['REFERENCIA'],
+        coordinates: row['COORDENADAS'],
+        description: row['DESCRICAO'],
+        emitted_at: row['DATA DE EMISSAO'],
+        district: row['DISTRITO'],
+        expires_at: row['DATA DE EXPIRACAO'],
+        number: row['Nº DOCUMENTO'],
+        limit: row['LIMITE'],
+        admin_name: row['ADMINISTRACAO'],
+      });
+
+      licencesBatch.push(parsed);
+
+      // processa batch
+      if (licencesBatch.length >= BATCH_SIZE) {
+        for (const licence of licencesBatch) {
+          await prisma.licence.upsert({
+            where: { reference: licence.reference },
+            create: licence,
+            update: licence,
+          });
+        }
+        totalImported += licencesBatch.length;
+        licencesBatch.length = 0;
+      }
+    } catch (err: any) {
+      errors.push({ row, error: err.errors || err.message });
+      console.error(err);
+    }
+  }
+
+  // finaliza batch pendente
+  if (licencesBatch.length > 0) {
+    for (const licence of licencesBatch) {
+      await prisma.licence.upsert({
+        where: { reference: licence.reference },
+        create: licence,
+        update: licence,
+      });
+    }
+    totalImported += licencesBatch.length;
+  }
+
+  const url = await uploadCsvToImageKit(filePath);
+
+  await prisma.$transaction(async tx => {
+    await audit(tx, 'IMPORT', {
+      user,
+      before: null,
+      after: null,
+      entity: 'LICENCE',
+      description: `Importou ${totalImported} licenças`,
+      metadata: { file: url },
+    });
+  });
+
+  return { errors, imported: totalImported };
+}

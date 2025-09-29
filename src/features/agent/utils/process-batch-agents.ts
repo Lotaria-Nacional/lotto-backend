@@ -9,19 +9,24 @@ type ProcessAgentsBatch = {
 };
 
 export async function processAgentsBatch({ agents, errors, user }: ProcessAgentsBatch) {
-  const groupedByType: Partial<Record<AgentType, number>> = {};
+  const groupedByType: Record<AgentType, number> = {
+    revendedor: 0,
+    lotaria_nacional: 0,
+  };
 
-  await prisma.$transaction(async tx => {
-    for (const agentData of agents) {
-      try {
+  for (const agentData of agents) {
+    try {
+      await prisma.$transaction(async tx => {
         const id_reference = agentData.id_reference;
         const agent_type: AgentType = id_reference.toString().startsWith('1') ? 'revendedor' : 'lotaria_nacional';
-
         const genre: Genre = agentData.gender;
 
-        await tx.agent.create({
-          data: {
+        // Usa upsert para criar ou atualizar
+        await tx.agent.upsert({
+          where: { id_reference: id_reference }, // assume que tens um unique composto
+          create: {
             id_reference,
+            agent_type,
             first_name: agentData.name,
             last_name: agentData.last_name,
             bi_number: agentData.bi_number,
@@ -29,29 +34,35 @@ export async function processAgentsBatch({ agents, errors, user }: ProcessAgents
             status: agentData.status,
             phone_number: agentData.phone_number,
             training_date: agentData.training_date,
-            agent_type,
           },
-          include: {
-            pos: true,
-            terminal: true,
+          update: {
+            first_name: agentData.name,
+            last_name: agentData.last_name,
+            bi_number: agentData.bi_number,
+            genre,
+            status: agentData.status,
+            phone_number: agentData.phone_number,
+            training_date: agentData.training_date,
           },
         });
 
-        // Regista o maior id_reference usado por tipo
-        if (!groupedByType[agent_type] || groupedByType[agent_type]! < id_reference) {
+        // Tracking para atualizar o id_reference
+        if (!groupedByType[agent_type] || groupedByType[agent_type] < id_reference) {
           groupedByType[agent_type] = id_reference;
         }
-      } catch (err: any) {
-        errors.push({ row: agentData, error: err.message || err });
-      }
+      });
+    } catch (err: any) {
+      errors.push({ row: agentData, error: err.message || err });
     }
+  }
 
-    // --- Depois de inserir os agentes, sincronizar counters ---
+  // Atualiza counters depois de processar o batch
+  await prisma.$transaction(async tx => {
     for (const [type, maxId] of Object.entries(groupedByType)) {
       await tx.idReference.updateMany({
         where: {
           type: type as AgentType,
-          counter: { lt: maxId }, // só actualiza se o counter for menor
+          counter: { lt: maxId },
         },
         data: { counter: maxId },
       });

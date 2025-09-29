@@ -23,7 +23,7 @@ const importTerminalsSchema = z.object({
   activationDate: z
     .string()
     .nullable()
-    .transform((val) => {
+    .transform(val => {
       if (!val) return null;
       try {
         if (val.includes('/')) {
@@ -82,94 +82,59 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
         });
 
         if (agent) {
-          // se não tiver terminal, associa
-          if (!agent.terminal) {
-            agentIdRef = agent.id_reference;
-            status = 'on_field';
-          }
+          agentIdRef = agent.id_reference;
+          if (!agent.terminal) status = 'on_field';
         }
       }
 
-      // === inserção com simCard individual ===
-      if (parsed.simCardNumber) {
-        const existingSim = await prisma.simCard.findUnique({
-          where: { number: parsed.simCardNumber },
-        });
-
-        if (existingSim) {
-          await prisma.terminal.create({
-            data: {
-              serial: parsed.serialNumber,
-              device_id: parsed.deviceId,
-              agent_id_reference: agentIdRef,
-              arrived_at: parsed.activationDate ?? undefined,
-              status, // ready ou on_field
-              sim_card: { connect: { id: existingSim.id } },
-            },
-          });
-        } else {
-          await prisma.terminal.create({
-            data: {
-              serial: parsed.serialNumber,
-              device_id: parsed.deviceId,
-              agent_id_reference: agentIdRef,
-              arrived_at: parsed.activationDate ?? undefined,
-              status,
-              sim_card: {
-                create: {
-                  number: parsed.simCardNumber,
-                  pin: parsed.pin,
-                  puk: parsed.puk,
-                  status: 'active',
+      // === upsert terminal ===
+      await prisma.terminal.upsert({
+        where: { serial: parsed.serialNumber }, // base para update/create
+        create: {
+          serial: parsed.serialNumber,
+          device_id: parsed.deviceId,
+          agent_id_reference: agentIdRef,
+          arrived_at: parsed.activationDate ?? undefined,
+          status: parsed.simCardNumber ? status : 'stock',
+          sim_card: parsed.simCardNumber
+            ? {
+                connectOrCreate: {
+                  where: { number: parsed.simCardNumber },
+                  create: {
+                    number: parsed.simCardNumber,
+                    pin: parsed.pin,
+                    puk: parsed.puk,
+                    status: 'active',
+                  },
                 },
-              },
-            },
-          });
-        }
+              }
+            : undefined,
+        },
+        update: {
+          device_id: parsed.deviceId,
+          agent_id_reference: agentIdRef,
+          arrived_at: parsed.activationDate ?? undefined,
+          status: parsed.simCardNumber ? status : 'stock',
+          sim_card: parsed.simCardNumber
+            ? {
+                connectOrCreate: {
+                  where: { number: parsed.simCardNumber },
+                  create: {
+                    number: parsed.simCardNumber,
+                    pin: parsed.pin,
+                    puk: parsed.puk,
+                    status: 'active',
+                  },
+                },
+              }
+            : undefined,
+        },
+      });
 
-        totalImported++;
-      } else {
-        // === acumula no batch ===
-        terminalsBatch.push({
-          ...parsed,
-          idReference: agentIdRef ?? undefined,
-          // 👇 sem SIM card => estado = stock
-          status: 'stock',
-        });
-
-        if (terminalsBatch.length >= BATCH_SIZE) {
-          const result = await prisma.terminal.createMany({
-            data: terminalsBatch.map((t) => ({
-              serial: t.serialNumber,
-              device_id: t.deviceId,
-              status: (t.status as TerminalStatus) ?? 'stock',
-              agent_id_reference: t?.idReference ?? null,
-              arrived_at: t.activationDate ?? undefined,
-            })),
-            skipDuplicates: true,
-          });
-          totalImported += result.count;
-          terminalsBatch.length = 0;
-        }
-      }
+      totalImported++;
     } catch (err: any) {
       errors.push({ row, error: err.message || err });
     }
-  }
-
-  // === finalizar batch pendente ===
-  if (terminalsBatch.length > 0) {
-    const result = await prisma.terminal.createMany({
-      data: terminalsBatch.map((t) => ({
-        serial: t.serialNumber,
-        device_id: t.deviceId,
-        status: (t.status as TerminalStatus) ?? 'stock',
-        agent_id_reference: t?.idReference ?? null,
-        arrived_at: t.activationDate ?? undefined,
-      })),
-      skipDuplicates: true,
-    });
-    totalImported += result.count;
   }
 
   // === upload do ficheiro ===
@@ -177,7 +142,7 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
 
   // === audit apenas se importou ===
   if (totalImported > 0) {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
       await audit(tx, 'IMPORT', {
         user,
         entity: 'TERMINAL',
