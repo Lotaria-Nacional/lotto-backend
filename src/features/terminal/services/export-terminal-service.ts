@@ -43,7 +43,7 @@ export async function exportTerminalService(res: Response, filters: PaginationPa
         terminal.agent_id_reference,
         terminal.serial,
         terminal.device_id,
-        terminalStatus[terminal?.status ?? 'stock'],
+        terminal.status,
         terminal?.arrived_at?.toISOString().split('T')[0] ?? '',
         terminal.leaved_at?.toISOString().split('T')[0] ?? '',
       ]
