@@ -90,7 +90,7 @@ model Pos {
 
   /// Administração pelo nome
   admin_name String?
-  admin      Administration? @relation(fields: [admin_name], references: [name])
+  admin      Administration? @relation(fields: [admin_name], references: [slug])
 
   licence_reference String?
   licence           Licence? @relation(fields: [licence_reference], references: [reference])
@@ -109,19 +109,19 @@ model Pos {
 
   /// Cidade pelo nome
   city_name String?
-  city      City?   @relation(fields: [city_name], references: [name])
+  city      City?   @relation(fields: [city_name], references: [slug])
 
   /// Província pelo nome
   province_name String?
-  province      Province? @relation(fields: [province_name], references: [name])
+  province      Province? @relation(fields: [province_name], references: [slug])
 
   /// Tipo pelo nome
   type_name String?
-  type      Type?   @relation(fields: [type_name], references: [name])
+  type      Type?   @relation(fields: [type_name], references: [slug])
 
   /// Subtipo pelo nome
   subtype_name String?
-  subtype      Subtype? @relation(fields: [subtype_name], references: [name])
+  subtype      Subtype? @relation(fields: [subtype_name], references: [slug])
 
   @@map("pos")
 }
@@ -144,7 +144,7 @@ model Licence {
   longitude   Float?
 
   admin_name String?
-  admin      Administration? @relation(fields: [admin_name], references: [name])
+  admin      Administration? @relation(fields: [admin_name], references: [slug])
 
   pos Pos[]
 
@@ -154,6 +154,7 @@ model Licence {
 model Administration {
   id       Int       @id @default(autoincrement())
   name     String    @unique
+  slug     String    @unique
   pos      Pos[]
   licences Licence[]
 
@@ -162,6 +163,7 @@ model Administration {
 
 model Province {
   name   String @unique
+  slug   String @unique
   id     Int    @id @default(autoincrement())
   cities City[]
   pos    Pos[]
@@ -172,6 +174,7 @@ model Province {
 model City {
   id          Int      @id @default(autoincrement())
   name        String   @unique
+  slug        String   @unique
   province    Province @relation(fields: [province_id], references: [id])
   province_id Int
 
@@ -203,8 +206,9 @@ model Area {
 }
 
 model Type {
-  name     String    @unique
   id       Int       @id @default(autoincrement())
+  name     String    @unique
+  slug     String    @unique
   pos      Pos[]
   subtypes Subtype[]
 
@@ -212,8 +216,9 @@ model Type {
 }
 
 model Subtype {
-  name    String @unique
   id      Int    @id @default(autoincrement())
+  name    String @unique
+  slug    String @unique
   type_id Int
   pos     Pos[]
   type    Type   @relation(fields: [type_id], references: [id])

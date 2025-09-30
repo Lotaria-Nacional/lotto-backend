@@ -1,5 +1,6 @@
 import { Prisma, PosStatus } from '@prisma/client';
 import { PaginationParams } from '../../../@types/pagination-params';
+import { createSlug } from '../../../utils/slug';
 
 export const createPosSearchFilters = (query: string | undefined) => {
   const filters: Prisma.PosWhereInput[] = [];
@@ -7,13 +8,13 @@ export const createPosSearchFilters = (query: string | undefined) => {
 
   if (!query?.trim()) return filters;
 
-  filters.push({ admin: { name: { equals: query, mode: 'insensitive' } } });
-  filters.push({ city: { name: { equals: query, mode: 'insensitive' } } });
-  filters.push({ province: { name: { equals: query, mode: 'insensitive' } } });
-  filters.push({ licence_reference: { equals: query, mode: 'insensitive' } });
-  filters.push({ type: { name: { equals: query, mode: 'insensitive' } } });
-  filters.push({ subtype: { name: { equals: query, mode: 'insensitive' } } });
-  filters.push({ area: { name: { equals: query, mode: 'insensitive' } } });
+  filters.push({ admin: { name: { contains: query, mode: 'insensitive' } } });
+  filters.push({ city: { name: { contains: query, mode: 'insensitive' } } });
+  filters.push({ province: { name: { contains: query, mode: 'insensitive' } } });
+  filters.push({ licence_reference: { contains: query, mode: 'insensitive' } });
+  filters.push({ type: { name: { contains: query, mode: 'insensitive' } } });
+  filters.push({ subtype: { name: { contains: query, mode: 'insensitive' } } });
+  filters.push({ area: { name: { contains: query, mode: 'insensitive' } } });
 
   if (!isNaN(numericQuery)) {
     filters.push({ latitude: numericQuery });
@@ -44,16 +45,20 @@ export const buildPosWhereInput = (params: PaginationParams): Prisma.PosWhereInp
   let where: Prisma.PosWhereInput = {
     AND: [
       ...(filters.length ? [{ OR: filters }] : []),
-
       ...(params.status ? getStatus(params.status as PosStatus) : []),
 
-      ...(params.type_name ? [{ type_name: params.type_name }] : []),
       ...(params.area_name ? [{ area_name: params.area_name }] : []),
-      ...(params.admin_name ? [{ admin_name: params.admin_name }] : []),
+      ...(params.admin_name ? [{ admin: { slug: createSlug(params.admin_name) } }] : []),
       ...(params.zone_number ? [{ zone_number: params.zone_number }] : []),
-      ...(params.subtype_name ? [{ subtype_name: params.subtype_name }] : []),
-      ...(params.province_name ? [{ province_name: params.province_name }] : []),
-      ...(params.city_name ? [{ city_name: params.city_name }] : []),
+
+      ...(params.subtype_name
+        ? [{ subtype: { slug: createSlug(params.subtype_name) } }]
+        : params.type_name
+        ? [{ type: { slug: createSlug(params.type_name) } }]
+        : []),
+
+      ...(params.province_name ? [{ province: { slug: createSlug(params.province_name) } }] : []),
+      ...(params.city_name ? [{ city: { slug: createSlug(params.city_name) } }] : []),
     ],
   };
 

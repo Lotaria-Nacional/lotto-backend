@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import { PrismaClient, Prisma } from '@prisma/client';
+import { createSlug } from '../utils/slug';
 
 const prisma = new PrismaClient();
 
@@ -46,6 +47,7 @@ seedData();
 
 /* ================= RESET DATABASE ================= */
 async function resetDatabase(tx: Prisma.TransactionClient) {
+  await tx.auditLog.deleteMany();
   await tx.membership.deleteMany();
   await tx.groupPermission.deleteMany();
   await tx.idReference.deleteMany();
@@ -90,14 +92,16 @@ async function seedZones(tx: Prisma.TransactionClient) {
 async function seedAdministrations(tx: Prisma.TransactionClient) {
   const adminNames = ['Kilamba Kiaxi', 'Ingombota', 'Samba', 'Talatona', 'Viana', 'Cacuaco', 'Cazenga', 'Sambizanga'];
 
-  const administrations = await Promise.all(adminNames.map(name => tx.administration.create({ data: { name } })));
+  const administrations = await Promise.all(
+    adminNames.map(name => tx.administration.create({ data: { name, slug: createSlug(name) } }))
+  );
 
   return administrations;
 }
 
 /* ================= SEED PROVINCE AND CITIES ================= */
 async function seedProvinceAndCities(tx: Prisma.TransactionClient, areas: any[], zones: any[], administrations: any[]) {
-  const { id: luandaId } = await tx.province.create({ data: { name: 'Luanda' } });
+  const { id: luandaId } = await tx.province.create({ data: { name: 'Luanda', slug: createSlug('Luanda') } });
 
   const citiesData = [
     { name: 'Ingombota', area: areas[0], zone: zones[0], adminName: 'Ingombota' },
@@ -131,6 +135,7 @@ async function seedProvinceAndCities(tx: Prisma.TransactionClient, areas: any[],
     await tx.city.create({
       data: {
         name: city.name,
+        slug: createSlug(city.name),
         province_id: luandaId,
         area_id: city.area.id,
         zone_id: city.zone.id,
@@ -143,15 +148,26 @@ async function seedProvinceAndCities(tx: Prisma.TransactionClient, areas: any[],
 /* ================= SEED TYPES AND SUBTYPES ================= */
 async function seedTypesAndSubtypes(tx: Prisma.TransactionClient) {
   await tx.type.createMany({
-    data: [{ name: 'Ambulante' }, { name: 'Popup-kit' }, { name: 'Agências' }, { name: 'Comércio' }],
+    data: [
+      { name: 'Ambulante', slug: createSlug('Ambulante') },
+      { name: 'Popupkit', slug: createSlug('Popupkit') },
+      { name: 'Agências', slug: createSlug('Agências') },
+      { name: 'Comércio', slug: createSlug('Comércio') },
+    ],
   });
 
   await tx.type.create({
     data: {
       name: 'Supermercado',
+      slug: createSlug('Supermercado'),
       subtypes: {
         createMany: {
-          data: [{ name: 'Arreiou' }, { name: 'Kibabo' }, { name: 'Nossa casa' }, { name: 'Angomart' }],
+          data: [
+            { name: 'Arreiou', slug: createSlug('Arreiou') },
+            { name: 'Kibabo', slug: createSlug('Kibabo') },
+            { name: 'Nossa casa', slug: createSlug('Nossa casa') },
+            { name: 'Angomart', slug: createSlug('Angomart') },
+          ],
         },
       },
     },
@@ -160,9 +176,13 @@ async function seedTypesAndSubtypes(tx: Prisma.TransactionClient) {
   await tx.type.create({
     data: {
       name: 'Quiosque',
+      slug: createSlug('Quiosque'),
       subtypes: {
         createMany: {
-          data: [{ name: 'Bancada' }, { name: 'Roulote' }],
+          data: [
+            { name: 'Bancada', slug: createSlug('Bancada') },
+            { name: 'Roulote', slug: createSlug('Roulote') },
+          ],
         },
       },
     },

@@ -21,5 +21,13 @@ export async function importAgentsController(req: Request, res: Response) {
 
   const result = await importAgentsFromCsvService(filePath, user);
 
+  if (result.errors.length > 0) {
+    return res.status(HttpStatus.BAD_REQUEST).json({
+      message: 'Erro ao importar alguns agentes',
+      imported: result.imported,
+      errors: result.errors,
+    });
+  }
+
   return res.status(HttpStatus.OK).json({ result, message: 'Upload feito com sucesso' });
 }

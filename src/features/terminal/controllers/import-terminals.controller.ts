@@ -21,6 +21,13 @@ export async function importTerminalsController(req: Request, res: Response) {
   }
   const filePath = req.file.path;
   const result = await importTerminalsFromCsvService(filePath, user);
+  if (result.errors.length > 0) {
+    return res.status(HttpStatus.BAD_REQUEST).json({
+      message: 'Erro ao importar alguns terminais',
+      imported: result.imported,
+      errors: result.errors,
+    });
+  }
 
   return res.status(HttpStatus.OK).json({ result, message: 'Terminais importados com sucesso' });
 }

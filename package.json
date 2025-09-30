@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsx --watch src/index.ts",
+    "start": "node dist/src/index.",
     "seed": "tsx src/database/seed.ts",
     "build": "tsc",
     "test:e2e": "vitest run",

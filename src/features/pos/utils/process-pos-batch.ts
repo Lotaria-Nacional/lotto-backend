@@ -25,44 +25,77 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
 
         // --- Validação de Tipologia ---
         let typeName: string | null = null;
-        if (posData.tipologia) {
-          const existingType = await tx.type.findUnique({
-            where: { name: posData.tipologia },
-            include: { subtypes: true },
-          });
+        let subtypeName: string | null = null;
 
+        if (posData.tipologia) {
+          const existingType = await tx.type.findUnique({ where: { slug: posData.tipologia } });
           if (existingType) {
-            typeName = existingType.name;
+            typeName = existingType.slug;
           } else {
             const subtype = await tx.subtype.findUnique({
-              where: { name: posData.tipologia },
+              where: { slug: posData.tipologia },
               include: { type: true },
             });
-            if (subtype) typeName = subtype.type.name;
+            if (subtype) {
+              subtypeName = subtype.slug;
+              typeName = subtype.type.slug;
+            }
           }
         }
-        // if (!typeName) throw new Error(`Tipologia inválida: ${posData.tipologia}`);
 
         // --- Criar POS (mesmo sem licença) ---
-        const pos = await tx.pos.create({
-          data: {
-            coordinates: posData.coordenadas,
-            admin_name: posData.administracao,
-            province_name: posData.provincia,
-            city_name: posData.cidade,
-            area_name: posData.area,
-            zone_number: posData.zona,
-            type_name: typeName,
-            latitude,
-            longitude,
-            status: 'pending',
-            ...(posData.idRevendedor && posData.idRevendedor !== 0 ? { agent_id_reference: posData.idRevendedor } : {}),
-          },
-          include: {
-            agent: { include: { terminal: true } },
-            licence: true,
-          },
-        });
+        let pos;
+        if (posData.idRevendedor) {
+          pos = await tx.pos.upsert({
+            where: { agent_id_reference: posData.idRevendedor },
+            create: {
+              agent_id_reference: posData.idRevendedor ?? undefined,
+              coordinates: posData.coordenadas ?? undefined,
+              admin_name: posData.administracao ?? undefined,
+              province_name: posData.provincia ?? undefined,
+              city_name: posData.cidade ?? undefined,
+              area_name: posData.area ?? undefined,
+              zone_number: posData.zona ?? undefined,
+              type_name: typeName ?? undefined,
+              subtype_name: subtypeName ?? undefined,
+              latitude,
+              longitude,
+              status: 'pending',
+            },
+            update: {
+              coordinates: posData.coordenadas ?? undefined,
+              admin_name: posData.administracao ?? undefined,
+              province_name: posData.provincia ?? undefined,
+              city_name: posData.cidade ?? undefined,
+              area_name: posData.area ?? undefined,
+              zone_number: posData.zona ?? undefined,
+              type_name: typeName ?? undefined,
+              subtype_name: subtypeName ?? undefined,
+              latitude,
+              longitude,
+            },
+            include: {
+              agent: { include: { terminal: true } },
+              licence: true,
+            },
+          });
+        } else {
+          pos = await tx.pos.create({
+            data: {
+              coordinates: posData.coordenadas ?? undefined,
+              admin_name: posData.administracao ?? undefined,
+              province_name: posData.provincia ?? undefined,
+              city_name: posData.cidade ?? undefined,
+              area_name: posData.area ?? undefined,
+              zone_number: posData.zona ?? undefined,
+              type_name: typeName ?? undefined,
+              subtype_name: subtypeName ?? undefined,
+              latitude,
+              longitude,
+              status: 'pending',
+            }, // cria sem agente
+          });
+        }
 
         let hasAgent = false;
         let hasLicence = false;
@@ -90,8 +123,6 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
               });
 
               hasLicence = true;
-            } else {
-              // throw new BadRequestError(`Licença ${posData.licenca} atingiu o limite de uso`);
             }
           }
         }

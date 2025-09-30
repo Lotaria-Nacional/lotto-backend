@@ -6,6 +6,7 @@ import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 import { processPosBatch } from '../utils/process-pos-batch';
 import uploadCsvToImageKit from '../../../utils/upload-csv-to-image-kit';
+import { createSlug, normalizeArea, normalizeZone } from '../../../utils/slug';
 
 interface ImportPosResponse {
   imported: number;
@@ -75,57 +76,43 @@ export async function importPosFromCsvService(filePath: string, user: AuthPayloa
 }
 
 const importPosSchema = z.object({
-  idRevendedor: z.coerce.number().int().optional(),
+  idRevendedor: z.preprocess(v => {
+    const num = Number(v);
+    return !num ? undefined : num; // se for 0, null, "", vira undefined
+  }, z.number().int().optional()),
+
   provincia: z
     .string()
-    .transform(val => {
-      if (!val) return undefined;
-      const trimmed = val.trim().normalize('NFC').toLowerCase();
-      return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
-    })
+    .transform(v => (v?.trim() ? createSlug(v) : undefined))
     .optional(),
 
   administracao: z
     .string()
-    .optional()
-    .transform(val => {
-      if (!val) return undefined;
-      const trimmed = val.trim().toLowerCase();
-      return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
-    }),
+    .transform(v => (v?.trim() ? createSlug(v) : undefined))
+    .optional(),
 
   cidade: z
     .string()
-    .optional()
-    .transform(val => {
-      if (!val) return undefined;
-      const trimmed = val.trim().normalize('NFC').toLowerCase();
-      return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
-    }),
+    .transform(v => (v?.trim() ? createSlug(v) : undefined))
+    .optional(),
+
   area: z
     .string()
-    .optional()
-    .transform(val => {
-      if (!val) return undefined;
-      // Converte para maiúsculas e remove espaços extras
-      const normalized = val.trim().toUpperCase();
-      // Remove a palavra "AREA" se existir e captura a letra seguinte
-      const match = normalized.match(/(?:AREA\s*)?([A-D])/);
-      return match ? match[1] : undefined;
-    }),
+    .transform(v => (v?.trim() ? normalizeArea(v) : undefined))
+    .optional(),
+
   zona: z
-    .string()
-    .optional()
-    .transform(val => {
-      if (!val) return undefined;
-      // Remove espaços e deixa maiúsculas (opcional)
-      const normalized = val.trim().toUpperCase();
-      // Captura o número que vem depois de "ZONA"
-      const match = normalized.match(/(?:ZONA\s*)?(\d+)/);
-      return match ? parseInt(match[1], 10) : undefined;
-    }),
+    .union([z.string(), z.number()])
+    .transform(v => normalizeZone(v))
+    .optional(),
+
   estado: z.string().optional(),
-  tipologia: z.string().optional(),
+
+  tipologia: z
+    .string()
+    .transform(v => (v?.trim() ? createSlug(v) : undefined))
+    .optional(),
+
   licenca: z.string().optional(),
   coordenadas: z.string().optional(),
 });

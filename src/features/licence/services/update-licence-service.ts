@@ -3,6 +3,7 @@ import { audit } from '../../../utils/audit-log';
 import { UpdateLicenceDTO } from '@lotaria-nacional/lotto';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { BadRequestError, NotFoundError } from '../../../errors';
+import { createSlug } from '../../../utils/slug';
 
 export async function updateLicenceService(data: UpdateLicenceDTO & { user: AuthPayload }) {
   await prisma.$transaction(async tx => {
@@ -31,6 +32,8 @@ export async function updateLicenceService(data: UpdateLicenceDTO & { user: Auth
     const usedPosCount = licence.pos.length;
     const newStatus: 'free' | 'used' = usedPosCount >= newLimit ? 'used' : 'free';
 
+    console.log(data.limit);
+
     const licenceUpdated = await tx.licence.update({
       where: { id: data.id },
       data: {
@@ -44,7 +47,7 @@ export async function updateLicenceService(data: UpdateLicenceDTO & { user: Auth
         expires_at: data.expires_at,
         limit: data.limit,
         status: newStatus,
-        admin_name: data.admin_name,
+        admin_name: data.admin_name ? createSlug(data.admin_name) : licence.admin_name,
       },
     });
 

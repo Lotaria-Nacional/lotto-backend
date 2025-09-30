@@ -22,6 +22,8 @@ export async function updateLicenceController(req: Request, res: Response) {
 
   const body = updateLicenceSchema.parse({ ...req.body, id });
 
+  console.log(body);
+
   const response = await updateLicenceService({ ...body, user });
 
   return res.status(HttpStatus.OK).json({
