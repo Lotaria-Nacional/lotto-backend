@@ -1,6 +1,6 @@
 import prisma from '../../../lib/prisma';
-import { ImportPosDTO } from '../services/import-pos-sevice';
 import { AuthPayload, PosStatus } from '@lotaria-nacional/lotto';
+import { ImportPosDTO } from '../schemas/import-pos-schema';
 
 type ProcessPosBatchParams = {
   posList: ImportPosDTO[];
@@ -13,8 +13,8 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
     try {
       await prisma.$transaction(async tx => {
         // --- Coordenadas ---
-        let latitude = 0;
-        let longitude = 0;
+        let latitude: number | null = null;
+        let longitude: number | null = null;
         if (posData.coordenadas) {
           const [lat, lng] = posData.coordenadas.trim().split(',').map(Number);
           if (!isNaN(lat) && !isNaN(lng)) {
@@ -41,28 +41,51 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
             if (subtype) typeName = subtype.type.name;
           }
         }
-        // if (!typeName) throw new Error(`Tipologia inválida: ${posData.tipologia}`);
 
-        // --- Criar POS (mesmo sem licença) ---
-        const pos = await tx.pos.create({
-          data: {
-            coordinates: posData.coordenadas,
-            admin_name: posData.administracao,
-            province_name: posData.provincia,
-            city_name: posData.cidade,
-            area_name: posData.area,
-            zone_number: posData.zona,
-            type_name: typeName,
-            latitude,
-            longitude,
-            status: 'pending',
-            ...(posData.idRevendedor && posData.idRevendedor !== 0 ? { agent_id_reference: posData.idRevendedor } : {}),
-          },
-          include: {
-            agent: { include: { terminal: true } },
-            licence: true,
-          },
-        });
+        // --- Definir dados base do POS (sem agent nem licence ainda) ---
+        const posDataToSave = {
+          coordinates: posData.coordenadas ?? null,
+          admin_name: posData.administracao ?? null,
+          province_name: posData.provincia ?? null,
+          city_name: posData.cidade ?? null,
+          area_name: posData.area ?? null,
+          zone_number: posData.zona ?? null,
+          type_name: typeName ?? null,
+          latitude,
+          longitude,
+          status: 'pending' as PosStatus,
+        };
+
+        // --- Encontrar POS existente (por agent_id_reference ou licence_reference) ---
+        let existingPos = null;
+        if (posData.idRevendedor && posData.idRevendedor !== 0) {
+          existingPos = await tx.pos.findUnique({
+            where: { agent_id_reference: posData.idRevendedor },
+          });
+        }
+        if (!existingPos && posData.licenca) {
+          existingPos = await tx.pos.findFirst({
+            where: { licence_reference: posData.licenca },
+          });
+        }
+
+        // --- Criar ou atualizar POS ---
+        const pos = existingPos
+          ? await tx.pos.update({
+              where: { id: existingPos.id },
+              data: posDataToSave,
+              include: {
+                agent: { include: { terminal: true } },
+                licence: true,
+              },
+            })
+          : await tx.pos.create({
+              data: posDataToSave,
+              include: {
+                agent: { include: { terminal: true } },
+                licence: true,
+              },
+            });
 
         let hasAgent = false;
         let hasLicence = false;
@@ -78,8 +101,8 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
             const posWithThisLicenceCount = licence.pos.length;
             const limitCount = licence.limit;
 
-            if (posWithThisLicenceCount < limitCount) {
-              const limitStatus = posWithThisLicenceCount + 1 >= limitCount ? 'used' : 'free';
+            if (posWithThisLicenceCount < limitCount || existingPos) {
+              const limitStatus = posWithThisLicenceCount + (existingPos ? 0 : 1) >= limitCount ? 'used' : 'free';
 
               await tx.licence.update({
                 where: { reference: posData.licenca },
@@ -90,8 +113,12 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
               });
 
               hasLicence = true;
-            } else {
-              // throw new BadRequestError(`Licença ${posData.licenca} atingiu o limite de uso`);
+
+              // ✅ Atualiza POS com licence_reference
+              await tx.pos.update({
+                where: { id: pos.id },
+                data: { licence_reference: posData.licenca },
+              });
             }
           }
         }
@@ -118,9 +145,14 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
               data: { status: 'active' },
             });
 
+            // ✅ Só agora associa o agent_id_reference ao POS
+            await tx.pos.update({
+              where: { id: pos.id },
+              data: { agent_id_reference: agent.id_reference },
+            });
+
             hasAgent = true;
           }
-          // Se não encontrar agente → apenas ignora, POS continua criado sem agente
         }
 
         // --- Determinar status final ---

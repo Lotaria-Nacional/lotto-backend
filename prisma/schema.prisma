@@ -35,7 +35,7 @@ model Agent {
   bi_number        String?
   status           AgentStatus @default(scheduled)
 
-  training_date DateTime
+  training_date DateTime?
   approved_at   DateTime?
 
   created_at DateTime  @default(now())
@@ -52,10 +52,11 @@ model Terminal {
   note      String?
   status    TerminalStatus? @default(stock)
 
-  created_at  DateTime  @default(now())
-  arrived_at  DateTime?
-  leaved_at   DateTime?
-  delivery_at DateTime?
+  created_at   DateTime  @default(now())
+  arrived_at   DateTime?
+  leaved_at    DateTime?
+  delivery_at  DateTime?
+  activated_at DateTime?
 
   agent_id_reference Int?     @unique
   agent              Agent?   @relation(fields: [agent_id_reference], references: [id_reference])
@@ -67,12 +68,13 @@ model Terminal {
 model SimCard {
   id String @id @default(uuid())
 
-  number     String        @unique
-  pin        String?
-  puk        String?
-  status     SimCardStatus @default(stock)
-  arrived_at DateTime      @default(now())
-  created_at DateTime      @default(now())
+  number             String        @unique
+  chip_serial_number String?
+  pin                String?
+  puk                String?
+  status             SimCardStatus @default(stock)
+  arrived_at         DateTime      @default(now())
+  created_at         DateTime      @default(now())
 
   terminal_id String?   @unique
   terminal    Terminal? @relation(fields: [terminal_id], references: [id])
@@ -312,6 +314,7 @@ enum AgentStatus {
 enum TerminalStatus {
   ready
   fixed
+  lost
   on_field
   training
   stock

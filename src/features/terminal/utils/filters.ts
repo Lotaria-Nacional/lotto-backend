@@ -85,6 +85,25 @@ export const buildTermninalWhereInput = (params: PaginationParams): Prisma.Termi
     }
   }
 
+  if (params.activated_at) {
+    const date = new Date(params.activated_at);
+
+    if (!isNaN(date.getTime())) {
+      const startAt = new Date(date);
+      startAt.setHours(0, 0, 0, 0);
+
+      const endAt = new Date(date);
+      endAt.setHours(23, 59, 59, 999);
+
+      filterByDate.push({
+        activated_at: {
+          gte: startAt,
+          lte: endAt,
+        },
+      });
+    }
+  }
+
   if (params.delivery_date) {
     const date = new Date(params.delivery_date);
 

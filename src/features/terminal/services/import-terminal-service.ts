@@ -3,6 +3,7 @@ import fs from 'fs';
 import csvParser from 'csv-parser';
 import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
+import { parseDate } from '../../../utils/date';
 import { AuthPayload, TerminalStatus } from '@lotaria-nacional/lotto';
 import uploadCsvToImageKit from '../../../utils/upload-csv-to-image-kit';
 
@@ -20,36 +21,7 @@ const importTerminalsSchema = z.object({
   puk: z.string().optional(),
   status: z.string().optional(),
   chipSerialNumber: z.string().optional(),
-  activationDate: z
-    .string()
-    .optional()
-    .transform(val => {
-      if (!val || val.trim() === '') {
-        // Gera uma data aleatória caso não exista
-        const year = new Date().getFullYear();
-        const month = Math.floor(Math.random() * 12);
-        const day = Math.floor(Math.random() * 28) + 1;
-        return new Date(year, month, day);
-      }
-
-      let day: number, month: number, year: number;
-
-      if (/^\d{4}[\/-]\d{1,2}[\/-]\d{1,2}$/.test(val)) {
-        // YYYY-MM-DD ou YYYY/MM/DD
-        [year, month, day] = val.split(/[-/]/).map(Number);
-      } else if (/^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$/.test(val)) {
-        // D/M/YYYY ou DD/MM/YYYY ou D/MM/YYYY etc
-        [day, month, year] = val.split(/[-/]/).map(Number);
-      } else {
-        // formato inválido: gera data aleatória
-        const currentYear = new Date().getFullYear();
-        const randomMonth = Math.floor(Math.random() * 12);
-        const randomDay = Math.floor(Math.random() * 28) + 1;
-        return new Date(currentYear, randomMonth, randomDay);
-      }
-
-      return new Date(year, month - 1, day);
-    }),
+  activationDate: z.string().optional().transform(parseDate),
 });
 
 export type ImportTerminalsDTO = z.infer<typeof importTerminalsSchema>;
@@ -83,7 +55,6 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
 
       const parsed = result.data;
 
-      // === validação do agente ===
       let status: TerminalStatus = 'ready';
       let agentIdRef: number | null = null;
 
@@ -104,14 +75,13 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
         }
       }
 
-      // === upsert terminal ===
       await prisma.terminal.upsert({
         where: { serial: parsed.serialNumber }, // base para update/create
         create: {
           serial: parsed.serialNumber,
           device_id: parsed.deviceId,
           agent_id_reference: agentIdRef,
-          arrived_at: parsed.activationDate ?? undefined,
+          activated_at: parsed.activationDate ?? undefined,
           status: parsed.simCardNumber ? status : 'stock',
           sim_card: parsed.simCardNumber
             ? {
@@ -121,6 +91,7 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
                     number: parsed.simCardNumber,
                     pin: parsed.pin,
                     puk: parsed.puk,
+                    chip_serial_number: parsed.chipSerialNumber,
                     status: 'active',
                   },
                 },
@@ -130,7 +101,7 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
         update: {
           device_id: parsed.deviceId,
           agent_id_reference: agentIdRef,
-          arrived_at: parsed.activationDate ?? undefined,
+          activated_at: parsed.activationDate,
           status: parsed.simCardNumber ? status : 'stock',
           sim_card: parsed.simCardNumber
             ? {
@@ -140,6 +111,7 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
                     number: parsed.simCardNumber,
                     pin: parsed.pin,
                     puk: parsed.puk,
+                    chip_serial_number: parsed.chipSerialNumber,
                     status: 'active',
                   },
                 },
@@ -154,10 +126,8 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
     }
   }
 
-  // === upload do ficheiro ===
   const url = await uploadCsvToImageKit(file);
 
-  // === audit apenas se importou ===
   if (totalImported > 0) {
     await prisma.$transaction(async tx => {
       await audit(tx, 'IMPORT', {
