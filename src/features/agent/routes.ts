@@ -26,10 +26,14 @@ import { disapproveManyAgentsController } from './controllers/disapprove-many-ag
 import { resetManyAgentsController } from './controllers/reset-many-agents.controller';
 import { discontinueManyAgentsController } from './controllers/discontinue-many-agents.controller';
 import { reactivateManyAgentsController } from './controllers/reactivate-many-agents.controller';
+import { importActivitiesController } from './controllers/import-activities-controller';
 
 const agentRouter = Router();
 
 export const upload = multer({ dest: 'uploads/' });
+export const uploadStorage = multer({ storage: multer.memoryStorage() });
+
+agentRouter.post('/activities', uploadStorage.single('file'), catchErrors(importActivitiesController));
 
 agentRouter.post('/', catchErrors(createAgentController));
 agentRouter.post('/import', upload.single('file'), catchErrors(importAgentsController));
