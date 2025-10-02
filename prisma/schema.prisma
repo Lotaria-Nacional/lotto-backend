@@ -289,6 +289,30 @@ model GroupPermission {
   @@map("group_permissions")
 }
 
+model AgentActivity {
+  id            String     @id @default(uuid())
+  area          String?
+  zone          String?
+  actualBalance Decimal    @default(0)
+  activities    Activity[]
+
+  @@map("agent_actitivies")
+}
+
+model Activity {
+  id      String  @id @default(uuid())
+  debt    Decimal @default(0)
+  deposit Decimal @default(0)
+  balance Decimal @default(0)
+
+  agentId       String
+  agentActivity AgentActivity @relation(fields: [agentId], references: [id])
+  date          String?
+  createdAt     DateTime      @default(now())
+
+  @@map("actitivies")
+}
+
 enum AgentType {
   lotaria_nacional
   revendedor

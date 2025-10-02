@@ -1,12 +1,12 @@
 import {
   getAgentController,
+  resetAgentController,
   deleteAgentController,
   createAgentController,
   updateAgentController,
   fetchAgentsController,
-  resetAgentController,
-  fetchAgentsHistoryController,
   getAgentsInfoController,
+  fetchAgentsHistoryController,
 } from './controllers';
 import multer from 'multer';
 import { Router } from 'express';
@@ -14,26 +14,27 @@ import catchErrors from '../../utils/catch-errors';
 import { exportAgentController } from './controllers/export-agents-controller';
 import { approveAgentController } from './controllers/approve-agent.controller';
 import { importAgentsController } from './controllers/import-agents.controller';
-import { desativateAgentController } from './controllers/desativate-agent.controller';
-import { disapproveAgentController } from './controllers/disapprove-agent.controller';
-import { discontinueAgentController } from './controllers/discontinue-agent.controller';
-import { reScheduleTrainingController } from './controllers/re-schedule-training-agent.controller';
 import { activateAgentController } from './controllers/activate-agent.controller';
 import { reactivateAgentController } from './controllers/reactivate-agent.controller';
-import { approveManyAgentsController } from './controllers/approve-many-agents.controller';
-import { desativateManyAgentsController } from './controllers/desativate-many-agents.controller';
-import { disapproveManyAgentsController } from './controllers/disapprove-many-agents.controller';
+import { uploadActivitiesController } from './controllers/import-activities-controller';
+import { desativateAgentController } from './controllers/desativate-agent.controller';
+import { disapproveAgentController } from './controllers/disapprove-agent.controller';
 import { resetManyAgentsController } from './controllers/reset-many-agents.controller';
-import { discontinueManyAgentsController } from './controllers/discontinue-many-agents.controller';
+import { discontinueAgentController } from './controllers/discontinue-agent.controller';
+import { approveManyAgentsController } from './controllers/approve-many-agents.controller';
+import { disapproveManyAgentsController } from './controllers/disapprove-many-agents.controller';
+import { desativateManyAgentsController } from './controllers/desativate-many-agents.controller';
 import { reactivateManyAgentsController } from './controllers/reactivate-many-agents.controller';
-import { importActivitiesController } from './controllers/import-activities-controller';
+import { reScheduleTrainingController } from './controllers/re-schedule-training-agent.controller';
+import { discontinueManyAgentsController } from './controllers/discontinue-many-agents.controller';
+import { fetchActivitiesController } from './controllers/fetch-activities-controller';
 
 const agentRouter = Router();
 
 export const upload = multer({ dest: 'uploads/' });
 export const uploadStorage = multer({ storage: multer.memoryStorage() });
 
-agentRouter.post('/activities', uploadStorage.single('file'), catchErrors(importActivitiesController));
+agentRouter.post('/activities', uploadStorage.array('files', 2), catchErrors(uploadActivitiesController));
 
 agentRouter.post('/', catchErrors(createAgentController));
 agentRouter.post('/import', upload.single('file'), catchErrors(importAgentsController));
@@ -58,6 +59,7 @@ agentRouter.put('/:id', catchErrors(updateAgentController));
 
 agentRouter.delete('/:id', catchErrors(deleteAgentController));
 
+agentRouter.get('/activities', catchErrors(fetchActivitiesController));
 agentRouter.get('/info', catchErrors(getAgentsInfoController));
 agentRouter.get('/export', catchErrors(exportAgentController));
 agentRouter.get('/history', catchErrors(fetchAgentsHistoryController));

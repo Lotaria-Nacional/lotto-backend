@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 async function seedData() {
   try {
-    await prisma.$transaction(async tx => {
+    await prisma.$transaction(async (tx) => {
       /* RESET DATABASE */
       await resetDatabase(tx);
 
@@ -46,6 +46,9 @@ seedData();
 
 /* ================= RESET DATABASE ================= */
 async function resetDatabase(tx: Prisma.TransactionClient) {
+  await tx.activity.deleteMany();
+  await tx.agentActivity.deleteMany();
+
   await tx.membership.deleteMany();
   await tx.groupPermission.deleteMany();
   await tx.idReference.deleteMany();
@@ -72,7 +75,7 @@ async function resetDatabase(tx: Prisma.TransactionClient) {
 async function seedAreas(tx: Prisma.TransactionClient) {
   const areasData = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-  const areas = await Promise.all(areasData.map(name => tx.area.create({ data: { name } })));
+  const areas = await Promise.all(areasData.map((name) => tx.area.create({ data: { name } })));
 
   return areas;
 }
@@ -81,7 +84,7 @@ async function seedAreas(tx: Prisma.TransactionClient) {
 async function seedZones(tx: Prisma.TransactionClient) {
   const zoneNumbers = Array.from({ length: 24 }, (_, i) => i + 1);
 
-  const zones = await Promise.all(zoneNumbers.map(number => tx.zone.create({ data: { number } })));
+  const zones = await Promise.all(zoneNumbers.map((number) => tx.zone.create({ data: { number } })));
 
   return zones;
 }
@@ -90,7 +93,7 @@ async function seedZones(tx: Prisma.TransactionClient) {
 async function seedAdministrations(tx: Prisma.TransactionClient) {
   const adminNames = ['Kilamba Kiaxi', 'Ingombota', 'Samba', 'Talatona', 'Viana', 'Cacuaco', 'Cazenga', 'Sambizanga'];
 
-  const administrations = await Promise.all(adminNames.map(name => tx.administration.create({ data: { name } })));
+  const administrations = await Promise.all(adminNames.map((name) => tx.administration.create({ data: { name } })));
 
   return administrations;
 }
@@ -127,7 +130,7 @@ async function seedProvinceAndCities(tx: Prisma.TransactionClient, areas: any[],
   ];
 
   for (const city of citiesData) {
-    const admin = administrations.find(a => a.name === city.adminName);
+    const admin = administrations.find((a) => a.name === city.adminName);
     await tx.city.create({
       data: {
         name: city.name,
