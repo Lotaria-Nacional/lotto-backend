@@ -16,7 +16,7 @@ import { approveAgentController } from './controllers/approve-agent.controller';
 import { importAgentsController } from './controllers/import-agents.controller';
 import { activateAgentController } from './controllers/activate-agent.controller';
 import { reactivateAgentController } from './controllers/reactivate-agent.controller';
-import { uploadActivitiesController } from './controllers/import-activities-controller';
+import { getProgressController, uploadActivitiesController } from './controllers/import-activities-controller';
 import { desativateAgentController } from './controllers/desativate-agent.controller';
 import { disapproveAgentController } from './controllers/disapprove-agent.controller';
 import { resetManyAgentsController } from './controllers/reset-many-agents.controller';
@@ -34,7 +34,8 @@ const agentRouter = Router();
 export const upload = multer({ dest: 'uploads/' });
 export const uploadStorage = multer({ storage: multer.memoryStorage() });
 
-agentRouter.post('/activities', uploadStorage.array('files', 2), catchErrors(uploadActivitiesController));
+agentRouter.post('/activities', upload.array('files'), uploadActivitiesController);
+agentRouter.get('/activities/progress/:uploadId', getProgressController);
 
 agentRouter.post('/', catchErrors(createAgentController));
 agentRouter.post('/import', upload.single('file'), catchErrors(importAgentsController));
