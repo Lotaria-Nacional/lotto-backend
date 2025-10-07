@@ -46,9 +46,6 @@ seedData();
 
 /* ================= RESET DATABASE ================= */
 async function resetDatabase(tx: Prisma.TransactionClient) {
-  await tx.activity.deleteMany();
-  await tx.agentActivity.deleteMany();
-
   await tx.membership.deleteMany();
   await tx.groupPermission.deleteMany();
   await tx.idReference.deleteMany();

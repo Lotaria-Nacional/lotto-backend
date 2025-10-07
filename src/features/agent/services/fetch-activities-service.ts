@@ -1,21 +1,39 @@
-import redis from '../../../lib/redis';
 import prisma from '../../../lib/prisma';
 
 export async function fetchActitiviesService() {
-  // const cacheKey = 'activities';
+  const activities = new Map<string, any[]>();
 
-  // const cached = await redis.get(cacheKey);
-  // if (cached) return JSON.parse(cached);
+  const afrimoneyActivities = await prisma.afrimoneyActivity.findMany();
+  const koralPlayActivities = await prisma.koralplayActivity.findMany();
 
-  const activities = await prisma.agentActivity.findMany({
-    include: {
-      activities: true,
-    },
-  });
+  const addActivity = (agentId: string | null, activity: any) => {
+    if (!agentId) return;
+    if (!activities.has(agentId)) {
+      activities.set(agentId, []);
+    }
+    activities.get(agentId)!.push(activity);
+  };
 
-  // if (activities.length > 0) {
-  //   await redis.set(cacheKey, JSON.stringify(activities));
-  // }
+  for (const afri of afrimoneyActivities) {
+    addActivity(afri.remarks, {
+      source: 'Afrimoney',
+      valu: afri.transferValue,
+      date: afri.transferDate,
+    });
+  }
 
-  return activities;
+  for (const koralPlay of koralPlayActivities) {
+    addActivity(koralPlay.staffReference, {
+      source: 'Koral Play',
+      valu: koralPlay.ggrAmount,
+      date: koralPlay.date,
+    });
+  }
+
+  const result = Array.from(activities.entries()).map(([agentId, acts]) => ({
+    agentId,
+    activities: acts,
+  }));
+
+  return result;
 }
