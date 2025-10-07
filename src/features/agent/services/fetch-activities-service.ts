@@ -7,7 +7,7 @@ export async function fetchActivitiesService() {
   const afrimoneyActivities = await prisma.afrimoneyActivity.findMany();
   const koralPlayActivities = await prisma.koralplayActivity.findMany();
 
-  const addActivity = (agentId: string, activity: any) => {
+  const addActivity = (agentId: string | null, activity: any) => {
     if (!agentId) return;
     if (!activities.has(agentId)) {
       activities.set(agentId, []);
@@ -21,7 +21,6 @@ export async function fetchActivitiesService() {
 
     addActivity(afri.remarks, {
       source: 'afrimoney',
-      type: afri.type, // opcional, caso exista um campo para tipo (deposit/transfer)
       value: Number(afri.transferValue) || 0,
       date: formattedDate,
     });
@@ -30,12 +29,11 @@ export async function fetchActivitiesService() {
   // --- KoralPlay ---
   for (const koral of koralPlayActivities) {
     // converter MM-DD-YYYY → DD-MM-YYYY
-    const formattedDate = dayjs(koral.transactionDate, 'MM-DD-YYYY').format('DD-MM-YYYY');
+    const formattedDate = dayjs(koral.date, 'MM-DD-YYYY').format('DD-MM-YYYY');
 
-    addActivity(koral.agentCode, {
+    addActivity(koral.staffReference, {
       source: 'koralplay',
-      type: koral.type, // opcional
-      value: Number(koral.amount) || 0,
+      value: Number(koral.ggrAmount) || 0,
       date: formattedDate,
     });
   }
