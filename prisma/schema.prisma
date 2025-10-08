@@ -302,7 +302,7 @@ model AfrimoneyActivity {
   remarks       String?
   transferValue String?  @map("transfer_value")
   accountId     String?  @map("account_id")
-  transferDate  String?  @map("transfer_date")
+  date          String?
   createdAt     DateTime @default(now())
 
   @@map("afrimoney_activities")

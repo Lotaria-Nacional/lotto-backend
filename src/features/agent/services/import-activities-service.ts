@@ -1,4 +1,5 @@
 import fs from 'fs';
+import dayjs from 'dayjs';
 import { Readable } from 'stream';
 import csvParser from 'csv-parser';
 import prisma from '../../../lib/prisma';
@@ -30,21 +31,37 @@ export async function importActitiviesService(
         .on('data', async (row) => {
           try {
             if (type === 'AFRIMONEY') {
+              const date = row['DATE'];
+              const formattedAfrimoneyDate = dayjs(date, 'M/D/YY H:mm', true).format('DD-MM-YYYY');
+
               await prisma.afrimoneyActivity.create({
                 data: {
+                  date: formattedAfrimoneyDate || null,
                   accountId: row['ACCOUNT_ID'] || null,
                   remarks: row['REMARKS']?.trim() || null,
-                  transferDate: row['TRANSFER_DATE'] || null,
                   transferValue: row['TRANSFER_VALUE'] || null,
                 },
               });
             }
 
             if (type === 'KORAL-PLAY') {
+              const date = row['DATE'];
+              const formattedKoralDate = dayjs(date, 'M/D/YYYY', true).format('DD-MM-YYYY');
+              const groupName = row['GROUPNAME']?.trim() || '';
+
+              // Ignorar SEDE NACIONAL
+              if (groupName.toUpperCase() === 'SEDE NACIONAL') return;
+
+              // Apenas guardar se for ZONA X (1,2,3,...) ou AGÊNCIAS
+              const isZona = /^ZONA\s*\d+$/i.test(groupName);
+              const isAgencia = /^AGENCIAS?$/i.test(groupName);
+
+              if (!isZona && !isAgencia) return;
+
               await prisma.koralplayActivity.create({
                 data: {
-                  date: row['DATE'] || null,
-                  groupName: row['GROUPNAME'] || null,
+                  date: formattedKoralDate || null,
+                  groupName,
                   ggrAmount: row['GGR_AMOUNT'] || null,
                   staffReference: row['STAFFREFERENCE']?.trim() || null,
                 },
