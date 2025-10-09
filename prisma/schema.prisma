@@ -297,26 +297,30 @@ model GroupPermission {
   @@map("group_permissions")
 }
 
-model AfrimoneyActivity {
-  id            String   @id @default(uuid())
-  remarks       String?
-  transferValue String?  @map("transfer_value")
-  accountId     String?  @map("account_id")
-  date          String?
-  createdAt     DateTime @default(now())
+model AgentActivity {
+  id        String              @id @default(uuid())
+  area      String?
+  zone      String?
+  balances  AgentDailyBalance[]
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
 
-  @@map("afrimoney_activities")
+  @@map("agent_activities")
 }
 
-model KoralplayActivity {
-  id             String   @id @default(uuid())
-  staffReference String?  @map("staff_reference")
-  groupName      String?  @map("group_name")
-  ggrAmount      String?  @map("ggr_amount")
-  date           String?
-  createdAt      DateTime @default(now())
+model AgentDailyBalance {
+  id        String   @id @default(uuid())
+  agentId   String
+  date      DateTime
+  deposit   Decimal? @db.Decimal(18, 2)
+  debt      Decimal? @db.Decimal(18, 2)
+  balance   Decimal? @db.Decimal(18, 2)
+  createdAt DateTime @default(now())
 
-  @@map("koralplay_activities")
+  agent AgentActivity @relation(fields: [agentId], references: [id])
+
+  @@unique([agentId, date]) 
+  @@map("agent_daily_balances")
 }
 
 enum AgentType {

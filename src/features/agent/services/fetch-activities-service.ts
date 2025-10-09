@@ -1,95 +1,86 @@
+import dayjs from 'dayjs';
+import { Prisma } from '@prisma/client';
 import prisma from '../../../lib/prisma';
+import { FetchActivitiesParams } from '../controllers/fetch-activities-controller';
 
-export async function fetchActivitiesService() {
-  const afrimoneyActivities = await prisma.afrimoneyActivity.findMany();
-  const koralPlayActivities = await prisma.koralplayActivity.findMany();
+/** Tipos auxiliares */
+export type AgentBalance = {
+  date: string; // formato YYYY-MM-DD
+  deposit: number;
+  debt: number;
+  balance: number;
+};
 
-  // Mapa: agentId -> dados do agente
+export type AgentWithBalances = {
+  id: string;
+  zone: string;
+  area: string;
+  summary: AgentBalance[];
+};
+
+export type FetchActivitiesResponse = {
+  dates: string[];
+  agents: AgentWithBalances[];
+};
+
+export async function fetchActivitiesService(params?: FetchActivitiesParams): Promise<FetchActivitiesResponse> {
+  const q = params?.query;
+  const date = params?.date;
+
+  let filters: Prisma.AgentDailyBalanceWhereInput[] = [];
+
+  if (q) {
+    filters.push({ agentId: { contains: params.query, mode: 'insensitive' } });
+  }
+
+  if (date) {
+    const start = new Date(date);
+    const end = new Date(date);
+
+    start.setHours(0, 0, 0, 0);
+
+    console.log({ start, end });
+
+    filters.push({
+      date: {
+        gte: start,
+        lte: end,
+      },
+    });
+  }
+
+  const balances = await prisma.agentDailyBalance.findMany({
+    where: { AND: filters },
+    include: { agent: true },
+    orderBy: [{ agentId: 'asc' }, { date: 'asc' }],
+  });
+
   const agentsMap = new Map<string, any>();
-
-  // --- Processar Afrimoney ---
-  for (const afri of afrimoneyActivities) {
-    const date = afri.date;
-    const agentId = afri.remarks;
-    if (!agentId || !date) continue;
-
-    if (!agentsMap.has(agentId)) {
-      agentsMap.set(agentId, {
-        agentId,
-        groupName: ' ',
-        areaName: 'A',
-        summary: new Map<string, { deposit: number; debt: number }>(),
-      });
-    }
-
-    const agentData = agentsMap.get(agentId)!;
-    const entry = agentData.summary.get(date) || { deposit: 0, debt: 0 };
-    entry.deposit += Number(afri.transferValue) || 0;
-    agentData.summary.set(date, entry);
-  }
-
-  // --- Processar KoralPlay ---
-  for (const koral of koralPlayActivities) {
-    const date = koral.date;
-    const agentId = koral.staffReference;
-    if (!agentId || !date) continue;
-
-    if (!agentsMap.has(agentId)) {
-      agentsMap.set(agentId, {
-        agentId,
-        groupName: koral.groupName || ' ',
-        areaName: 'A',
-        summary: new Map<string, { deposit: number; debt: number }>(),
-      });
-    }
-
-    const agentData = agentsMap.get(agentId)!;
-    agentData.groupName = koral.groupName || agentData.groupName;
-
-    const entry = agentData.summary.get(date) || { deposit: 0, debt: 0 };
-    entry.debt += Number(koral.ggrAmount) || 0;
-    agentData.summary.set(date, entry);
-  }
-
-  // --- Calcular saldos diários (considerando saldo anterior) ---
-  const result = Array.from(agentsMap.values()).map((agent) => {
-    const sortedDates = Array.from(agent.summary.keys() as Iterable<string>).sort((a, b) => {
-      const [da, ma, ya] = a.split('-').map(Number);
-      const [db, mb, yb] = b.split('-').map(Number);
-      return new Date(ya, ma - 1, da).getTime() - new Date(yb, mb - 1, db).getTime();
-    });
-
-    let previousBalance = 0;
-    const summary = sortedDates.map((date) => {
-      const { deposit, debt } = agent.summary.get(date)!;
-      const balance = previousBalance + debt - deposit;
-      previousBalance = balance;
-      return { date, deposit, debt, balance };
-    });
-
-    return {
-      agentId: agent.agentId,
-      groupName: agent.groupName,
-      areaName: agent.areaName,
-      actualBalance: previousBalance,
-      summary,
-    };
-  });
-
-  // --- Obter todas as datas únicas existentes ---
   const allDates = new Set<string>();
-  afrimoneyActivities.forEach((a) => a.date && allDates.add(a.date));
-  koralPlayActivities.forEach((k) => k.date && allDates.add(k.date));
 
-  const sortedAllDates = Array.from(allDates).sort((a, b) => {
-    const [da, ma, ya] = a.split('-').map(Number);
-    const [db, mb, yb] = b.split('-').map(Number);
-    return new Date(ya, ma - 1, da).getTime() - new Date(yb, mb - 1, db).getTime();
-  });
+  for (const b of balances) {
+    const date = dayjs(b.date).format('YYYY-MM-DD');
+    allDates.add(date);
 
-  // --- Retornar agentes + datas únicas ---
+    if (!agentsMap.has(b.agentId)) {
+      agentsMap.set(b.agentId, {
+        id: b.agentId,
+        zone: b.agent.zone,
+        area: b.agent.area,
+        summary: [],
+      });
+    }
+
+    agentsMap.get(b.agentId).summary.push({
+      date,
+      deposit: Number(b.deposit),
+      debt: Number(b.debt),
+      balance: Number(b.balance),
+    });
+  }
+
   return {
-    dates: sortedAllDates,
-    agents: result.sort((a, b) => (a.groupName || '').localeCompare(b.groupName || '')),
+    dates: Array.from(allDates).sort(),
+    agents: Array.from(agentsMap.values()),
   };
 }

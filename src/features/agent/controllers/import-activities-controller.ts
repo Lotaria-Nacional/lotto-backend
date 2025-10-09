@@ -1,7 +1,7 @@
-import { Request, Response } from 'express';
-import { importActitiviesService } from '../services/import-activities-service';
 import { v4 as uuidv4 } from 'uuid';
+import { Request, Response } from 'express';
 import { getProgress, setProgress } from '../../../utils/progress-store';
+import { importActivitiesService } from '../services/import-activities-service';
 
 export async function uploadActivitiesController(req: Request, res: Response) {
   const files = req.files as Express.Multer.File[];
@@ -15,7 +15,7 @@ export async function uploadActivitiesController(req: Request, res: Response) {
   // Processamento em background (não bloqueia a resposta HTTP)
   (async () => {
     try {
-      await importActitiviesService(files, (percent) => {
+      await importActivitiesService(files, (percent) => {
         setProgress(uploadId, percent);
       });
       setProgress(uploadId, 100);
