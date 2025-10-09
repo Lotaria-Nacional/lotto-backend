@@ -30,7 +30,13 @@ export async function fetchActivitiesService(params?: FetchActivitiesParams): Pr
   let filters: Prisma.AgentDailyBalanceWhereInput[] = [];
 
   if (q) {
-    filters.push({ agentId: { contains: params.query, mode: 'insensitive' } });
+    filters.push({
+      OR: [
+        { agentId: { contains: params.query, mode: 'insensitive' } },
+        { agent: { zone: { contains: params.query, mode: 'insensitive' } } },
+        { agent: { area: { contains: params.query, mode: 'insensitive' } } },
+      ],
+    });
   }
 
   if (date) {
