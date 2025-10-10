@@ -5,11 +5,6 @@ import csvParser from 'csv-parser';
 import prisma from '../../../lib/prisma';
 import { detectCsvType } from '../utils/detect-csv-type';
 
-function normalizeId(value?: string | number): string {
-  if (!value) return '';
-  return String(value).trim().replace(/^0+/, '').toUpperCase();
-}
-
 export async function importActivitiesService(
   files: Express.Multer.File[],
   onProgress?: (percent: number) => void
@@ -17,13 +12,11 @@ export async function importActivitiesService(
   let totalRecords = 0;
   let processed = 0;
 
-  // --- 1️⃣ Contar linhas para o progresso
   for (const file of files) {
     const buffer = file.buffer?.toString() ?? fs.readFileSync(file.path, 'utf8');
     totalRecords += buffer.split('\n').length - 1;
   }
 
-  // --- 2️⃣ Mapas de dados agregados (como no teu código original)
   const agentsMap = new Map<
     string,
     {
@@ -34,7 +27,6 @@ export async function importActivitiesService(
     }
   >();
 
-  // --- 3️⃣ Ler ficheiros e alimentar o mapa
   for (const file of files) {
     const type = await detectCsvType(file);
     const stream = file.buffer ? Readable.from(file.buffer.toString()) : fs.createReadStream(file.path);
@@ -110,16 +102,13 @@ export async function importActivitiesService(
     });
   }
 
-  // --- 4️⃣ Persistir dados no BD
   for (const [id, agent] of agentsMap.entries()) {
-    // 4.1️⃣ Criar/atualizar agente
     await prisma.agentActivity.upsert({
       where: { id },
       update: { zone: agent.zone, area: agent.area },
       create: { id, zone: agent.zone, area: agent.area },
     });
 
-    // 4.2️⃣ Calcular saldo acumulado e guardar diários
     const sortedDates = Array.from(agent.summary.keys()).sort();
     let previousBalance = 0;
 
@@ -137,5 +126,9 @@ export async function importActivitiesService(
   }
 
   if (onProgress) onProgress(100);
-  console.log(`✅ Importação concluída: ${processed}/${totalRecords} processados`);
+}
+
+function normalizeId(value?: string | number): string {
+  if (!value) return '';
+  return String(value).trim().replace(/^0+/, '').toUpperCase();
 }

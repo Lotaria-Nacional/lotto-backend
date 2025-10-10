@@ -25,7 +25,8 @@ export type FetchActivitiesResponse = {
 
 export async function fetchActivitiesService(params?: FetchActivitiesParams): Promise<FetchActivitiesResponse> {
   const q = params?.query;
-  const date = params?.date;
+  const start = params?.start;
+  const end = params?.end;
 
   let filters: Prisma.AgentDailyBalanceWhereInput[] = [];
 
@@ -39,18 +40,16 @@ export async function fetchActivitiesService(params?: FetchActivitiesParams): Pr
     });
   }
 
-  if (date) {
-    const start = new Date(date);
-    const end = new Date(date);
+  if (start || end) {
+    const startDate = start ? new Date(start) : undefined;
+    const endDate = end ? new Date(end) : undefined;
 
-    start.setHours(0, 0, 0, 0);
-
-    console.log({ start, end });
+    startDate?.setHours(0, 0, 0, 0);
 
     filters.push({
       date: {
-        gte: start,
-        lte: end,
+        gte: startDate,
+        lte: endDate,
       },
     });
   }

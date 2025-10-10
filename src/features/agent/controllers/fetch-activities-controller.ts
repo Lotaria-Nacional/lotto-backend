@@ -1,11 +1,12 @@
+import z from 'zod';
 import { Request, Response } from 'express';
 import { HttpStatus } from '../../../constants/http';
 import { fetchActivitiesService } from '../services/fetch-activities-service';
-import z from 'zod';
 
 const paramsSchema = z.object({
   query: z.string().optional(),
-  date: z.string().optional(),
+  start: z.string().optional(),
+  end: z.string().optional(),
 });
 
 export type FetchActivitiesParams = z.infer<typeof paramsSchema>;
