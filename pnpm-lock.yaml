@@ -15,8 +15,8 @@ importers:
         specifier: ^7.0.1
         version: 7.0.1
       '@lotaria-nacional/lotto':
-        specifier: ^1.0.84
-        version: 1.0.84(@types/node@24.3.1)(jiti@2.5.1)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.9.2)
+        specifier: ^1.0.89
+        version: 1.0.89(@types/node@24.3.1)(jiti@2.5.1)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.9.2)
       '@prisma/client':
         specifier: ^6.16.1
         version: 6.16.1(prisma@6.16.1(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2)
@@ -337,8 +337,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.30':
     resolution: {integrity: sha512-GQ7Nw5G2lTu/BtHTKfXhKHok2WGetd4XYcVKGx00SjAk8GMwgJM3zr6zORiPGuOE+/vkc90KtTosSSvaCjKb2Q==}
 
-  '@lotaria-nacional/lotto@1.0.84':
-    resolution: {integrity: sha512-xOzfF1bbF5NwX6Rsm9V41zzHUC9pgcochGWemgx5bJyWdnVqT1aBWeVNREjO+hBFf03e6l7ev6LdpvgLxmlYXA==}
+  '@lotaria-nacional/lotto@1.0.89':
+    resolution: {integrity: sha512-tzPBiL6DQrpTJbQ07DecC5NplgUaFbKhmG7xOFYxTfMMseTIAG+UYC8u7ZV/jhjSVc4905jKRj1BKdd1coQypw==}
 
   '@noble/hashes@1.8.0':
     resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
@@ -2175,7 +2175,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@lotaria-nacional/lotto@1.0.84(@types/node@24.3.1)(jiti@2.5.1)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.9.2)':
+  '@lotaria-nacional/lotto@1.0.89(@types/node@24.3.1)(jiti@2.5.1)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.9.2)':
     dependencies:
       '@casl/ability': 6.7.3
       tsup: 8.5.0(jiti@2.5.1)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.9.2)
