@@ -5,8 +5,7 @@ export class CloudflareR2 {
   private baseUrl: string;
 
   constructor() {
-    const baseUrl = env.CLOUDFLARE_R2_BASEURL;
-    this.baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    this.baseUrl = env.CLOUDFLARE_R2_BASEURL;
   }
 
   private toArrayBuffer(data: Buffer | ArrayBuffer): ArrayBuffer {
@@ -15,7 +14,7 @@ export class CloudflareR2 {
   }
 
   private getUrlWithKey(key: string) {
-    return `${this.baseUrl}/files/${key}`;
+    return `${this.baseUrl}/${key}`;
   }
 
   async PUT(file: Buffer | ArrayBuffer, key: string, contentType: string) {
@@ -29,7 +28,10 @@ export class CloudflareR2 {
 
   async GET(key: string) {
     const response = await axios.get(this.getUrlWithKey(key), { responseType: 'arraybuffer' });
-    return response.data;
+    return {
+      data: response.data,
+      contentType: response.headers['content-type'] || 'application/octet-stream',
+    };
   }
 
   async DELETE(key: string) {

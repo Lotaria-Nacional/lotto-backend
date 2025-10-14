@@ -11,7 +11,6 @@ import { authenticate } from '../middleware/auth/authenticate';
 import terminalRouter from '../features/terminal/routes';
 import { refreshTokenController } from '../features/auth/controllers/refresh-token.controller';
 import { adminRoutes, areasRoutes, provincesRoutes, typesRoutes } from '../features/references/routes';
-import { CloudflareR2 } from '../utils/cloudflare-r2';
 import uploadFileToR2Router from '../features/upload-file';
 
 const router = Router();
