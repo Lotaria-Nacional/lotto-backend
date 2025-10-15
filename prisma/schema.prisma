@@ -299,14 +299,20 @@ model GroupPermission {
 }
 
 model AgentActivity {
-  id        String              @id @default(uuid())
+  id        String               @id @default(uuid())
   area      String?
   zone      String?
+  status    AgentActivityStatus? @default(active)
   balances  AgentDailyBalance[]
-  createdAt DateTime            @default(now()) @map("created_at")
-  updatedAt DateTime            @updatedAt @map("updated_at")
+  createdAt DateTime             @default(now()) @map("created_at")
+  updatedAt DateTime             @updatedAt @map("updated_at")
 
   @@map("agent_activities")
+}
+
+enum AgentActivityStatus {
+  blocked
+  active
 }
 
 model AgentDailyBalance {

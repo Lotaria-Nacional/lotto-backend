@@ -15,19 +15,21 @@ import { exportAgentController } from './controllers/export-agents-controller';
 import { approveAgentController } from './controllers/approve-agent.controller';
 import { importAgentsController } from './controllers/import-agents.controller';
 import { activateAgentController } from './controllers/activate-agent.controller';
+import { fetchActivitiesController } from './controllers/fetch-activities-controller';
 import { reactivateAgentController } from './controllers/reactivate-agent.controller';
-import { getProgressController, uploadActivitiesController } from './controllers/import-activities-controller';
 import { desativateAgentController } from './controllers/desativate-agent.controller';
 import { disapproveAgentController } from './controllers/disapprove-agent.controller';
 import { resetManyAgentsController } from './controllers/reset-many-agents.controller';
 import { discontinueAgentController } from './controllers/discontinue-agent.controller';
 import { approveManyAgentsController } from './controllers/approve-many-agents.controller';
+import { blockAgentsActivityController } from './controllers/block-agents-activity-controller';
 import { disapproveManyAgentsController } from './controllers/disapprove-many-agents.controller';
 import { desativateManyAgentsController } from './controllers/desativate-many-agents.controller';
 import { reactivateManyAgentsController } from './controllers/reactivate-many-agents.controller';
 import { reScheduleTrainingController } from './controllers/re-schedule-training-agent.controller';
 import { discontinueManyAgentsController } from './controllers/discontinue-many-agents.controller';
-import { fetchActivitiesController } from './controllers/fetch-activities-controller';
+import { unblockAgentsActivityController } from './controllers/unblock-agents-activity-controller';
+import { getProgressController, uploadActivitiesController } from './controllers/import-activities-controller';
 
 const agentRouter = Router();
 
@@ -39,6 +41,9 @@ agentRouter.get('/activities/progress/:uploadId', getProgressController);
 
 agentRouter.post('/', catchErrors(createAgentController));
 agentRouter.post('/import', upload.single('file'), catchErrors(importAgentsController));
+
+agentRouter.put('/activities/block', catchErrors(blockAgentsActivityController));
+agentRouter.put('/activities/unblock', catchErrors(unblockAgentsActivityController));
 
 agentRouter.put('/reset-many', catchErrors(resetManyAgentsController));
 agentRouter.put('/approve-many', catchErrors(approveManyAgentsController));

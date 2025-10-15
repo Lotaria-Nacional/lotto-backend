@@ -23,8 +23,11 @@ export type FetchActivitiesResponse = {
   agents: AgentWithBalances[];
 };
 
+type AgentActivityStatus = 'active' | 'blocked';
+
 export async function fetchActivitiesService(params?: FetchActivitiesParams): Promise<FetchActivitiesResponse> {
   const q = params?.query;
+  const status = params?.status;
   const start = params?.start;
   const end = params?.end;
 
@@ -32,10 +35,11 @@ export async function fetchActivitiesService(params?: FetchActivitiesParams): Pr
 
   if (q) {
     filters.push({
-      OR: [
+      AND: [
         { agentId: { contains: params.query, mode: 'insensitive' } },
         { agent: { zone: { contains: params.query, mode: 'insensitive' } } },
         { agent: { area: { contains: params.query, mode: 'insensitive' } } },
+        { agent: { status: { equals: status ? (status as AgentActivityStatus) : undefined } } },
       ],
     });
   }
@@ -72,6 +76,7 @@ export async function fetchActivitiesService(params?: FetchActivitiesParams): Pr
         id: b.agentId,
         zone: b.agent.zone,
         area: b.agent.area,
+        status: b.agent.status,
         summary: [],
       });
     }

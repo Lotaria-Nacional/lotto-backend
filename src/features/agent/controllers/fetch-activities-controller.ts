@@ -5,6 +5,7 @@ import { fetchActivitiesService } from '../services/fetch-activities-service';
 
 const paramsSchema = z.object({
   query: z.string().optional(),
+  status: z.string().optional(),
   start: z.string().optional(),
   end: z.string().optional(),
 });
