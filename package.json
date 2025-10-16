@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsx --watch src/index.ts",
-    "seed": "tsx src/database/seed.ts",
+    "seed": "tsx src/database/index.ts",
     "build": "tsc",
     "test:e2e": "vitest run",
     "generate": "prisma generate",

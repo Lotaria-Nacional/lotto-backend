@@ -2,20 +2,11 @@ import fs from 'fs';
 import z, { ZodError } from 'zod';
 import csvParser from 'csv-parser';
 import prisma from '../../../lib/prisma';
-import { audit } from '../../../utils/audit-log';
-import { processAgentsBatch } from '../utils/process-batch-agents';
+import { parseImportedDate } from '../../../utils/import-utils';
+import { processBatchAgents } from '../../../utils/process-batch';
 import { AgentStatus, AuthPayload } from '@lotaria-nacional/lotto';
-import uploadCsvToImageKit from '../../../utils/upload-csv-to-image-kit';
 
-interface ImportAgentsFromCsvServiceResponse {
-  imported: number;
-  errors: { row: any; error: any }[];
-}
-
-export async function importAgentsFromCsvService(
-  file: string,
-  user: AuthPayload
-): Promise<ImportAgentsFromCsvServiceResponse> {
+export async function importAgentsFromCsvService(file: string, user: AuthPayload) {
   const errors: any[] = [];
   let imported = 0;
   const BATCH_SIZE = 500;
@@ -41,11 +32,11 @@ export async function importAgentsFromCsvService(
       agentsBatch.push(parsed);
 
       if (agentsBatch.length >= BATCH_SIZE) {
-        await processAgentsBatch({ agents: agentsBatch, user, errors });
-        imported += agentsBatch.length;
-        agentsBatch.length = 0;
+        imported += await processBatchAgents(agentsBatch);
       }
     } catch (err) {
+      console.log(err);
+
       if (err instanceof ZodError) {
         errors.push({
           row,
@@ -61,24 +52,9 @@ export async function importAgentsFromCsvService(
   }
 
   if (agentsBatch.length > 0) {
-    await processAgentsBatch({ agents: agentsBatch, user, errors });
-    imported += agentsBatch.length;
+    imported += await processBatchAgents(agentsBatch);
   }
-
-  const url = await uploadCsvToImageKit(file);
-
-  await prisma.$transaction(async (tx) => {
-    await audit(tx, 'IMPORT', {
-      user,
-      before: null,
-      after: null,
-      entity: 'AGENT',
-      description: `Importou ${imported} agentes`,
-      metadata: {
-        file: url,
-      },
-    });
-  });
+  await updateIdReference();
 
   return { errors, imported };
 }
@@ -88,21 +64,28 @@ const importAgentsSchema = z.object({
   name: z.string().trim(),
   last_name: z.string().trim(),
   gender: z.string().transform((val) => {
-    const v = val.toLowerCase();
-    if (v === 'm' || v === 'masculino') return 'male';
-    if (v === 'f' || v === 'feminino') return 'female';
+    const v = val.toLowerCase().trim();
+    if (/^m(asculino)?$/.test(v)) return 'male';
+    if (/^f(eminino)?$/.test(v)) return 'female';
     return 'male';
   }),
-  training_date: z.coerce.date(),
+  training_date: z.transform(parseImportedDate),
   status: z
     .string()
     .transform((val): AgentStatus | undefined => {
-      const v = val.toLowerCase();
-      if (v === 'activo') return 'active';
-      if (v === 'negado') return 'discontinued';
-      if (v === 'apto') return 'approved';
-      if (v === 'agendado') return 'scheduled';
-      return undefined;
+      const v = val.toLowerCase().trim();
+      switch (v) {
+        case 'activo':
+          return 'active';
+        case 'negado':
+          return 'discontinued';
+        case 'apto':
+          return 'approved';
+        case 'agendado':
+          return 'scheduled';
+        default:
+          return undefined;
+      }
     })
     .optional(),
   phone_number: z.string().trim(),
@@ -110,3 +93,44 @@ const importAgentsSchema = z.object({
 });
 
 export type ImportAgentDTO = z.infer<typeof importAgentsSchema>;
+
+async function updateIdReference() {
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Último id_reference da lotaria
+      const lastLotaria = await tx.agent.findFirst({
+        where: { agent_type: 'lotaria_nacional' },
+        orderBy: { id_reference: 'desc' },
+        select: { id_reference: true },
+      });
+
+      // Último id_reference do revendedor
+      const lastRevendedor = await tx.agent.findFirst({
+        where: { agent_type: 'revendedor' },
+        orderBy: { id_reference: 'desc' },
+        select: { id_reference: true },
+      });
+
+      // Actualizar a tabela idReference
+      if (lastRevendedor?.id_reference) {
+        await tx.idReference.update({
+          where: { type: 'revendedor' },
+          data: {
+            counter: lastRevendedor.id_reference,
+          },
+        });
+      }
+
+      if (lastLotaria?.id_reference) {
+        await tx.idReference.update({
+          where: { type: 'lotaria_nacional' },
+          data: {
+            counter: lastLotaria.id_reference,
+          },
+        });
+      }
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}

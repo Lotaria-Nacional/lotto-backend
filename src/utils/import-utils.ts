@@ -1,0 +1,61 @@
+import prisma from '../lib/prisma';
+import { audit } from './audit-log';
+import { AuthPayload, Module } from '@lotaria-nacional/lotto';
+import uploadCsvToImageKit from './upload-csv-to-image-kit';
+
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { ZodError } from 'zod';
+
+dayjs.extend(customParseFormat);
+
+interface AuditImportProps {
+  file: any;
+  user: AuthPayload;
+  imported: number;
+  entity: Module;
+}
+
+export const auditImport = async ({ file, user, imported, entity }: AuditImportProps) => {
+  const url = await uploadCsvToImageKit(file);
+  await prisma.$transaction(async (tx) => {
+    await audit(tx, 'IMPORT', {
+      user,
+      before: null,
+      after: null,
+      entity,
+      description: `Importou ${imported} agentes`,
+      metadata: {
+        file: url,
+      },
+    });
+  });
+};
+
+export function parseImportedDate(dateStr: string) {
+  const parsedDate = dayjs(dateStr, ['D/M/YYYY', 'DD/MM/YYYY', 'M/DD/YYYY', 'MM/DD/YYYY'], true);
+  if (!parsedDate.isValid()) {
+    return null;
+  }
+  return parsedDate.toDate();
+}
+
+interface HandleImportErrorProps {
+  err: any;
+  errors: any[];
+  row: any;
+}
+export function handleImportError({ err, errors, row }: HandleImportErrorProps) {
+  console.log(err);
+  if (err instanceof ZodError) {
+    errors.push({
+      row,
+      error: err.issues.map((issue) => ({
+        campo: issue.path.join(','),
+        menssagem: issue.message,
+      })),
+    });
+  } else {
+    errors.push({ row, error: (err as any).message || err });
+  }
+}

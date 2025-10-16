@@ -1,11 +1,8 @@
 import fs from 'fs';
 import z from 'zod';
 import csvParser from 'csv-parser';
-import prisma from '../../../lib/prisma';
-import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
-import { processPosBatch } from '../utils/process-pos-batch';
-import uploadCsvToImageKit from '../../../utils/upload-csv-to-image-kit';
+import { processBatchPos } from '../../../utils/process-batch';
 
 interface ImportPosResponse {
   imported: number;
@@ -13,26 +10,26 @@ interface ImportPosResponse {
 }
 
 export async function importPosFromCsvService(filePath: string, user: AuthPayload): Promise<ImportPosResponse> {
-  const posBatch: ImportPosDTO[] = [];
   const errors: any[] = [];
-  const BATCH_SIZE = 500;
   let imported = 0;
+  const BATCH_SIZE = 500;
 
   const stream = fs.createReadStream(filePath).pipe(csvParser());
+  const posBatch: ImportPosDTO[] = [];
 
   for await (const row of stream) {
     try {
       const input: ImportPosDTO = {
-        idRevendedor: row['ID REVENDEDOR'],
-        provincia: row['PROVINCIA'],
-        administracao: row['ADMINISTRACAO'],
-        cidade: row['CIDADE'],
+        agent_id_reference: row['ID REVENDEDOR'],
+        province: row['PROVINCIA'],
+        admin_name: row['ADMINISTRACAO'],
+        city: row['CIDADE'],
         area: row['AREA'],
-        zona: row['ZONA'],
-        estado: row['ESTADO'],
-        tipologia: row['TIPOLOGIA'],
-        licenca: row['LICENCA'],
-        coordenadas: row['COORDENADAS'],
+        zone: row['ZONA'],
+        status: row['ESTADO'],
+        type_name: row['TIPOLOGIA'],
+        licence: row['LICENCA'],
+        coordinates: row['COORDENADAS'],
       };
 
       const parsed = importPosSchema.parse(input);
@@ -40,9 +37,7 @@ export async function importPosFromCsvService(filePath: string, user: AuthPayloa
       posBatch.push(parsed);
 
       if (posBatch.length >= BATCH_SIZE) {
-        await processPosBatch({ posList: posBatch, user, errors });
-        imported += posBatch.length;
-        posBatch.length = 0;
+        imported += await processBatchPos(posBatch);
       }
     } catch (err: any) {
       errors.push({ row, error: err.errors || err.message });
@@ -50,51 +45,37 @@ export async function importPosFromCsvService(filePath: string, user: AuthPayloa
   }
 
   if (posBatch.length > 0) {
-    await processPosBatch({ posList: posBatch, user, errors });
-    imported += posBatch.length;
-  }
-
-  const url = await uploadCsvToImageKit(filePath);
-
-  if (imported > 0) {
-    await prisma.$transaction(async tx => {
-      await audit(tx, 'IMPORT', {
-        user,
-        entity: 'POS',
-        before: null,
-        after: null,
-        description: `Importou ${imported} pontos de venda`,
-        metadata: { file: url },
-      });
-    });
+    imported += await processBatchPos(posBatch);
   }
 
   return { errors, imported };
 }
 
 const importPosSchema = z.object({
-  idRevendedor: z.coerce.number().int().optional(),
-  provincia: z
+  agent_id_reference: z.coerce.number().int().optional(),
+  province: z
     .string()
-    .transform(val => val?.trim().normalize('NFC'))
+    .transform((val) => val?.trim().normalize('NFC'))
     .optional(),
-  administracao: z
+  admin_name: z
     .string()
     .optional()
-    .transform(val => val?.trim()),
-  cidade: z
-    .string()
-    .optional()
-    .transform(val => val?.trim().normalize('NFC')),
-  area: z
-    .string()
-    .optional()
-    .transform(val => val?.toUpperCase()),
-  zona: z.coerce.number().int().optional(),
-  estado: z.string().optional(),
-  tipologia: z.string().min(1, 'Tipologia obrigatória'),
-  licenca: z.string().optional(),
-  coordenadas: z.string().optional(),
+    .transform((val) => val?.trim()),
+  city: z.string().transform((val) => val?.trim().normalize('NFC')),
+
+  area: z.string().transform((val) => {
+    return val.replace(/^á?rea\s*/i, '').trim();
+  }),
+
+  zone: z.string().transform((val) => {
+    const zone = Number(val.replace(/^zona\s*/i, '').trim());
+    return isNaN(zone) ? null : zone;
+  }),
+
+  status: z.string().optional(),
+  type_name: z.string().min(1, 'Tipologia obrigatória'),
+  licence: z.string().optional(),
+  coordinates: z.string().optional(),
 });
 
 export type ImportPosDTO = z.infer<typeof importPosSchema>;
