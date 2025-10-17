@@ -1,40 +1,31 @@
 import fs from 'fs';
 import csvParser from 'csv-parser';
-import prisma from '../../../lib/prisma';
-import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
-import { processPosBatch } from '../utils/process-pos-batch';
-import uploadCsvToImageKit from '../../../utils/upload-csv-to-image-kit';
-import { ImportPosDTO, importPosSchema } from '../schemas/import-pos-schema';
+import { processBatchPos } from '../utils/process-batch-pos';
+import { ImportPosDTO, importPosSchema } from '../validation/import-pos-schema';
+import { auditImport } from '../../../utils/import-utils';
 
-interface ImportPosResponse {
-  imported: number;
-  errors: { row: any; error: any }[];
-}
-
-export async function importPosFromCsvService(filePath: string, user: AuthPayload): Promise<ImportPosResponse> {
-  const posBatch: ImportPosDTO[] = [];
+export async function importPosFromCsvService(filePath: string, user: AuthPayload) {
   const errors: any[] = [];
-  const BATCH_SIZE = 500;
   let imported = 0;
+  const BATCH_SIZE = 500;
 
-  const stream = fs
-    .createReadStream(filePath)
-    .pipe(csvParser({ mapHeaders: ({ header }) => header.replace(/^\uFEFF/, '').trim() }));
+  const stream = fs.createReadStream(filePath).pipe(csvParser());
+  const posBatch: ImportPosDTO[] = [];
 
   for await (const row of stream) {
     try {
       const input: ImportPosDTO = {
-        idRevendedor: row['ID REVENDEDOR'],
-        provincia: row['PROVINCIA'],
-        administracao: row['ADMINISTRACAO'],
-        cidade: row['CIDADE'],
+        agent_id_reference: row['ID REVENDEDOR'],
+        province: row['PROVINCIA'],
+        admin_name: row['ADMINISTRACAO'],
+        city: row['CIDADE'],
         area: row['AREA'],
-        zona: row['ZONA'],
-        estado: row['ESTADO'],
-        tipologia: row['TIPOLOGIA'],
-        licenca: row['LICENCA'],
-        coordenadas: row['COORDENADAS'],
+        zone: row['ZONA'],
+        status: row['ESTADO'],
+        type_name: row['TIPOLOGIA'],
+        licence: getLicenceColumn(row),
+        coordinates: row['coordenadas'],
       };
 
       const parsed = importPosSchema.parse(input);
@@ -42,34 +33,43 @@ export async function importPosFromCsvService(filePath: string, user: AuthPayloa
       posBatch.push(parsed);
 
       if (posBatch.length >= BATCH_SIZE) {
-        await processPosBatch({ posList: posBatch, user, errors });
-        imported += posBatch.length;
-        posBatch.length = 0;
+        imported += await processBatchPos(posBatch);
       }
     } catch (err: any) {
-      errors.push({ row, error: err.errors || err.message });
+      const missingFields = Array.isArray(err.errors) ? err.errors.map((e: any) => e.message) : [err.message];
+
+      errors.push({ row, error: missingFields.join(', ') });
+
+      // Enviar SMS apenas para campos obrigatórios faltantes
+      if (missingFields.length > 0) {
+        const msg = `POS ignorado: ${missingFields.join(', ')}`;
+        await sendSMS(msg); // envia SMS ao utilizador
+      }
     }
   }
 
   if (posBatch.length > 0) {
-    await processPosBatch({ posList: posBatch, user, errors });
-    imported += posBatch.length;
+    imported += await processBatchPos(posBatch);
   }
 
-  const url = await uploadCsvToImageKit(filePath);
+  await auditImport({ file: filePath, user, imported, entity: 'POS', desc: 'pontos de venda' });
 
-  if (imported > 0) {
-    await prisma.$transaction(async tx => {
-      await audit(tx, 'IMPORT', {
-        user,
-        entity: 'POS',
-        before: null,
-        after: null,
-        description: `Importou ${imported} pontos de venda`,
-        metadata: { file: url },
-      });
-    });
-  }
+  return { total: imported + errors.length, errors, imported, ignored: errors.length };
+}
 
-  return { errors, imported };
+async function sendSMS(message: string) {
+  // Exemplo: podes usar Twilio, Nexmo ou outro serviço
+  console.log(`SMS para Paulo Luguenda: ${message}`);
+}
+
+function getLicenceColumn(row: Record<string, any>) {
+  const key = Object.keys(row).find(k =>
+    k
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // remove acentos
+      .trim()
+      .toLowerCase()
+      .includes('licenc')
+  );
+  return key ? row[key]?.toString().trim() || undefined : undefined;
 }

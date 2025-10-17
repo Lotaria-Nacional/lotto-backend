@@ -1,6 +1,6 @@
-import { Router } from 'express';
+import { Router, type Response, type Request } from 'express';
 import posRouter from '../features/pos/routes';
-import agentRouter from '../features/agent/routes';
+import agentRouter, { upload } from '../features/agent/routes';
 import userRouter from '../features/user/routes';
 import authRouter from '../features/auth/auth.router';
 import simCardRouter from '../features/sim-card/routes';
@@ -11,6 +11,7 @@ import { authenticate } from '../middleware/auth/authenticate';
 import terminalRouter from '../features/terminal/routes';
 import { refreshTokenController } from '../features/auth/controllers/refresh-token.controller';
 import { adminRoutes, areasRoutes, provincesRoutes, typesRoutes } from '../features/references/routes';
+import uploadFileToR2Router from '../features/upload-file';
 
 const router = Router();
 
@@ -35,5 +36,7 @@ router.use('/types', authenticate, typesRoutes);
 router.use('/admins', authenticate, adminRoutes);
 router.use('/provinces', authenticate, provincesRoutes);
 router.use('/audit-logs', authenticate, auditLogRouter);
+
+router.use('/file-upload', uploadFileToR2Router);
 
 export default router;

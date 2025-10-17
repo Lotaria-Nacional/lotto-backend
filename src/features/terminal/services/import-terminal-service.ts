@@ -1,145 +1,61 @@
-import z from 'zod';
 import fs from 'fs';
+import { ZodError } from 'zod';
 import csvParser from 'csv-parser';
-import prisma from '../../../lib/prisma';
-import { audit } from '../../../utils/audit-log';
-import { parseDate } from '../../../utils/date';
-import { AuthPayload, TerminalStatus } from '@lotaria-nacional/lotto';
-import uploadCsvToImageKit from '../../../utils/upload-csv-to-image-kit';
+import { AuthPayload } from '@lotaria-nacional/lotto';
+import { auditImport } from '../../../utils/import-utils';
+import { processBatchTerminals } from '../utils/process-batch-terminals';
+import { ImportTerminalsDTO, importTerminalsSchema } from '../validation/import-terminal-schema';
 
-interface ImportTerminalsResponse {
-  imported: number;
-  errors: { row: any; error: any }[];
-}
+export async function importTerminalsFromCsvService(file: string, user: AuthPayload) {
+  const errors: any[] = [];
+  let imported = 0;
+  const BATCH_SIZE = 500;
 
-const importTerminalsSchema = z.object({
-  idReference: z.coerce.number().int().nullable().optional(),
-  serialNumber: z.string().min(1, 'Número de série obrigatório'),
-  deviceId: z.string().optional(),
-  simCardNumber: z.string().optional(),
-  pin: z.string().optional(),
-  puk: z.string().optional(),
-  status: z.string().optional(),
-  chipSerialNumber: z.string().optional(),
-  activationDate: z.string().optional().transform(parseDate),
-});
-
-export type ImportTerminalsDTO = z.infer<typeof importTerminalsSchema>;
-
-export async function importTerminalsFromCsvService(file: string, user: AuthPayload): Promise<ImportTerminalsResponse> {
-  const errors: { row: any; error: any }[] = [];
-  const stream = fs
-    .createReadStream(file)
-    .pipe(csvParser({ mapHeaders: ({ header }) => header.replace(/^\uFEFF/, '').trim() }));
-
-  let totalImported = 0;
+  const stream = fs.createReadStream(file).pipe(csvParser());
+  const terminalsBatch: ImportTerminalsDTO[] = [];
 
   for await (const row of stream) {
     try {
-      const result = importTerminalsSchema.safeParse({
-        idReference: row['ID REVENDEDOR'],
-        serialNumber: row['Nº DE SERIE DO TERMINAL'],
-        deviceId: row['DEVICE ID'],
-        simCardNumber: row['Nº DO CARTAO UNITEL'],
-        status: row['ESTADO'],
+      const input: ImportTerminalsDTO = {
+        agent_id_reference: row['ID REVENDEDOR'],
+        serial_number: row['Nº DE SERIE DO TERMINAL'],
+        sim_card_number: row['Nº DO CARTAO UNITEL'],
         pin: row['PIN'],
         puk: row['PUK'],
-        chipSerialNumber: row['Nº DE SERIE DO CHIP'],
-        activationDate: row['DATA DA ACTIVACAO'],
-      });
+        status: row['ESTADO'],
+        chip_serial_number: row['Nº DE SERIE DO CHIP'],
+        device_id: row['DEVICE ID'],
+        activatedAt: row['DATA DA ACTIVACAO'],
+      };
 
-      if (!result.success) {
-        errors.push({ row, error: result.error.format });
-        continue;
+      const parsed = importTerminalsSchema.parse(input);
+
+      terminalsBatch.push(parsed);
+
+      if (terminalsBatch.length >= BATCH_SIZE) {
+        imported += await processBatchTerminals(terminalsBatch);
       }
-
-      const parsed = result.data;
-
-      let status: TerminalStatus = 'ready';
-      let agentIdRef: number | null = null;
-
-      if (parsed.idReference) {
-        const agent = await prisma.agent.findUnique({
-          where: { id_reference: parsed.idReference },
-          include: {
-            terminal: { select: { id: true } },
-            pos: { select: { id: true } },
-          },
-        });
-
-        if (agent) {
-          agentIdRef = agent.id_reference;
-          if (agent.pos?.id) {
-            status = 'on_field';
-          }
-        }
-      }
-
-      await prisma.terminal.upsert({
-        where: { serial: parsed.serialNumber }, // base para update/create
-        create: {
-          serial: parsed.serialNumber,
-          device_id: parsed.deviceId,
-          agent_id_reference: agentIdRef,
-          activated_at: parsed.activationDate ?? undefined,
-          status: parsed.simCardNumber ? status : 'stock',
-          sim_card: parsed.simCardNumber
-            ? {
-                connectOrCreate: {
-                  where: { number: parsed.simCardNumber },
-                  create: {
-                    number: parsed.simCardNumber,
-                    pin: parsed.pin,
-                    puk: parsed.puk,
-                    chip_serial_number: parsed.chipSerialNumber,
-                    status: 'active',
-                  },
-                },
-              }
-            : undefined,
-        },
-        update: {
-          device_id: parsed.deviceId,
-          agent_id_reference: agentIdRef,
-          activated_at: parsed.activationDate,
-          status: parsed.simCardNumber ? status : 'stock',
-          sim_card: parsed.simCardNumber
-            ? {
-                connectOrCreate: {
-                  where: { number: parsed.simCardNumber },
-                  create: {
-                    number: parsed.simCardNumber,
-                    pin: parsed.pin,
-                    puk: parsed.puk,
-                    chip_serial_number: parsed.chipSerialNumber,
-                    status: 'active',
-                  },
-                },
-              }
-            : undefined,
-        },
-      });
-
-      totalImported++;
     } catch (err: any) {
-      errors.push({ row, error: err.message || err });
+      console.log(err);
+      if (err instanceof ZodError) {
+        errors.push({
+          row,
+          error: err.issues.map(issue => ({
+            campo: issue.path.join(','),
+            menssagem: issue.message,
+          })),
+        });
+      } else {
+        errors.push({ row, error: (err as any).message || err });
+      }
     }
   }
 
-  const url = await uploadCsvToImageKit(file);
-
-  if (totalImported > 0) {
-    await prisma.$transaction(async tx => {
-      await audit(tx, 'IMPORT', {
-        user,
-        entity: 'TERMINAL',
-        before: null,
-        after: null,
-        description: `Importou ${totalImported} terminais`,
-        metadata: { file: url },
-      });
-    });
+  if (terminalsBatch.length > 0) {
+    imported += await processBatchTerminals(terminalsBatch);
   }
 
-  return { imported: totalImported, errors };
+  await auditImport({ file, user, imported, entity: 'TERMINAL', desc: 'terminais' });
+
+  return { errors, imported };
 }

@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { Response } from 'express';
 import { Agent } from '@prisma/client';
 import prisma from '../../../lib/prisma';
@@ -10,7 +11,7 @@ export async function exportAgentService(res: Response, filters: PaginationParam
   const where = buildAgentWhereInput(filters);
 
   // Cabeçalho CSV
-  res.write(`ID, NOME, SOBRENOME, GENERO, Nº TELEFONE, Nº BI, ESTADO, DATA DE FORMACAO\n`);
+  res.write(`ID, NOME, SOBRENOME, GENERO, DATA DE FORMACAO, ESTADO, Nº TELEFONE, Nº BI\n`);
 
   let cursor: string | null = null;
   const batchSize = 500;
@@ -43,10 +44,10 @@ export async function exportAgentService(res: Response, filters: PaginationParam
         agent.first_name,
         agent.last_name,
         genre,
+        dayjs(agent.training_date).format('DD/MM/YYYY'),
+        agentStatus[agent.status],
         agent.phone_number,
         agent.bi_number,
-        agentStatus[agent.status],
-        agent.training_date?.toISOString().split('T')[0] ?? '',
       ]
         .map(v => `"${v ?? ''}"`)
         .join(',');

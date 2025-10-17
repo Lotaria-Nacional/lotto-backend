@@ -30,13 +30,23 @@ export async function updatePosService(data: UpdatePosDTO & { user: AuthPayload 
       });
     }
 
+    let licence;
+    if (data.licence_reference) {
+      licence = await tx.licence.findUnique({
+        where: {
+          reference: data.licence_reference,
+        },
+        include: { admin: { select: { name: true } } },
+      });
+    }
+
     const posUpdated = await tx.pos.update({
       where: { id: data.id },
       data: {
         coordinates: data.coordinates,
         latitude: data.latitude,
         longitude: data.longitude,
-        admin_name: data.admin_name,
+        admin_name: licence?.admin_name,
         province_name: data.province_name,
         city_name: data.city_name,
         area_name: data.area_name,

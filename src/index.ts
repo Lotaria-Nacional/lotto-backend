@@ -15,7 +15,6 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// const allowedOrigins = ['https://mtjogos.co.ao'];
 const allowedOrigins = ['*', 'http://localhost:5173'];
 
 app.use(

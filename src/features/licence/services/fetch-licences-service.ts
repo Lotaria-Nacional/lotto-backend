@@ -12,7 +12,10 @@ export async function fetchLicencesService(params: PaginationParams) {
     skip: offset,
     take: params.limit,
     orderBy: { emitted_at: 'desc' },
-    include: { admin: { select: { id: true, name: true } } },
+    include: {
+      admin: { select: { id: true, name: true } },
+      pos: { select: { id: true } },
+    },
     omit: { admin_name: true },
   });
 

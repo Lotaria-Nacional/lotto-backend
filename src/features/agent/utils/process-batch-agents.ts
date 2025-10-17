@@ -1,87 +1,38 @@
+import { Genre } from '@prisma/client';
 import prisma from '../../../lib/prisma';
-import { ImportAgentDTO } from '../services/import-agents-service';
-import { AgentType, AuthPayload, Genre } from '@lotaria-nacional/lotto';
+import { AgentType } from '@lotaria-nacional/lotto';
+import { ImportAgentDTO } from '../validation/import-agent-schema';
 
-type ProcessAgentsBatch = {
-  agents: ImportAgentDTO[];
-  user: AuthPayload;
-  errors: any[];
-};
+export const CHUNK_SIZE = 200;
 
-export async function processAgentsBatch({ agents, errors, user }: ProcessAgentsBatch) {
-  const groupedByType: Record<AgentType, number> = {
-    revendedor: 0,
-    lotaria_nacional: 0,
-  };
+export async function processBatchAgents(batch: ImportAgentDTO[]) {
+  for (let i = 0; i < batch.length; i += CHUNK_SIZE) {
+    const chunk = batch.slice(i, i + CHUNK_SIZE);
 
-  // Filtra e valida dados antes de inserir
-  const validAgents: ImportAgentDTO[] = [];
-  for (const agent of agents) {
-    if (!agent.id_reference || !agent.name || !agent.last_name) {
-      errors.push({ row: agent, error: 'Dados obrigatórios ausentes' });
-      continue;
-    }
-    validAgents.push(agent);
+    await prisma.$transaction(
+      chunk.map(agent => {
+        const agentData = {
+          id_reference: agent.id_reference,
+          first_name: agent.name,
+          last_name: agent.last_name,
+          genre: agent.gender as Genre,
+          training_date: agent.training_date,
+          status: agent.status,
+          bi_number: agent.bi_number,
+          phone_number: agent.phone_number,
+          agent_type: agent.id_reference.toString().startsWith('1') ? 'revendedor' : ('lotaria_nacional' as AgentType),
+        };
+
+        return prisma.agent.upsert({
+          where: { id_reference: agent.id_reference },
+          create: agentData,
+          update: agentData,
+        });
+      })
+    );
   }
 
-  try {
-    await prisma.$transaction(async tx => {
-      for (const agentData of validAgents) {
-        const id_reference = agentData.id_reference;
-        const agent_type: AgentType = id_reference.toString().startsWith('1') ? 'revendedor' : 'lotaria_nacional';
-        const genre: Genre = agentData.gender;
-
-        try {
-          await tx.agent.upsert({
-            where: { id_reference },
-            create: {
-              agent_type,
-              id_reference,
-              genre,
-              first_name: agentData.name ?? null,
-              last_name: agentData.last_name ?? null,
-              bi_number: agentData.bi_number ?? null,
-              status: agentData.status ?? 'approved',
-              phone_number: agentData.phone_number ?? null,
-              training_date: agentData.training_date ?? null,
-            },
-            update: {
-              genre,
-              first_name: agentData.name,
-              last_name: agentData.last_name,
-              bi_number: agentData.bi_number,
-              status: agentData.status ?? 'approved',
-              phone_number: agentData.phone_number,
-              training_date: agentData.training_date,
-            },
-          });
-
-          // Atualiza max id por tipo
-          if (!groupedByType[agent_type] || groupedByType[agent_type] < id_reference) {
-            groupedByType[agent_type] = id_reference;
-          }
-        } catch (err: any) {
-          errors.push({ row: agentData, error: err.message || err });
-        }
-      }
-    });
-
-    // Atualiza counters depois de processar o batch
-    await prisma.$transaction(async tx => {
-      for (const [type, maxId] of Object.entries(groupedByType)) {
-        if (maxId > 0) {
-          await tx.idReference.updateMany({
-            where: {
-              type: type as AgentType,
-              counter: { lt: maxId },
-            },
-            data: { counter: maxId },
-          });
-        }
-      }
-    });
-  } catch (err: any) {
-    // Falha geral da transação
-    errors.push({ row: null, error: `Falha batch completa: ${err.message || err}` });
-  }
+  const count = batch.length;
+  batch.length = 0;
+  return count;
 }

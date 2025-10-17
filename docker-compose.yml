@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: lotaria_nacional
+      POSTGRES_DB: intern_managment_db
+      POSTGRES_PASSWORD: Lp6YtX4SNq10
+    ports:
+      - '5432:5432'
+    volumes:
+      - intern_managment_db_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+volumes:
+  intern_managment_db_data:
+  redis_data:

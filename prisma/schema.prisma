@@ -84,6 +84,7 @@ model SimCard {
 
 model Pos {
   id          String     @id @default(uuid())
+  // pos_reference String?    @unique
   coordinates String?
   latitude    Float?
   longitude   Float?
@@ -160,6 +161,8 @@ model Administration {
   licences Licence[]
 
   cities City[] // Uma administração tem várias cidades
+
+  @@map("administrations")
 }
 
 model Province {
@@ -187,6 +190,8 @@ model City {
 
   administration    Administration? @relation(fields: [administration_id], references: [id])
   administration_id Int?
+
+  @@map("cities")
 }
 
 model Zone {
@@ -195,6 +200,8 @@ model Zone {
 
   cities City[] // uma zona pode ter várias cidades
   pos    Pos[]
+
+  @@map("zones")
 }
 
 model Area {
@@ -202,6 +209,8 @@ model Area {
   name   String @unique
   cities City[]
   pos    Pos[]
+
+  @@map("areas")
 }
 
 model Type {
@@ -289,6 +298,38 @@ model GroupPermission {
 
   @@unique([group_id, module])
   @@map("group_permissions")
+}
+
+model AgentActivity {
+  id        String               @id @default(uuid())
+  area      String?
+  zone      String?
+  status    AgentActivityStatus? @default(active)
+  balances  AgentDailyBalance[]
+  createdAt DateTime             @default(now()) @map("created_at")
+  updatedAt DateTime             @updatedAt @map("updated_at")
+
+  @@map("agent_activities")
+}
+
+enum AgentActivityStatus {
+  blocked
+  active
+}
+
+model AgentDailyBalance {
+  id        String   @id @default(uuid())
+  agentId   String
+  date      DateTime
+  deposit   Decimal? @db.Decimal(18, 2)
+  debt      Decimal? @db.Decimal(18, 2)
+  balance   Decimal? @db.Decimal(18, 2)
+  createdAt DateTime @default(now())
+
+  agent AgentActivity @relation(fields: [agentId], references: [id])
+
+  @@unique([agentId, date])
+  @@map("agent_daily_balances")
 }
 
 enum AgentType {

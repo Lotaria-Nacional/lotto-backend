@@ -14,8 +14,8 @@ export async function parseCsvFile(filePath: string): Promise<any[]> {
     const results: any[] = [];
     fs.createReadStream(filePath)
       .pipe(csvParser())
-      .on('data', (data) => results.push(data))
+      .on('data', data => results.push(data))
       .on('end', () => resolve(results))
-      .on('error', (err) => reject(err));
+      .on('error', err => reject(err));
   });
 }

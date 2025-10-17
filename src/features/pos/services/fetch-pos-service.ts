@@ -13,7 +13,11 @@ export async function fetchPoService(params: PaginationParams) {
     take: params.limit,
     orderBy: { created_at: 'desc' },
     select: {
-      licence: true,
+      licence: {
+        include: {
+          admin: true,
+        },
+      },
       agent: {
         select: {
           id: true,
