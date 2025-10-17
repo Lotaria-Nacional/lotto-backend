@@ -1,20 +1,8 @@
 import { Response } from 'express';
 import prisma from '../../../lib/prisma';
 import { Terminal } from '@prisma/client';
-import { TerminalStatus } from '@lotaria-nacional/lotto';
 import { PaginationParams } from '../../../@types/pagination-params';
 import { buildTermninalWhereInput } from '../utils/filters';
-
-const terminalStatus: Record<TerminalStatus, string> = {
-  ready: 'Pronto',
-  broken: 'Avariado',
-  stock: 'Inventario',
-  fixed: 'Concertado',
-  on_field: 'Em campo',
-  discontinued: 'Negado',
-  training: 'Em formacao',
-  maintenance: 'Em manuntencao',
-};
 
 export async function exportTerminalService(res: Response, filters: PaginationParams) {
   const where = buildTermninalWhereInput(filters);

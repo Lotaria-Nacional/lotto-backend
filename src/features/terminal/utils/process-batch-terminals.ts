@@ -1,4 +1,4 @@
-import { TerminalStatus } from '@lotaria-nacional/lotto';
+import { TerminalStatus } from '@prisma/client';
 import prisma from '../../../lib/prisma';
 import { CHUNK_SIZE } from '../../agent/utils/process-batch-agents';
 import { ImportTerminalsDTO } from '../validation/import-terminal-schema';

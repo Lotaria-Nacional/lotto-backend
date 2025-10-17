@@ -5,7 +5,7 @@ export class CloudflareR2 {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = env.CLOUDFLARE_R2_BASEURL;
+    this.baseUrl = env.CLOUDFLARE_R2_BASEURL || '';
   }
 
   private toArrayBuffer(data: Buffer | ArrayBuffer): ArrayBuffer {
