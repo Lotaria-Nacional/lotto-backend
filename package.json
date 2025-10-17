@@ -9,7 +9,9 @@
     "build": "tsc",
     "test:e2e": "vitest run",
     "generate": "prisma generate",
-    "migrate": "prisma migrate dev"
+    "migrate": "prisma migrate dev",
+    "prisma:dev": "NODE_ENV=development prisma migrate dev",
+    "prisma:prod": "NODE_ENV=production prisma migrate deploy"
   },
   "dependencies": {
     "@casl/ability": "^6.7.3",

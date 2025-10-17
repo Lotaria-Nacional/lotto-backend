@@ -15,7 +15,8 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const allowedOrigins = ['*', 'http://localhost:5173'];
+// const allowedOrigins = ['*', 'http://localhost:5173'];
+const allowedOrigins = ['https://mtjogos.co.ao'];
 
 app.use(
   cors({
@@ -36,6 +37,7 @@ app.use(errorHandler);
 
 app.listen(env.PORT, '0.0.0.0', () => {
   console.log(`App running on port:${env.PORT}`);
+  console.log(env.DATABASE_URL, env.DEV_DATABASE_URL, env.REDIS_URL);
 });
 
 export default app;

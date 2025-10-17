@@ -1,7 +1,14 @@
+// import env from '../constants/env';
 import { PrismaClient } from '@prisma/client';
+import env from '../constants/env';
 
 const prisma = new PrismaClient({
-  log: ['error', 'info'],
+  datasources: {
+    db: {
+      url: process.env.NODE_ENV === 'development' ? env.DEV_DATABASE_URL : env.DATABASE_URL,
+    },
+  },
+  log: ['info', 'warn', 'error'],
 });
 
 const checkConnection = async () => {

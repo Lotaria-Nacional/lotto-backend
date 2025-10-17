@@ -8,6 +8,7 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string(),
   PORT: z.coerce.number().default(3333),
   DATABASE_URL: z.string(),
+  DEV_DATABASE_URL: z.string(),
   REDIS_URL: z.string().default('redis://localhost:6379'),
 });
 
