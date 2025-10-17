@@ -37,6 +37,7 @@ export async function exportAgentService(res: Response, filters: PaginationParam
         denied: 'Negado',
         scheduled: 'Agendado',
         ready: 'Pronto',
+        blocked: 'Bloqueado',
       };
 
       const line = [
@@ -49,7 +50,7 @@ export async function exportAgentService(res: Response, filters: PaginationParam
         agent.phone_number,
         agent.bi_number,
       ]
-        .map(v => `"${v ?? ''}"`)
+        .map((v) => `"${v ?? ''}"`)
         .join(',');
 
       res.write(line + '\n');
