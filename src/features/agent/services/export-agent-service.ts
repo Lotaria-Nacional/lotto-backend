@@ -1,10 +1,10 @@
+import dayjs from 'dayjs';
 import { Response } from 'express';
 import { Agent } from '@prisma/client';
 import prisma from '../../../lib/prisma';
 import { AgentStatus } from '@lotaria-nacional/lotto';
 import { PaginationParams } from '../../../@types/pagination-params';
 import { buildAgentWhereInput } from '../utils/filters';
-import dayjs from 'dayjs';
 
 export async function exportAgentService(res: Response, filters: PaginationParams) {
   // Gerar WHERE com base nos filtros já existentes
@@ -49,7 +49,7 @@ export async function exportAgentService(res: Response, filters: PaginationParam
         agent.phone_number,
         agent.bi_number,
       ]
-        .map((v) => `"${v ?? ''}"`)
+        .map(v => `"${v ?? ''}"`)
         .join(',');
 
       res.write(line + '\n');
