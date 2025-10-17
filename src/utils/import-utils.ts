@@ -1,11 +1,10 @@
+import dayjs from 'dayjs';
+import { ZodError } from 'zod';
 import prisma from '../lib/prisma';
 import { audit } from './audit-log';
-import { AuthPayload, Module } from '@lotaria-nacional/lotto';
 import uploadCsvToImageKit from './upload-csv-to-image-kit';
-
-import dayjs from 'dayjs';
+import { AuthPayload, Module } from '@lotaria-nacional/lotto';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { ZodError } from 'zod';
 
 dayjs.extend(customParseFormat);
 
@@ -14,17 +13,18 @@ interface AuditImportProps {
   user: AuthPayload;
   imported: number;
   entity: Module;
+  desc: string;
 }
 
-export const auditImport = async ({ file, user, imported, entity }: AuditImportProps) => {
+export const auditImport = async ({ file, user, imported, entity, desc }: AuditImportProps) => {
   const url = await uploadCsvToImageKit(file);
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     await audit(tx, 'IMPORT', {
       user,
       before: null,
       after: null,
       entity,
-      description: `Importou ${imported} agentes`,
+      description: `Importou ${imported} ${desc}`,
       metadata: {
         file: url,
       },
@@ -50,7 +50,7 @@ export function handleImportError({ err, errors, row }: HandleImportErrorProps) 
   if (err instanceof ZodError) {
     errors.push({
       row,
-      error: err.issues.map((issue) => ({
+      error: err.issues.map(issue => ({
         campo: issue.path.join(','),
         menssagem: issue.message,
       })),

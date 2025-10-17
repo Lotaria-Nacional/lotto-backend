@@ -1,35 +1,45 @@
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
+import { audit } from '../../../utils/audit-log';
+import { AuthPayload } from '@lotaria-nacional/lotto';
 
-async function unBlockAgentsActivitiesService(agentsIds: string[]) {
-  const count = await prisma.$transaction(async (tx) => {
-    const { count } = await tx.agentActivity.updateMany({
-      where: {
-        id: { in: agentsIds },
-        status: 'blocked',
-      },
-      data: {
-        status: 'active',
-      },
-    });
+async function unBlockAgentsActivitiesService(agentsIds: string[], user: AuthPayload) {
+  const updatedAgents: number[] = [];
 
-    await tx.agent.updateMany({
-      where: {
-        id_reference: { in: agentsIds.map(Number) },
-      },
-      data: {
-        status: 'active',
-      },
-    });
+  await prisma.$transaction(async tx => {
+    for (const id of agentsIds) {
+      const agent = await tx.agent.findUnique({ where: { id_reference: Number(id) } });
+      if (agent && agent.status === 'denied') {
+        // ou 'blocked', dependendo do status actual
+        const updatedAgent = await tx.agent.update({
+          where: { id_reference: Number(id) },
+          data: { status: 'active' },
+        });
 
-    if (count === 0) {
+        await audit(tx, 'ACTIVATE', {
+          user,
+          before: agent,
+          after: updatedAgent,
+          entity: 'AGENT',
+          description: 'Ativou um agente',
+        });
+
+        updatedAgents.push(Number(id));
+      }
+    }
+
+    if (updatedAgents.length === 0) {
       throw new NotFoundError('Nenhum agente bloqueado foi encontrado para desbloquear.');
     }
 
-    return count;
+    // Opcional: atualizar agentActivity também
+    await tx.agentActivity.updateMany({
+      where: { id: { in: agentsIds }, status: 'blocked' },
+      data: { status: 'active' },
+    });
   });
 
-  return { updated: count };
+  return { updated: updatedAgents.length };
 }
 
 export default unBlockAgentsActivitiesService;

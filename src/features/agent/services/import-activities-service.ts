@@ -4,11 +4,10 @@ import { Readable } from 'stream';
 import csvParser from 'csv-parser';
 import prisma from '../../../lib/prisma';
 import { detectCsvType } from '../utils/detect-csv-type';
+import { auditImport } from '../../../utils/import-utils';
+import { AuthPayload } from '@lotaria-nacional/lotto';
 
-export async function importActivitiesService(
-  files: Express.Multer.File[],
-  onProgress?: (percent: number) => void
-): Promise<void> {
+export async function importActivitiesService(files: Express.Multer.File[], user: AuthPayload) {
   let totalRecords = 0;
   let processed = 0;
 
@@ -34,7 +33,7 @@ export async function importActivitiesService(
     await new Promise<void>((resolve, reject) => {
       stream
         .pipe(csvParser())
-        .on('data', async (row) => {
+        .on('data', async row => {
           try {
             if (type === 'AFRIMONEY') {
               const id = normalizeId(row['REMARKS']);
@@ -89,10 +88,6 @@ export async function importActivitiesService(
             }
 
             processed++;
-            if (onProgress) {
-              const percent = Math.round((processed / totalRecords) * 100);
-              onProgress(Math.min(100, percent));
-            }
           } catch (err) {
             console.error('Erro ao processar linha:', err);
           }
@@ -125,7 +120,17 @@ export async function importActivitiesService(
     }
   }
 
-  if (onProgress) onProgress(100);
+  for (const file of files) {
+    const importedRecords = processed; // ou contar os inserts reais no Prisma
+
+    await auditImport({
+      user,
+      file: file.buffer,
+      imported: importedRecords,
+      entity: 'AGENT',
+      desc: 'históricos de actividade',
+    });
+  }
 }
 
 function normalizeId(value?: string | number): string {

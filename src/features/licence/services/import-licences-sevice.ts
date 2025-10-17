@@ -1,8 +1,8 @@
 import fs from 'fs';
 import csvParser from 'csv-parser';
 import { AuthPayload } from '@lotaria-nacional/lotto';
-import { handleImportError } from '../../../utils/import-utils';
 import { processBatchLicences } from '../utils/process-batch-licences';
+import { auditImport, handleImportError } from '../../../utils/import-utils';
 import { ImportLicenceDTO, importLicenceSchema } from '../validation/import-licence-schema';
 
 export async function importLicencesFromCsvService(filePath: string, user: AuthPayload) {
@@ -43,7 +43,7 @@ export async function importLicencesFromCsvService(filePath: string, user: AuthP
     imported += await processBatchLicences(licencesBatch);
   }
 
-  console.log({ imported, errors: errors.length });
+  await auditImport({ file: filePath, user, imported, entity: 'LICENCE', desc: 'licenças' });
 
   return { imported, errors };
 }

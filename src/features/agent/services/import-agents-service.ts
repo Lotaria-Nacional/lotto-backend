@@ -2,8 +2,8 @@ import fs from 'fs';
 import { ZodError } from 'zod';
 import csvParser from 'csv-parser';
 import prisma from '../../../lib/prisma';
-
 import { AuthPayload } from '@lotaria-nacional/lotto';
+import { auditImport } from '../../../utils/import-utils';
 import { processBatchAgents } from '../utils/process-batch-agents';
 import { ImportAgentDTO, importAgentsSchema } from '../validation/import-agent-schema';
 
@@ -56,6 +56,8 @@ export async function importAgentsFromCsvService(file: string, user: AuthPayload
     imported += await processBatchAgents(agentsBatch);
   }
   await updateIdReference();
+
+  await auditImport({ file, user, imported, entity: 'AGENT', desc: 'agentes' });
 
   return { errors, imported };
 }

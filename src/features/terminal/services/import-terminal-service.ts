@@ -2,6 +2,7 @@ import fs from 'fs';
 import { ZodError } from 'zod';
 import csvParser from 'csv-parser';
 import { AuthPayload } from '@lotaria-nacional/lotto';
+import { auditImport } from '../../../utils/import-utils';
 import { processBatchTerminals } from '../utils/process-batch-terminals';
 import { ImportTerminalsDTO, importTerminalsSchema } from '../validation/import-terminal-schema';
 
@@ -53,6 +54,8 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
   if (terminalsBatch.length > 0) {
     imported += await processBatchTerminals(terminalsBatch);
   }
+
+  await auditImport({ file, user, imported, entity: 'TERMINAL', desc: 'terminais' });
 
   return { errors, imported };
 }

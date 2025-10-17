@@ -3,6 +3,7 @@ import csvParser from 'csv-parser';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 import { processBatchPos } from '../utils/process-batch-pos';
 import { ImportPosDTO, importPosSchema } from '../validation/import-pos-schema';
+import { auditImport } from '../../../utils/import-utils';
 
 export async function importPosFromCsvService(filePath: string, user: AuthPayload) {
   const errors: any[] = [];
@@ -50,6 +51,8 @@ export async function importPosFromCsvService(filePath: string, user: AuthPayloa
   if (posBatch.length > 0) {
     imported += await processBatchPos(posBatch);
   }
+
+  await auditImport({ file: filePath, user, imported, entity: 'POS', desc: 'pontos de venda' });
 
   return { total: imported + errors.length, errors, imported, ignored: errors.length };
 }

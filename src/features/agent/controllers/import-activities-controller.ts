@@ -2,8 +2,21 @@ import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
 import { getProgress, setProgress } from '../../../utils/progress-store';
 import { importActivitiesService } from '../services/import-activities-service';
+import { AuthPayload } from '@lotaria-nacional/lotto';
+import { hasPermission } from '../../../middleware/auth/permissions';
 
 export async function uploadActivitiesController(req: Request, res: Response) {
+  const user = req.user as AuthPayload;
+
+  await hasPermission({
+    res,
+    userId: user.id,
+    permission: {
+      action: 'IMPORT',
+      subject: 'AGENT',
+    },
+  });
+
   const files = req.files as Express.Multer.File[];
   if (!files || files.length === 0) {
     return res.status(400).json({ error: 'Nenhum ficheiro fornecido' });
@@ -15,9 +28,7 @@ export async function uploadActivitiesController(req: Request, res: Response) {
   // Processamento em background (não bloqueia a resposta HTTP)
   (async () => {
     try {
-      await importActivitiesService(files, (percent) => {
-        setProgress(uploadId, percent);
-      });
+      await importActivitiesService(files, user);
       setProgress(uploadId, 100);
     } catch (error) {
       setProgress(uploadId, -1); // indica erro
