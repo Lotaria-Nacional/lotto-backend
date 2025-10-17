@@ -1,9 +1,9 @@
-import z from 'zod';
 import fs from 'fs';
 import csvParser from 'csv-parser';
 import { AuthPayload } from '@lotaria-nacional/lotto';
-import { handleImportError, parseImportedDate } from '../../../utils/import-utils';
-import { processBatchLicences } from '../../../utils/process-batch';
+import { handleImportError } from '../../../utils/import-utils';
+import { processBatchLicences } from '../utils/process-batch-licences';
+import { ImportLicenceDTO, importLicenceSchema } from '../validation/import-licence-schema';
 
 export async function importLicencesFromCsvService(filePath: string, user: AuthPayload) {
   const errors: any[] = [];
@@ -47,17 +47,3 @@ export async function importLicencesFromCsvService(filePath: string, user: AuthP
 
   return { imported, errors };
 }
-
-const importLicenceSchema = z.object({
-  reference: z.string(),
-  admin_name: z.string().transform((val) => val.toLowerCase().trim()),
-  coordinates: z.string().optional(),
-  district: z.string().optional(),
-  emitted_at: z.transform(parseImportedDate).optional(),
-  expires_at: z.transform(parseImportedDate).optional(),
-  number: z.string(),
-  description: z.string(),
-  limit: z.coerce.number().default(50),
-});
-
-export type ImportLicenceDTO = z.infer<typeof importLicenceSchema>;

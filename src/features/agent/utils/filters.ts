@@ -87,7 +87,7 @@ export const buildAgentWhereInput = (params: PaginationParams): Prisma.AgentWher
       ...(params.area_name ? [{ pos: { area: { name: params.area_name } } }] : []),
       ...(params.zone_number ? [{ pos: { zone: { number: params.zone_number } } }] : []),
       ...(params.type_name ? [{ pos: { type: { name: params.type_name } } }] : []),
-      ...(params.subtype_name ? [{ pos: { area: { name: params.subtype_name } } }] : []),
+      ...(params.subtype_name ? [{ pos: { subtype: { name: params.subtype_name } } }] : []),
       ...(params.province_name ? [{ pos: { province: { name: params.province_name } } }] : []),
       ...(params.city_name ? [{ pos: { city: { name: params.city_name } } }] : []),
       ...(params.admin_name ? [{ pos: { admin: { name: params.admin_name } } }] : []),

@@ -24,7 +24,7 @@ export async function seedProvinceAndCities(
     { name: 'palanca', area: areas[3], zone: zones[12], adminName: 'kilamba kiaxi' },
     { name: 'mulenvos', area: areas[3], zone: zones[13], adminName: 'cacuaco' },
     { name: 'cazenga', area: areas[3], zone: zones[14], adminName: 'cazenga' },
-    { name: 'são Paulo', area: areas[3], zone: zones[15], adminName: 'sambizanga' },
+    { name: 'sao paulo', area: areas[3], zone: zones[15], adminName: 'sambizanga' },
     { name: 'kikolo', area: areas[4], zone: zones[16], adminName: 'cacuaco' },
     { name: 'sambizanga', area: areas[4], zone: zones[17], adminName: 'sambizanga' },
     { name: 'cacuaco', area: areas[4], zone: zones[18], adminName: 'cacuaco' },
@@ -36,7 +36,7 @@ export async function seedProvinceAndCities(
   ];
 
   for (const city of citiesData) {
-    const admin = administrations.find((a) => a.name === city.adminName);
+    const admin = administrations.find(a => a.name === city.adminName);
     await tx.city.create({
       data: {
         name: city.name,

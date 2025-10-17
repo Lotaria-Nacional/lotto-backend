@@ -1,10 +1,11 @@
 import fs from 'fs';
-import z, { ZodError } from 'zod';
+import { ZodError } from 'zod';
 import csvParser from 'csv-parser';
 import prisma from '../../../lib/prisma';
-import { parseImportedDate } from '../../../utils/import-utils';
-import { processBatchAgents } from '../../../utils/process-batch';
-import { AgentStatus, AuthPayload } from '@lotaria-nacional/lotto';
+
+import { AuthPayload } from '@lotaria-nacional/lotto';
+import { processBatchAgents } from '../utils/process-batch-agents';
+import { ImportAgentDTO, importAgentsSchema } from '../validation/import-agent-schema';
 
 export async function importAgentsFromCsvService(file: string, user: AuthPayload) {
   const errors: any[] = [];
@@ -40,7 +41,7 @@ export async function importAgentsFromCsvService(file: string, user: AuthPayload
       if (err instanceof ZodError) {
         errors.push({
           row,
-          error: err.issues.map((issue) => ({
+          error: err.issues.map(issue => ({
             campo: issue.path.join('.'),
             mensagem: issue.message,
           })),
@@ -59,44 +60,9 @@ export async function importAgentsFromCsvService(file: string, user: AuthPayload
   return { errors, imported };
 }
 
-const importAgentsSchema = z.object({
-  id_reference: z.coerce.number().int(),
-  name: z.string().trim(),
-  last_name: z.string().trim(),
-  gender: z.string().transform((val) => {
-    const v = val.toLowerCase().trim();
-    if (/^m(asculino)?$/.test(v)) return 'male';
-    if (/^f(eminino)?$/.test(v)) return 'female';
-    return 'male';
-  }),
-  training_date: z.transform(parseImportedDate),
-  status: z
-    .string()
-    .transform((val): AgentStatus | undefined => {
-      const v = val.toLowerCase().trim();
-      switch (v) {
-        case 'activo':
-          return 'active';
-        case 'negado':
-          return 'discontinued';
-        case 'apto':
-          return 'approved';
-        case 'agendado':
-          return 'scheduled';
-        default:
-          return undefined;
-      }
-    })
-    .optional(),
-  phone_number: z.string().trim(),
-  bi_number: z.string().trim(),
-});
-
-export type ImportAgentDTO = z.infer<typeof importAgentsSchema>;
-
 async function updateIdReference() {
   try {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
       // Último id_reference da lotaria
       const lastLotaria = await tx.agent.findFirst({
         where: { agent_type: 'lotaria_nacional' },

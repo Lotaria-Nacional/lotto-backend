@@ -1,9 +1,9 @@
 import fs from 'fs';
-import z, { ZodError } from 'zod';
+import { ZodError } from 'zod';
 import csvParser from 'csv-parser';
-import { parseImportedDate } from '../../../utils/import-utils';
-import { processBatchTerminals } from '../../../utils/process-batch';
-import { AuthPayload, TerminalStatus } from '@lotaria-nacional/lotto';
+import { AuthPayload } from '@lotaria-nacional/lotto';
+import { processBatchTerminals } from '../utils/process-batch-terminals';
+import { ImportTerminalsDTO, importTerminalsSchema } from '../validation/import-terminal-schema';
 
 export async function importTerminalsFromCsvService(file: string, user: AuthPayload) {
   const errors: any[] = [];
@@ -16,14 +16,14 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
   for await (const row of stream) {
     try {
       const input: ImportTerminalsDTO = {
-        idReference: row['ID REVENDEDOR'],
-        serialNumber: row['Nº DE SERIE DO TERMINAL'],
-        simCardNumber: row['Nº DO CARTAO UNITEL'],
+        agent_id_reference: row['ID REVENDEDOR'],
+        serial_number: row['Nº DE SERIE DO TERMINAL'],
+        sim_card_number: row['Nº DO CARTAO UNITEL'],
         pin: row['PIN'],
         puk: row['PUK'],
         status: row['ESTADO'],
-        chipSerialNumber: row['Nº DE SERIE DO CHIP'],
-        deviceId: row['DEVICE ID'],
+        chip_serial_number: row['Nº DE SERIE DO CHIP'],
+        device_id: row['DEVICE ID'],
         activatedAt: row['DATA DA ACTIVACAO'],
       };
 
@@ -39,7 +39,7 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
       if (err instanceof ZodError) {
         errors.push({
           row,
-          error: err.issues.map((issue) => ({
+          error: err.issues.map(issue => ({
             campo: issue.path.join(','),
             menssagem: issue.message,
           })),
@@ -56,42 +56,3 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
 
   return { errors, imported };
 }
-
-const importTerminalsSchema = z.object({
-  idReference: z
-    .string()
-    .transform((val) => {
-      // Extrai apenas dígitos
-      const match = val.match(/^\d+$/);
-      return match ? Number(match[0]) : null;
-    })
-    .nullable()
-    .optional(),
-  serialNumber: z.string().trim(),
-  deviceId: z.string().trim().optional(),
-  simCardNumber: z.string().trim().optional(),
-  pin: z.string().trim().optional(),
-  puk: z.string().trim().optional(),
-  status: z
-    .string()
-    .transform((val): TerminalStatus | null => {
-      const v = val.toLowerCase().trim();
-      switch (v) {
-        case 'em campo':
-          return 'on_field';
-        case 'pronto':
-          return 'ready';
-        case 'inventário':
-          return 'stock';
-        case 'avariado':
-          return 'broken';
-        default:
-          return 'ready';
-      }
-    })
-    .optional(),
-  chipSerialNumber: z.string().trim().optional(),
-  activatedAt: z.transform(parseImportedDate),
-});
-
-export type ImportTerminalsDTO = z.infer<typeof importTerminalsSchema>;

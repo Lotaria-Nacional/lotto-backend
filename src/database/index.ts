@@ -11,7 +11,7 @@ const prisma = new PrismaClient();
 
 async function seedData() {
   try {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
       /* RESET DATABASE */
       await resetDatabase(tx);
 
