@@ -7,7 +7,7 @@ export async function processBatchTerminals(batch: ImportTerminalsDTO[]) {
   for (let i = 0; i < batch.length; i += CHUNK_SIZE) {
     const chunk = batch.slice(i, i + CHUNK_SIZE);
 
-    await prisma.$transaction(async tx => {
+    await prisma.$transaction(async (tx) => {
       for (const terminal of chunk) {
         const terminalData = {
           serial: terminal.serial_number,

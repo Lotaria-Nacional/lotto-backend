@@ -4,15 +4,24 @@ import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 
 async function unBlockAgentsActivitiesService(agentsIds: string[], user: AuthPayload) {
-  const updatedAgents: number[] = [];
+  const count = await prisma.$transaction(async (tx) => {
+    const { count } = await tx.agentActivity.updateMany({
+      where: {
+        id: { in: agentsIds },
+        status: 'blocked',
+      },
+      data: {
+        status: 'active',
+      },
+    });
 
-  await prisma.$transaction(async tx => {
     for (const id of agentsIds) {
       const agent = await tx.agent.findUnique({ where: { id_reference: Number(id) } });
-      if (agent && agent.status === 'denied') {
-        // ou 'blocked', dependendo do status actual
+      if (agent) {
         const updatedAgent = await tx.agent.update({
-          where: { id_reference: Number(id) },
+          where: {
+            id_reference: Number(id),
+          },
           data: { status: 'active' },
         });
 
@@ -23,23 +32,17 @@ async function unBlockAgentsActivitiesService(agentsIds: string[], user: AuthPay
           entity: 'AGENT',
           description: 'Ativou um agente',
         });
-
-        updatedAgents.push(Number(id));
       }
     }
 
-    if (updatedAgents.length === 0) {
-      throw new NotFoundError('Nenhum agente bloqueado foi encontrado para desbloquear.');
+    if (count === 0) {
+      throw new NotFoundError('Nenhum agente bloqueado foi encontrado para ativar.');
     }
 
-    // Opcional: atualizar agentActivity também
-    await tx.agentActivity.updateMany({
-      where: { id: { in: agentsIds }, status: 'blocked' },
-      data: { status: 'active' },
-    });
+    return count;
   });
 
-  return { updated: updatedAgents.length };
+  return { updated: count };
 }
 
 export default unBlockAgentsActivitiesService;

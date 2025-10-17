@@ -36,7 +36,7 @@ export async function seedProvinceAndCities(
   ];
 
   for (const city of citiesData) {
-    const admin = administrations.find(a => a.name === city.adminName);
+    const admin = administrations.find((a) => a.name === city.adminName);
     await tx.city.create({
       data: {
         name: city.name,

@@ -1,11 +1,11 @@
-import { TerminalStatus } from '@lotaria-nacional/lotto';
 import z from 'zod';
+import { TerminalStatus } from '@lotaria-nacional/lotto';
 import { parseImportedDate } from '../../../utils/import-utils';
 
 export const importTerminalsSchema = z.object({
   agent_id_reference: z
     .string()
-    .transform(val => {
+    .transform((val) => {
       const match = val.match(/^\d+$/);
       return match ? Number(match[0]) : null;
     })

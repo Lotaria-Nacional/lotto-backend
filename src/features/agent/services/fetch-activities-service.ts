@@ -26,7 +26,7 @@ export type FetchActivitiesResponse = {
 type AgentActivityStatus = 'active' | 'blocked';
 
 export async function fetchActivitiesService(params?: FetchActivitiesParams): Promise<FetchActivitiesResponse> {
-  const q = params?.query;
+  const q = params?.query?.normalize('NFD');
   const status = params?.status;
   const start = params?.start;
   const end = params?.end;
@@ -34,14 +34,18 @@ export async function fetchActivitiesService(params?: FetchActivitiesParams): Pr
   let filters: Prisma.AgentDailyBalanceWhereInput[] = [];
 
   if (q) {
+    console.log(q);
     filters.push({
-      AND: [
-        { agentId: { contains: params.query, mode: 'insensitive' } },
-        { agent: { zone: { contains: params.query, mode: 'insensitive' } } },
-        { agent: { area: { contains: params.query, mode: 'insensitive' } } },
-        { agent: { status: { equals: status ? (status as AgentActivityStatus) : undefined } } },
+      OR: [
+        { agentId: { contains: q, mode: 'insensitive' } },
+        { agent: { zone: { contains: q, mode: 'insensitive' } } },
+        { agent: { area: { contains: q, mode: 'insensitive' } } },
       ],
     });
+  }
+
+  if (status) {
+    filters.push({ agent: { status: status as AgentActivityStatus } });
   }
 
   if (start || end) {

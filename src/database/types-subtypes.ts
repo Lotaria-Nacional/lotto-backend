@@ -29,7 +29,6 @@ export async function seedTypesAndSubtypes(tx: Prisma.TransactionClient) {
             { name: 'nova vida' },
             { name: 'patriota' },
             { name: 'cacuaco' },
-            { name: 'palanca' },
             { name: 'benfica' },
             { name: 'samba' },
             { name: 'mulenvos' },

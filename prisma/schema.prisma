@@ -344,6 +344,7 @@ enum Genre {
 
 enum AgentStatus {
   active
+  blocked
   denied
   scheduled
   approved

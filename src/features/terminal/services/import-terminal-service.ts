@@ -40,7 +40,7 @@ export async function importTerminalsFromCsvService(file: string, user: AuthPayl
       if (err instanceof ZodError) {
         errors.push({
           row,
-          error: err.issues.map(issue => ({
+          error: err.issues.map((issue) => ({
             campo: issue.path.join(','),
             menssagem: issue.message,
           })),

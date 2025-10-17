@@ -43,7 +43,7 @@ export async function importAgentsFromCsvService(file: string, user: AuthPayload
       if (err instanceof ZodError) {
         errors.push({
           row,
-          error: err.issues.map(issue => ({
+          error: err.issues.map((issue) => ({
             campo: issue.path.join('.'),
             mensagem: issue.message,
           })),
@@ -66,14 +66,14 @@ export async function importAgentsFromCsvService(file: string, user: AuthPayload
 
 async function updateIdReference() {
   try {
-    await prisma.$transaction(async tx => {
+    await prisma.$transaction(async (tx) => {
       // Último id_reference da lotaria
       const lastLotaria = await tx.agent.findFirst({
         where: { agent_type: 'lotaria_nacional' },
         orderBy: { id_reference: 'desc' },
         select: { id_reference: true },
       });
-
+        
       // Último id_reference do revendedor
       const lastRevendedor = await tx.agent.findFirst({
         where: { agent_type: 'revendedor' },

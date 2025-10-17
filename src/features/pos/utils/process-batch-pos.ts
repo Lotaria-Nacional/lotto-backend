@@ -1,14 +1,14 @@
+import { PosStatus } from '@lotaria-nacional/lotto';
 import prisma from '../../../lib/prisma';
+import { BATCH_SIZE } from '../services/import-pos-sevice';
 import { ImportPosDTO } from '../validation/import-pos-schema';
-import { CHUNK_SIZE } from '../../agent/utils/process-batch-agents';
 
 export async function processBatchPos(batch: ImportPosDTO[]) {
-  for (let i = 0; i < batch.length; i += CHUNK_SIZE) {
-    const chunk = batch.slice(i, i + CHUNK_SIZE);
+  for (let i = 0; i < batch.length; i += BATCH_SIZE) {
+    const chunk = batch.slice(i, i + BATCH_SIZE);
 
     const { typeMap, subtypeMap, agentSet, licenceMap } = await collectData(chunk);
-
-    const data = chunk.map(pos => {
+    const data = chunk.map((pos) => {
       let type_name: string | null = null;
       let subtype_name: string | null = null;
 
@@ -27,15 +27,44 @@ export async function processBatchPos(batch: ImportPosDTO[]) {
 
       const admin_name = pos.licence ? licenceMap.get(pos.licence) || null : null;
 
+      // converter status de string -> PosStatus
+      let status: PosStatus | null = null;
+      if (pos.status) {
+        switch (pos.status.trim().toLowerCase()) {
+          case 'active':
+          case 'activo':
+            status = 'active';
+            break;
+          case 'pending':
+          case 'pendente':
+            status = 'pending';
+            break;
+          case 'denied':
+          case 'negado':
+            status = 'denied';
+            break;
+          case 'discontinued':
+          case 'descontinuado':
+            status = 'discontinued';
+            break;
+          case 'approved':
+          case 'aprovado':
+            status = 'approved';
+            break;
+          default:
+            status = 'pending';
+        }
+      }
+
       return {
         coordinates: pos.coordinates || null,
         latitude: 0,
         longitude: 0,
         province_name: pos.province || null,
-        city_name: pos.city && pos.city !== 'N/D' && pos.city !== 'AGENCIAS' ? pos.city : null,
-        area_name: pos.area && pos.area !== 'AGENCIAS' ? pos.area : null,
+        city_name: pos.city || null,
+        area_name: pos.area || null,
         zone_number: pos.zone || null,
-        status: pos.status || null,
+        status, // ✅ agora é PosStatus | null
         type_name,
         subtype_name,
         agent_id_reference,
@@ -44,10 +73,14 @@ export async function processBatchPos(batch: ImportPosDTO[]) {
       };
     });
 
-    await prisma.pos.createMany({
-      data,
-      skipDuplicates: true,
-    });
+    try {
+      await prisma.pos.createMany({
+        data,
+        skipDuplicates: true,
+      });
+    } catch (err: any) {
+      console.error('Erro ao importar batch POS:', err);
+    }
   }
 
   const count = batch.length;
@@ -55,12 +88,14 @@ export async function processBatchPos(batch: ImportPosDTO[]) {
   return count;
 }
 
+// --- FUNÇÃO PARA COLETAR DADOS AUXILIARES ---
 async function collectData(chunk: ImportPosDTO[]) {
-  const typeNames = Array.from(new Set(chunk.map(p => p.type_name).filter(Boolean))) as string[];
-  const agentIds = Array.from(new Set(chunk.map(p => p.agent_id_reference).filter(Boolean))) as number[];
-  const licenceRefs = Array.from(new Set(chunk.map(p => p.licence).filter(Boolean))) as string[];
+  const typeNames = Array.from(new Set(chunk.map((p) => p.type_name).filter(Boolean))) as string[];
+  const agentIds = Array.from(new Set(chunk.map((p) => p.agent_id_reference).filter(Boolean))) as number[];
+  const licenceRefs = Array.from(new Set(chunk.map((p) => p.licence).filter(Boolean))) as string[];
+  const areaNames = Array.from(new Set(chunk.map((p) => p.area).filter(Boolean))) as string[];
 
-  const [types, subtypes, agents, licences] = await Promise.all([
+  const [types, subtypes, agents, licences, areas] = await Promise.all([
     prisma.type.findMany({ where: { name: { in: typeNames } } }),
     prisma.subtype.findMany({
       where: { name: { in: typeNames } },
@@ -74,12 +109,17 @@ async function collectData(chunk: ImportPosDTO[]) {
       where: { reference: { in: licenceRefs } },
       include: { admin: { select: { name: true } } },
     }),
+    prisma.area.findMany({
+      where: { name: { in: areaNames } },
+      select: { name: true },
+    }),
   ]);
 
-  const typeMap = new Map(types.map(t => [t.name, t.name]));
-  const subtypeMap = new Map(subtypes.map(s => [s.name, s]));
-  const agentSet = new Set(agents.map(a => a.id_reference));
-  const licenceMap = new Map(licences.map(l => [l.reference, l.admin?.name]));
+  const typeMap = new Map(types.map((t) => [t.name, t.name]));
+  const subtypeMap = new Map(subtypes.map((s) => [s.name, s]));
+  const agentSet = new Set(agents.map((a) => a.id_reference));
+  const licenceMap = new Map(licences.map((l) => [l.reference, l.admin?.name]));
+  const areaSet = new Set(areas.map((a) => a.name));
 
-  return { typeMap, subtypeMap, agentSet, licenceMap };
+  return { typeMap, subtypeMap, agentSet, licenceMap, areaSet };
 }

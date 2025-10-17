@@ -28,11 +28,12 @@ export const getAgentsByStatus = (status: AgentStatus): Prisma.AgentWhereInput[]
   if (!status) return [];
   if (status === 'ready') return [{ status: { in: ['ready'] } }];
   if (status === 'denied') return [{ status: { in: ['denied'] } }];
+  if (status === 'blocked') return [{ status: { in: ['blocked'] } }];
   if (status === 'approved') return [{ status: { in: ['approved'] } }];
   if (status === 'scheduled') return [{ status: { in: ['scheduled'] } }];
   if (status === 'discontinued') return [{ status: { in: ['discontinued'] } }];
   if (status === 'disapproved') return [{ status: { in: ['disapproved'] } }];
-  if (status === 'active') return [{ status: { in: ['approved', 'active', 'ready'] } }];
+  if (status === 'active') return [{ status: { in: ['approved', 'active', 'ready', 'blocked'] } }];
   return [];
 };
 

@@ -29,17 +29,15 @@ import { reactivateManyAgentsController } from './controllers/reactivate-many-ag
 import { reScheduleTrainingController } from './controllers/re-schedule-training-agent.controller';
 import { discontinueManyAgentsController } from './controllers/discontinue-many-agents.controller';
 import { unblockAgentsActivityController } from './controllers/unblock-agents-activity-controller';
-import { getProgressController, uploadActivitiesController } from './controllers/import-activities-controller';
+import { uploadActivitiesController } from './controllers/import-activities-controller';
 
 const agentRouter = Router();
 
 export const upload = multer({ dest: 'uploads/' });
 export const uploadStorage = multer({ storage: multer.memoryStorage() });
 
-agentRouter.post('/activities', upload.array('files'), uploadActivitiesController);
-agentRouter.get('/activities/progress/:uploadId', getProgressController);
-
 agentRouter.post('/', catchErrors(createAgentController));
+agentRouter.post('/activities', upload.array('files'), uploadActivitiesController);
 agentRouter.post('/import', upload.single('file'), catchErrors(importAgentsController));
 
 agentRouter.put('/activities/block', catchErrors(blockAgentsActivityController));

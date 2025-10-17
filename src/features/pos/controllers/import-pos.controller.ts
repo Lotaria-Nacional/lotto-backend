@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { HttpStatus } from '../../../constants/http';
 import { AuthPayload } from '@lotaria-nacional/lotto';
-import { importPosFromCsvService } from '../services/import-pos-sevice';
 import { hasPermission } from '../../../middleware/auth/permissions';
+import { importPosFromCsvService } from '../services/import-pos-sevice';
 
 export async function importPosController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
