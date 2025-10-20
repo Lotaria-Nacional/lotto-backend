@@ -1,51 +1,77 @@
 import fs from 'fs';
 import csvParser from 'csv-parser';
 import { AuthPayload } from '@lotaria-nacional/lotto';
+import { auditImport } from '../../../utils/import-utils';
+import { ImportLicenceDTO } from '../validation/import-licence-schema';
+import { createTransformLicenceStream } from '../stream/transform-licences';
 import { processBatchLicences } from '../utils/process-batch-licences';
-import { auditImport, handleImportError } from '../../../utils/import-utils';
-import { ImportLicenceDTO, importLicenceSchema } from '../validation/import-licence-schema';
+import { licenceEmitDone, licenceEmitError, licenceEmitProgress } from '../sse/licence-emitter';
 
-export async function importLicencesFromCsvService(filePath: string, user: AuthPayload) {
+export async function importLicencesService(file: string, user: AuthPayload) {
   const errors: any[] = [];
+  const batch: ImportLicenceDTO[] = [];
   let imported = 0;
-  const BATCH_SIZE = 500;
+  let total = 0;
+  let totalLines = 0;
+
+  totalLines = await new Promise<number>((resolve, reject) => {
+    let count = 0;
+    fs.createReadStream(file)
+      .pipe(csvParser())
+      .on('data', () => count++)
+      .on('end', () => resolve(count))
+      .on('error', reject);
+  });
+
+  console.log(`======== TOTAL LINES: ${totalLines} =========`);
+
   const stream = fs
-    .createReadStream(filePath)
-    .pipe(csvParser({ mapHeaders: ({ header }) => header.replace(/^\uFEFF/, '').trim() }));
+    .createReadStream(file)
+    .pipe(csvParser({ mapHeaders: ({ header }) => header.trim() }))
+    .pipe(
+      createTransformLicenceStream(batch, errors, async () => {
+        const count = await processBatchLicences(batch);
+        imported += count;
+        total += count;
+        batch.length = 0;
+        const percent = Math.min(Math.round((imported / totalLines) * 100), 100);
+        licenceEmitProgress({ percent });
+        console.log(`COUNT: ${count}, IMPORTED: ${imported}, TOTAL: ${total}, PERCENT: ${percent}`);
+      })
+    );
 
-  const licencesBatch: ImportLicenceDTO[] = [];
+  stream.on('data', data => console.log(`STREAMING: ${JSON.stringify(data)}`));
 
-  for await (const row of stream) {
+  stream.on('end', async () => {
     try {
-      const input: ImportLicenceDTO = {
-        reference: row['REFERENCIA'],
-        coordinates: row['COORDENADAS'],
-        description: row['DESCRICAO'],
-        emitted_at: row['DATA DE EMISSAO'],
-        district: row['DISTRITO'],
-        expires_at: row['DATA DE EXPIRACAO'],
-        number: row['Nº DOCUMENTO'],
-        limit: row['LIMITE'],
-        admin_name: row['ADMINISTRACAO'],
-      };
+      if (batch.length > 0) {
+        const count = await processBatchLicences(batch);
+        imported += count;
+        const percent = Math.min(Math.round((imported / totalLines) * 100), 100);
+        licenceEmitProgress({ percent });
 
-      const parsed = importLicenceSchema.parse(input);
-
-      licencesBatch.push(parsed);
-
-      if (licencesBatch.length >= BATCH_SIZE) {
-        imported += await processBatchLicences(licencesBatch);
+        console.log(`========= STREAM END ========= `);
+        console.log(`========= TOTAL IMPORTED: ${imported} =========`);
       }
-    } catch (err: any) {
-      handleImportError({ err, errors, row });
+
+      await auditImport({
+        file,
+        user,
+        imported,
+        entity: 'LICENCE',
+        desc: `Importação de licenças (${imported})`,
+      });
+
+      licenceEmitDone({ imported, total, errors });
+    } catch (err) {
+      licenceEmitError(err);
     }
-  }
+  });
 
-  if (licencesBatch.length > 0) {
-    imported += await processBatchLicences(licencesBatch);
-  }
-
-  await auditImport({ file: filePath, user, imported, entity: 'LICENCE', desc: 'licenças' });
+  stream.on('error', err => {
+    licenceEmitError(err);
+    console.log(`========= STREAM ERROR: ${err} =========`);
+  });
 
   return { imported, errors };
 }

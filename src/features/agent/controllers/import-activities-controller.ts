@@ -4,7 +4,7 @@ import { AuthPayload } from '@lotaria-nacional/lotto';
 import { hasPermission } from '../../../middleware/auth/permissions';
 import { importActivitiesService } from '../services/import-activities-service';
 
-export async function uploadActivitiesController(req: Request, res: Response) {
+export async function importActivitiesController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
 
   await hasPermission({

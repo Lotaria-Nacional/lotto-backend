@@ -17,7 +17,7 @@ export async function seedAdministrations(tx: Prisma.TransactionClient) {
   ];
 
   const administrations = await Promise.all(
-    adminNames.map((name) => tx.administration.create({ data: { name: name.trim().toLocaleLowerCase() } }))
+    adminNames.map(name => tx.administration.create({ data: { name: name.trim().toLocaleLowerCase() } }))
   );
 
   return administrations;

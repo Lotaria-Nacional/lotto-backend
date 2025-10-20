@@ -1,106 +1,73 @@
 import fs from 'fs';
-import { ZodError } from 'zod';
 import csvParser from 'csv-parser';
-import prisma from '../../../lib/prisma';
 import { AuthPayload } from '@lotaria-nacional/lotto';
-import { auditImport } from '../../../utils/import-utils';
+import { ImportAgentDTO } from '../validation/import-agent-schema';
+import { createTransformAgentStream } from '../stream/transform-agent';
 import { processBatchAgents } from '../utils/process-batch-agents';
-import { ImportAgentDTO, importAgentsSchema } from '../validation/import-agent-schema';
+import { emitDone, emitError, emitProgress } from '../sse/agent-progress-emitter';
+import { updateIdReference } from '../utils/update-id-reference';
+import { auditImport } from '../../../utils/import-utils';
 
-export async function importAgentsFromCsvService(file: string, user: AuthPayload) {
+export async function importAgentsServices(file: string, user: AuthPayload) {
   const errors: any[] = [];
+  const batch: ImportAgentDTO[] = [];
   let imported = 0;
-  const BATCH_SIZE = 500;
+  let total = 0;
+  let totalLines = 0;
+
+  totalLines = await new Promise<number>((resolve, reject) => {
+    let count = 0;
+    fs.createReadStream(file)
+      .pipe(csvParser())
+      .on('data', () => count++)
+      .on('end', () => resolve(count))
+      .on('error', reject);
+  });
+
+  console.log(`======== TOTAL LINES: ${totalLines} =========`);
 
   const stream = fs
     .createReadStream(file)
-    .pipe(csvParser({ mapHeaders: ({ header }) => header.replace(/^\uFEFF/, '').trim() }));
-  const agentsBatch: ImportAgentDTO[] = [];
+    .pipe(csvParser({ mapHeaders: ({ header }) => header.trim() }))
+    .pipe(
+      createTransformAgentStream(batch, errors, async () => {
+        const count = await processBatchAgents(batch);
+        imported += count;
+        total += count;
+        batch.length = 0;
+        const percent = Math.min(Math.round((imported / totalLines) * 100), 100);
+        emitProgress({ percent, imported, totalLines });
+        console.log(`COUNT: ${count}, IMPORTED: ${imported}, TOTAL: ${total}, PERCENT: ${percent}`);
+      })
+    );
 
-  for await (const row of stream) {
-    try {
-      const input: ImportAgentDTO = {
-        id_reference: row['ID'],
-        name: row['NOME'],
-        last_name: row['SOBRENOME'],
-        gender: row['GENERO'],
-        training_date: row['DATA  DE FORMACAO'],
-        status: row['ESTADO'],
-        phone_number: row['Nº TELEFONE'],
-        bi_number: row['Nº DO BI'],
-      };
+  stream.on('data', data => console.log(`STREAMING: ${JSON.stringify(data)}`));
 
-      const parsed = importAgentsSchema.parse(input);
-
-      agentsBatch.push(parsed);
-
-      if (agentsBatch.length >= BATCH_SIZE) {
-        imported += await processBatchAgents(agentsBatch);
-      }
-    } catch (err) {
-      console.log(err);
-
-      if (err instanceof ZodError) {
-        errors.push({
-          row,
-          error: err.issues.map((issue) => ({
-            campo: issue.path.join('.'),
-            mensagem: issue.message,
-          })),
-        });
-      } else {
-        errors.push({ row, error: (err as any).message || err });
-      }
+  stream.on('end', async () => {
+    if (batch.length > 0) {
+      const count = await processBatchAgents(batch);
+      imported += count;
+      const percent = Math.min(Math.round((imported / totalLines) * 100), 100);
+      emitProgress({ percent, imported, totalLines });
     }
-  }
+    emitDone({ imported, total: totalLines, errors });
+    console.log(`========= STREAM END ========= `);
+    console.log(`========= TOTAL IMPORTED: ${imported} =========`);
 
-  if (agentsBatch.length > 0) {
-    imported += await processBatchAgents(agentsBatch);
-  }
-  await updateIdReference();
-
-  await auditImport({ file, user, imported, entity: 'AGENT', desc: 'agentes' });
-
-  return { errors, imported };
-}
-
-async function updateIdReference() {
-  try {
-    await prisma.$transaction(async (tx) => {
-      // Último id_reference da lotaria
-      const lastLotaria = await tx.agent.findFirst({
-        where: { agent_type: 'lotaria_nacional' },
-        orderBy: { id_reference: 'desc' },
-        select: { id_reference: true },
-      });
-        
-      // Último id_reference do revendedor
-      const lastRevendedor = await tx.agent.findFirst({
-        where: { agent_type: 'revendedor' },
-        orderBy: { id_reference: 'desc' },
-        select: { id_reference: true },
-      });
-
-      // Actualizar a tabela idReference
-      if (lastRevendedor?.id_reference) {
-        await tx.idReference.update({
-          where: { type: 'revendedor' },
-          data: {
-            counter: lastRevendedor.id_reference,
-          },
-        });
-      }
-
-      if (lastLotaria?.id_reference) {
-        await tx.idReference.update({
-          where: { type: 'lotaria_nacional' },
-          data: {
-            counter: lastLotaria.id_reference,
-          },
-        });
-      }
+    await auditImport({
+      file,
+      user,
+      imported,
+      entity: 'AGENT',
+      desc: `Importação de agentes (${imported}})`,
     });
-  } catch (error) {
-    console.error(error);
-  }
+  });
+
+  stream.on('error', err => {
+    emitError(err);
+    console.log(`========= STREAM ERROR: ${err} =========`);
+  });
+
+  await updateIdReference();
+  return { imported, errors };
 }

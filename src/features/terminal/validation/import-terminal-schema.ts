@@ -5,7 +5,7 @@ import { parseImportedDate } from '../../../utils/import-utils';
 export const importTerminalsSchema = z.object({
   agent_id_reference: z
     .string()
-    .transform((val) => {
+    .transform(val => {
       const match = val.match(/^\d+$/);
       return match ? Number(match[0]) : null;
     })
@@ -18,7 +18,7 @@ export const importTerminalsSchema = z.object({
   puk: z.string().trim().optional(),
   status: z
     .string()
-    .transform((val): TerminalStatus | null => {
+    .transform((val): TerminalStatus | undefined => {
       const v = val.toLowerCase().trim();
       switch (v) {
         case 'em campo':
@@ -35,7 +35,7 @@ export const importTerminalsSchema = z.object({
     })
     .optional(),
   chip_serial_number: z.string().trim().optional(),
-  activatedAt: z.transform(parseImportedDate),
+  activatedAt: z.transform(parseImportedDate).optional(),
 });
 
 export type ImportTerminalsDTO = z.infer<typeof importTerminalsSchema>;

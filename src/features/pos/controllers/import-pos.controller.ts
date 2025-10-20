@@ -2,7 +2,8 @@ import { Request, Response } from 'express';
 import { HttpStatus } from '../../../constants/http';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 import { hasPermission } from '../../../middleware/auth/permissions';
-import { importPosFromCsvService } from '../services/import-pos-sevice';
+import { importPosService } from '../services/import-pos-sevice';
+import { posEmitter } from '../sse/pos-emitter';
 
 export async function importPosController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
@@ -16,34 +17,49 @@ export async function importPosController(req: Request, res: Response) {
     },
   });
 
-  if (!req.file) {
-    return res.status(400).json({ message: 'Arquivo não enviado' });
-  }
+  if (!req.file) return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Ficheiro é obrigatório' });
 
   const filePath = req.file.path;
 
-  const result = await importPosFromCsvService(filePath, user);
+  importPosService(filePath, user).catch(e => console.error(e));
 
-  const totalRows = result.imported + result.errors.length;
+  return res.status(HttpStatus.OK).json({ message: 'POS importados com sucesso' });
+}
 
-  if (result.errors.length === 0) {
-    return res.status(HttpStatus.OK).json({
-      message: `Todos os ${result.imported} POS foram importados com sucesso.`,
-      imported: result.imported,
-    });
-  } else if (result.imported > 0) {
-    return res.status(HttpStatus.OK).json({
-      message: `Foram importados ${result.imported} POS com sucesso, mas alguns não foram inseridos devido a campos inválidos ou em falta.`,
-      imported: result.imported,
-      errors: result.errors,
-      totalRows,
-    });
-  } else {
-    return res.status(HttpStatus.BAD_REQUEST).json({
-      message: 'Nenhum POS foi importado. Todos os registros possuem erros.',
-      imported: result.imported,
-      errors: result.errors,
-      totalRows,
-    });
-  }
+export async function getPosProgress(req: Request, res: Response) {
+  // Configuração do stream SSE
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  console.log('📡 Cliente conectado ao SSE de importação.');
+
+  // Função auxiliar para enviar eventos
+  const send = (event: string, data: any) => {
+    res.write(`event: ${event}\n`);
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
+
+  // Progresso contínuo
+  posEmitter.on('progress', data => send('progress', data));
+
+  // Finalização (apenas uma vez)
+  posEmitter.once('done', data => {
+    send('done', { ...data, completed: true });
+    res.end();
+    console.log('✅ SSE concluído e fechado (done).');
+  });
+
+  // Erros (apenas uma vez)
+  posEmitter.once('error', err => {
+    send('error', { message: err.message });
+    res.end();
+    console.log('❌ SSE encerrado com erro.');
+  });
+
+  // Quando o cliente fecha a ligação
+  req.on('close', () => {
+    posEmitter.removeAllListeners();
+    console.log('🔌 Cliente desconectado do SSE.');
+  });
 }

@@ -25,6 +25,8 @@ export async function importActivitiesService(files: Express.Multer.File[], user
     const type = await detectCsvType(file);
     const stream = file.buffer ? Readable.from(file.buffer.toString()) : fs.createReadStream(file.path);
 
+    console.log(type);
+
     const agentsMap = new Map<
       string,
       {
@@ -40,7 +42,7 @@ export async function importActivitiesService(files: Express.Multer.File[], user
     await new Promise<void>((resolve, reject) => {
       stream
         .pipe(csvParser())
-        .on('data', async (row) => {
+        .on('data', async row => {
           try {
             // ------------------- AFRIMONEY -------------------
             if (type === 'AFRIMONEY') {
@@ -85,7 +87,7 @@ export async function importActivitiesService(files: Express.Multer.File[], user
               // ✅ Buscar área a partir da zona
               let areaFromDb: string | undefined;
               if (zoneNumber) {
-                const city = allCities.find((c) => c.zone?.number === zoneNumber);
+                const city = allCities.find(c => c.zone?.number === zoneNumber);
                 if (city?.area?.name) {
                   areaFromDb = `AREA ${city.area.name.toUpperCase()}`;
                 }
@@ -144,19 +146,19 @@ export async function importActivitiesService(files: Express.Multer.File[], user
     }
 
     // ✅ Audit log detalhado por tipo
-    const url = await uploadCsvToImageKit(file.path);
-    await prisma.$transaction(async (tx) => {
-      await audit(tx, 'IMPORT', {
-        user,
-        before: null,
-        after: null,
-        entity: 'AGENT',
-        description: `Importação de atividades ${type} (${processedInFile})`,
-        metadata: {
-          file: url,
-        },
-      });
-    });
+    // const url = await uploadCsvToImageKit(file.path);
+    // await prisma.$transaction(async tx => {
+    //   await audit(tx, 'IMPORT', {
+    //     user,
+    //     before: null,
+    //     after: null,
+    //     entity: 'AGENT',
+    //     description: `Importação de atividades ${type} (${processedInFile})`,
+    //     metadata: {
+    //       file: url,
+    //     },
+    //   });
+    // });
 
     totalProcessed += processedInFile;
   }

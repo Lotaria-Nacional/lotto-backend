@@ -1,61 +1,71 @@
 import fs from 'fs';
-import { ZodError } from 'zod';
-import csvParser from 'csv-parser';
 import { AuthPayload } from '@lotaria-nacional/lotto';
-import { auditImport } from '../../../utils/import-utils';
+import { ImportTerminalsDTO } from '../validation/import-terminal-schema';
+import csvParser from 'csv-parser';
+import { createTransformTerminalStream } from '../stream/transform-terminal';
 import { processBatchTerminals } from '../utils/process-batch-terminals';
-import { ImportTerminalsDTO, importTerminalsSchema } from '../validation/import-terminal-schema';
+import { terminalEmitDone, terminalEmitError, terminalEmitProgress } from '../sse/terminal-progress-emitter';
+import { auditImport } from '../../../utils/import-utils';
 
-export async function importTerminalsFromCsvService(file: string, user: AuthPayload) {
-  const errors: any[] = [];
+export async function importTerminalsService(file: string, user: AuthPayload) {
+  const errors: any = [];
+  const batch: ImportTerminalsDTO[] = [];
   let imported = 0;
-  const BATCH_SIZE = 500;
+  let total = 0;
+  let totalLines = 0;
 
-  const stream = fs.createReadStream(file).pipe(csvParser());
-  const terminalsBatch: ImportTerminalsDTO[] = [];
+  totalLines = await new Promise<number>((resolve, reject) => {
+    let count = 0;
+    fs.createReadStream(file)
+      .pipe(csvParser())
+      .on('data', () => count++)
+      .on('end', () => resolve(count))
+      .on('error', reject);
+  });
 
-  for await (const row of stream) {
-    try {
-      const input: ImportTerminalsDTO = {
-        agent_id_reference: row['ID REVENDEDOR'],
-        serial_number: row['Nº DE SERIE DO TERMINAL'],
-        sim_card_number: row['Nº DO CARTAO UNITEL'],
-        pin: row['PIN'],
-        puk: row['PUK'],
-        status: row['ESTADO'],
-        chip_serial_number: row['Nº DE SERIE DO CHIP'],
-        device_id: row['DEVICE ID'],
-        activatedAt: row['DATA DA ACTIVACAO'],
-      };
+  console.log(`======== TOTAL LINES: ${totalLines} =========`);
 
-      const parsed = importTerminalsSchema.parse(input);
+  const stream = fs
+    .createReadStream(file)
+    .pipe(csvParser({ mapHeaders: ({ header }) => header.trim() }))
+    .pipe(
+      createTransformTerminalStream(batch, errors, async () => {
+        const { count, errors: err } = await processBatchTerminals(batch);
+        imported += count;
+        total += count;
+        batch.length = 0;
+        const percent = Math.min(Math.round((imported / totalLines) * 100), 100);
+        terminalEmitProgress({ percent });
+        console.log(`COUNT: ${count}, IMPORTED: ${imported}, TOTAL: ${total}, PERCENT: ${percent}`);
+      })
+    );
 
-      terminalsBatch.push(parsed);
+  stream.on('data', data => console.log(`STREAMING: ${JSON.stringify(data)}`));
 
-      if (terminalsBatch.length >= BATCH_SIZE) {
-        imported += await processBatchTerminals(terminalsBatch);
-      }
-    } catch (err: any) {
-      console.log(err);
-      if (err instanceof ZodError) {
-        errors.push({
-          row,
-          error: err.issues.map((issue) => ({
-            campo: issue.path.join(','),
-            menssagem: issue.message,
-          })),
-        });
-      } else {
-        errors.push({ row, error: (err as any).message || err });
-      }
+  stream.on('end', async () => {
+    if (batch.length > 0) {
+      const { count, errors: err } = await processBatchTerminals(batch);
+      imported += count;
+      const percent = Math.min(Math.round((imported / totalLines) * 100), 100);
+      terminalEmitProgress({ percent });
     }
-  }
+    await auditImport({
+      file,
+      user,
+      imported,
+      entity: 'TERMINAL',
+      desc: `Importação de terminais (${imported})`,
+    });
 
-  if (terminalsBatch.length > 0) {
-    imported += await processBatchTerminals(terminalsBatch);
-  }
+    terminalEmitDone({ imported, total: totalLines, errors });
+    console.log(`========= STREAM END ========= `);
+    console.log(`========= TOTAL IMPORTED: ${imported} =========`);
+  });
 
-  await auditImport({ file, user, imported, entity: 'TERMINAL', desc: 'terminais' });
+  stream.on('error', err => {
+    terminalEmitError(err);
+    console.log(`========= STREAM ERROR: ${err} =========`);
+  });
 
-  return { errors, imported };
+  return { imported, errors };
 }

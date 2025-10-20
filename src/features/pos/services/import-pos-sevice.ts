@@ -1,81 +1,73 @@
 import fs from 'fs';
 import csvParser from 'csv-parser';
 import { AuthPayload } from '@lotaria-nacional/lotto';
-import { ImportPosDTO, importPosSchema } from '../validation/import-pos-schema';
+import { ImportPosDTO } from '../validation/import-pos-schema';
 import { auditImport } from '../../../utils/import-utils';
 import { processBatchPos } from '../utils/process-batch-pos';
-import z from 'zod';
+import { createTransformPosStream } from '../stream/transform-pos';
+import { posEmitDone, posEmitError, posEmitProgress } from '../sse/pos-emitter';
 
-export const BATCH_SIZE = 500;
-
-export async function importPosFromCsvService(filePath: string, user: AuthPayload) {
+export async function importPosService(file: string, user: AuthPayload) {
   const errors: any[] = [];
+  const batch: ImportPosDTO[] = [];
   let imported = 0;
-  const posBatch: ImportPosDTO[] = [];
+  let total = 0;
+  let totalLines = 0;
 
-  const stream = fs.createReadStream(filePath).pipe(csvParser());
+  totalLines = await new Promise<number>((resolve, reject) => {
+    let count = 0;
+    fs.createReadStream(file)
+      .pipe(csvParser())
+      .on('data', () => count++)
+      .on('end', () => resolve(count))
+      .on('error', () => reject);
+  });
 
-  for await (const row of stream) {
-    // Transformar CSV para DTO
-    const input: ImportPosDTO = {
-      agent_id_reference: row['ID REVENDEDOR'],
-      province: row['PROVINCIA'],
-      admin_name: row['ADMINISTRACAO'],
-      city: row['CIDADE'],
-      area: row['AREA'],
-      zone: row['ZONA'],
-      status: row['ESTADO'],
-      type_name: row['TIPOLOGIA'],
-      licence: getLicenceColumn(row),
-      coordinates: row['coordenadas'],
-    };
+  console.log(`======== TOTAL LINES: ${totalLines} =========`);
 
-    // Parse seguro (nunca lança)
-    const parsed = safeParse(importPosSchema, input);
-    posBatch.push(parsed);
+  const stream = fs
+    .createReadStream(file)
+    .pipe(csvParser({ mapHeaders: ({ header }) => header.trim() }))
+    .pipe(
+      createTransformPosStream(batch, errors, async () => {
+        const count = await processBatchPos(batch);
+        imported += count;
+        total += count;
+        batch.length = 0;
+        const percent = Math.min(Math.round((imported / totalLines) * 100), 100);
+        posEmitProgress({ percent });
+        console.log(`COUNT: ${count}, IMPORTED: ${imported}, TOTAL: ${total}, PERCENT: ${percent}`);
+      })
+    );
 
-    if (posBatch.length >= BATCH_SIZE) {
-      imported += await processBatchPos(posBatch);
+  stream.on('data', data => console.log(`STREAMING: ${JSON.stringify(data)}`));
+
+  stream.on('end', async () => {
+    if (batch.length > 0) {
+      const count = await processBatchPos(batch);
+      imported += count;
+      const percent = Math.min(Math.round((imported / totalLines) * 100), 100);
+      posEmitProgress({ percent });
+
+      console.log(`========= STREAM END ========= `);
+      console.log(`========= TOTAL IMPORTED: ${imported} =========`);
     }
-  }
 
-  // Importar o que sobrou
-  if (posBatch.length > 0) {
-    imported += await processBatchPos(posBatch);
-  }
-
-  // Auditoria
-  await auditImport({ file: filePath, user, imported, entity: 'POS', desc: 'pontos de venda' });
-
-  return { total: imported + errors.length, errors, imported, ignored: errors.length };
-}
-
-async function sendSMS(message: string) {
-  // Exemplo: podes usar Twilio, Nexmo ou outro serviço
-  console.log(`SMS para Paulo Luguenda: ${message}`);
-}
-
-function getLicenceColumn(row: Record<string, any>) {
-  const key = Object.keys(row).find((k) =>
-    k
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // remove acentos
-      .trim()
-      .toLowerCase()
-      .includes('licenc')
-  );
-  return key ? row[key]?.toString().trim() || undefined : undefined;
-}
-
-function safeParse<T>(schema: z.ZodSchema<T>, data: any): T {
-  try {
-    return schema.parse(data);
-  } catch {
-    const output: Partial<T> = {};
-    Object.keys(data).forEach((key) => {
-      // @ts-ignore
-      output[key] = data[key] ?? null;
+    await auditImport({
+      file,
+      user,
+      imported,
+      entity: 'POS',
+      desc: `Importação de pontos de venda (${imported}})`,
     });
-    return output as T;
-  }
+
+    posEmitDone({ imported, total, errors });
+  });
+
+  stream.on('error', err => {
+    posEmitError(err);
+    console.log(`========= STREAM ERROR: ${err} =========`);
+  });
+
+  return { imported, errors };
 }

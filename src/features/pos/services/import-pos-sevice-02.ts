@@ -6,7 +6,7 @@
 
 // export const BATCH_SIZE = 500;
 
-// export async function importPosFromCsvService(filePath: string, user: AuthPayload) {
+// export async function importPosService(filePath: string, user: AuthPayload) {
 //   const errors: any[] = [];
 //   let imported = 0;
 

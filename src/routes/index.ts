@@ -1,17 +1,22 @@
-import { Router, type Response, type Request } from 'express';
+import { Router } from 'express';
 import posRouter from '../features/pos/routes';
-import agentRouter, { upload } from '../features/agent/routes';
 import userRouter from '../features/user/routes';
+import groupRouter from '../features/group/routes';
+import agentRouter from '../features/agent/routes';
 import authRouter from '../features/auth/auth.router';
 import simCardRouter from '../features/sim-card/routes';
 import licenceRouter from '../features/licence/routes';
-import groupRouter from '../features/group/routes';
-import auditLogRouter from '../features/audit-log/routes';
-import { authenticate } from '../middleware/auth/authenticate';
 import terminalRouter from '../features/terminal/routes';
-import { refreshTokenController } from '../features/auth/controllers/refresh-token.controller';
-import { adminRoutes, areasRoutes, provincesRoutes, typesRoutes } from '../features/references/routes';
+import auditLogRouter from '../features/audit-log/routes';
 import uploadFileToR2Router from '../features/upload-file';
+import { authenticate } from '../middleware/auth/authenticate';
+import { getAgentProgress } from '../features/agent/controllers';
+import { getTerminalProgress } from '../features/terminal/controllers';
+import { refreshTokenController } from '../features/auth/controllers/refresh-token.controller';
+import { getLicenceProgress } from '../features/licence/controllers/import-licence.controller';
+import { adminRoutes, areasRoutes, provincesRoutes, typesRoutes } from '../features/references/routes';
+import catchErrors from '../utils/catch-errors';
+import { getPosProgress } from '../features/pos/controllers/import-pos.controller';
 
 const router = Router();
 
@@ -20,6 +25,13 @@ router.use('/auth', authRouter);
 
 //refresh token
 router.post('/refresh-token', refreshTokenController);
+
+// progress
+router.get('/agents/import/progress', catchErrors(getAgentProgress));
+router.get('/licences/import/progress', catchErrors(getLicenceProgress));
+router.get('/terminals/import/progress', catchErrors(getTerminalProgress));
+router.get('/pos/import/progress', catchErrors(getPosProgress));
+// router.get('/activities/import/progress', getActivitiesProgress);
 
 // Main routers
 router.use('/groups', authenticate, groupRouter);

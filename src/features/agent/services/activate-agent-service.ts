@@ -18,6 +18,7 @@ export async function activateAgentService(data: UpdateAgentDTO & { user: AuthPa
     const terminal = await tx.terminal.findUnique({
       where: { id: data.terminal_id },
     });
+
     if (!terminal) throw new NotFoundError('Terminal não encontrado');
 
     // --- Validar exclusividade ---

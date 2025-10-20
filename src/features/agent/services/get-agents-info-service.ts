@@ -8,6 +8,7 @@ export async function getAgentsInfoService() {
   const blocked = await prisma.agent.count({ where: { status: 'denied' } });
   const discontinued = await prisma.agent.count({ where: { status: 'discontinued' } });
   const ready = await prisma.agent.count({ where: { status: 'ready' } });
+  const scheduled = await prisma.agent.count({ where: { status: 'scheduled' } });
 
-  return { total, approved, active, blocked, discontinued, ready };
+  return { total, approved, active, blocked, discontinued, ready, scheduled };
 }

@@ -1,6 +1,6 @@
 import prisma from '../../../lib/prisma';
 import { AuthPayload, PosStatus } from '@lotaria-nacional/lotto';
-import { ImportPosDTO } from '../schemas/import-pos-schema';
+import { ImportPosDTO } from '../validation/import-pos-schema';
 
 type ProcessPosBatchParams = {
   posList: ImportPosDTO[];
@@ -15,8 +15,8 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
         // --- Coordenadas ---
         let latitude: number | null = null;
         let longitude: number | null = null;
-        if (posData.coordenadas) {
-          const [lat, lng] = posData.coordenadas.trim().split(',').map(Number);
+        if (posData.coordinates) {
+          const [lat, lng] = posData.coordinates.trim().split(',').map(Number);
           if (!isNaN(lat) && !isNaN(lng)) {
             latitude = lat;
             longitude = lng;
@@ -25,9 +25,9 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
 
         // --- Validação de Tipologia ---
         let typeName: string | null = null;
-        if (posData.tipologia) {
+        if (posData.type_name) {
           const existingType = await tx.type.findUnique({
-            where: { name: posData.tipologia },
+            where: { name: posData.type_name },
             include: { subtypes: true },
           });
 
@@ -35,7 +35,7 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
             typeName = existingType.name;
           } else {
             const subtype = await tx.subtype.findUnique({
-              where: { name: posData.tipologia },
+              where: { name: posData.type_name },
               include: { type: true },
             });
             if (subtype) typeName = subtype.type.name;
@@ -44,12 +44,12 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
 
         // --- Definir dados base do POS (sem agent nem licence ainda) ---
         const posDataToSave = {
-          coordinates: posData.coordenadas ?? null,
-          admin_name: posData.administracao ?? null,
-          province_name: posData.provincia ?? null,
-          city_name: posData.cidade ?? null,
+          coordinates: posData.coordinates ?? null,
+          admin_name: posData.admin_name ?? null,
+          province_name: posData.province ?? null,
+          city_name: posData.city ?? null,
           area_name: posData.area ?? null,
-          zone_number: posData.zona ?? null,
+          zone_number: posData.zone ?? null,
           type_name: typeName ?? null,
           latitude,
           longitude,
@@ -58,14 +58,14 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
 
         // --- Encontrar POS existente (por agent_id_reference ou licence_reference) ---
         let existingPos = null;
-        if (posData.idRevendedor && posData.idRevendedor !== 0) {
+        if (posData.agent_id_reference && posData.agent_id_reference !== 0) {
           existingPos = await tx.pos.findUnique({
-            where: { agent_id_reference: posData.idRevendedor },
+            where: { agent_id_reference: posData.agent_id_reference },
           });
         }
-        if (!existingPos && posData.licenca) {
+        if (!existingPos && posData.licence) {
           existingPos = await tx.pos.findFirst({
-            where: { licence_reference: posData.licenca },
+            where: { licence_reference: posData.licence },
           });
         }
 
@@ -91,9 +91,9 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
         let hasLicence = false;
 
         // --- Associação de licença (opcional) ---
-        if (posData.licenca) {
+        if (posData.licence) {
           const licence = await tx.licence.findUnique({
-            where: { reference: posData.licenca },
+            where: { reference: posData.licence },
             include: { pos: { select: { id: true } } },
           });
 
@@ -105,7 +105,7 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
               const limitStatus = posWithThisLicenceCount + (existingPos ? 0 : 1) >= limitCount ? 'used' : 'free';
 
               await tx.licence.update({
-                where: { reference: posData.licenca },
+                where: { reference: posData.licence },
                 data: {
                   status: limitStatus,
                   pos: { connect: { id: pos.id } },
@@ -117,16 +117,16 @@ export async function processPosBatch({ posList, user, errors }: ProcessPosBatch
               // ✅ Atualiza POS com licence_reference
               await tx.pos.update({
                 where: { id: pos.id },
-                data: { licence_reference: posData.licenca },
+                data: { licence_reference: posData.licence },
               });
             }
           }
         }
 
         // --- Associação de agente (opcional) ---
-        if (posData.idRevendedor) {
+        if (posData.agent_id_reference) {
           const agent = await tx.agent.findUnique({
-            where: { id_reference: posData.idRevendedor },
+            where: { id_reference: posData.agent_id_reference },
             include: { terminal: { select: { id: true, status: true } } },
           });
 
