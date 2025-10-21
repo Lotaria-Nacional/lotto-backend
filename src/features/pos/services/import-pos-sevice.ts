@@ -40,7 +40,7 @@ export async function importPosService(file: string, user: AuthPayload) {
       })
     );
 
-  stream.on('data', data => console.log(`STREAMING: ${JSON.stringify(data)}`));
+  stream.on('data', (data) => console.log(`STREAMING: ${JSON.stringify(data)}`));
 
   stream.on('end', async () => {
     if (batch.length > 0) {
@@ -58,13 +58,13 @@ export async function importPosService(file: string, user: AuthPayload) {
       user,
       imported,
       entity: 'POS',
-      desc: `Importação de pontos de venda (${imported}})`,
+      desc: 'Pontos de venda',
     });
 
     posEmitDone({ imported, total, errors });
   });
 
-  stream.on('error', err => {
+  stream.on('error', (err) => {
     posEmitError(err);
     console.log(`========= STREAM ERROR: ${err} =========`);
   });

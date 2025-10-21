@@ -18,7 +18,7 @@ interface AuditImportProps {
 
 export const auditImport = async ({ file, user, imported, entity, desc }: AuditImportProps) => {
   const url = await uploadCsvToImageKit(file);
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     await audit(tx, 'IMPORT', {
       user,
       before: null,
@@ -54,7 +54,7 @@ export function handleImportError({ err, errors, row }: HandleImportErrorProps) 
   if (err instanceof ZodError) {
     errors.push({
       row,
-      error: err.issues.map(issue => ({
+      error: err.issues.map((issue) => ({
         campo: issue.path.join(','),
         menssagem: issue.message,
       })),

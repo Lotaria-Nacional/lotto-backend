@@ -1,12 +1,12 @@
 import fs from 'fs';
 import csvParser from 'csv-parser';
 import { AuthPayload } from '@lotaria-nacional/lotto';
+import { auditImport } from '../../../utils/import-utils';
+import { updateIdReference } from '../utils/update-id-reference';
+import { processBatchAgents } from '../utils/process-batch-agents';
 import { ImportAgentDTO } from '../validation/import-agent-schema';
 import { createTransformAgentStream } from '../stream/transform-agent';
-import { processBatchAgents } from '../utils/process-batch-agents';
 import { emitDone, emitError, emitProgress } from '../sse/agent-progress-emitter';
-import { updateIdReference } from '../utils/update-id-reference';
-import { auditImport } from '../../../utils/import-utils';
 
 export async function importAgentsServices(file: string, user: AuthPayload) {
   const errors: any[] = [];
@@ -41,7 +41,7 @@ export async function importAgentsServices(file: string, user: AuthPayload) {
       })
     );
 
-  stream.on('data', data => console.log(`STREAMING: ${JSON.stringify(data)}`));
+  stream.on('data', (data) => console.log(`STREAMING: ${JSON.stringify(data)}`));
 
   stream.on('end', async () => {
     if (batch.length > 0) {
@@ -59,11 +59,11 @@ export async function importAgentsServices(file: string, user: AuthPayload) {
       user,
       imported,
       entity: 'AGENT',
-      desc: `Importação de agentes (${imported}})`,
+      desc: `agentes`,
     });
   });
 
-  stream.on('error', err => {
+  stream.on('error', (err) => {
     emitError(err);
     console.log(`========= STREAM ERROR: ${err} =========`);
   });

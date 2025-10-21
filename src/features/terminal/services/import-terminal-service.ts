@@ -1,11 +1,11 @@
 import fs from 'fs';
-import { AuthPayload } from '@lotaria-nacional/lotto';
-import { ImportTerminalsDTO } from '../validation/import-terminal-schema';
 import csvParser from 'csv-parser';
-import { createTransformTerminalStream } from '../stream/transform-terminal';
-import { processBatchTerminals } from '../utils/process-batch-terminals';
-import { terminalEmitDone, terminalEmitError, terminalEmitProgress } from '../sse/terminal-progress-emitter';
+import { AuthPayload } from '@lotaria-nacional/lotto';
 import { auditImport } from '../../../utils/import-utils';
+import { processBatchTerminals } from '../utils/process-batch-terminals';
+import { ImportTerminalsDTO } from '../validation/import-terminal-schema';
+import { createTransformTerminalStream } from '../stream/transform-terminal';
+import { terminalEmitDone, terminalEmitError, terminalEmitProgress } from '../sse/terminal-progress-emitter';
 
 export async function importTerminalsService(file: string, user: AuthPayload) {
   const errors: any = [];
@@ -40,7 +40,7 @@ export async function importTerminalsService(file: string, user: AuthPayload) {
       })
     );
 
-  stream.on('data', data => console.log(`STREAMING: ${JSON.stringify(data)}`));
+  stream.on('data', (data) => console.log(`STREAMING: ${JSON.stringify(data)}`));
 
   stream.on('end', async () => {
     if (batch.length > 0) {
@@ -54,7 +54,7 @@ export async function importTerminalsService(file: string, user: AuthPayload) {
       user,
       imported,
       entity: 'TERMINAL',
-      desc: `Importação de terminais (${imported})`,
+      desc: `terminais`,
     });
 
     terminalEmitDone({ imported, total: totalLines, errors });
@@ -62,7 +62,7 @@ export async function importTerminalsService(file: string, user: AuthPayload) {
     console.log(`========= TOTAL IMPORTED: ${imported} =========`);
   });
 
-  stream.on('error', err => {
+  stream.on('error', (err) => {
     terminalEmitError(err);
     console.log(`========= STREAM ERROR: ${err} =========`);
   });

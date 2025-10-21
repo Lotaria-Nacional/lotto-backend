@@ -1,10 +1,10 @@
-import { upload } from './agent/routes';
+import { upload } from '../features/agent/routes';
 import { CloudflareR2 } from '../utils/cloudflare-r2';
 import { Router, type Response, type Request } from 'express';
 
-const uploadFileToR2Router = Router();
+const cloudflareWorker = Router();
 
-uploadFileToR2Router.put('/', upload.single('file'), async (req: Request, res: Response) => {
+cloudflareWorker.put('/', upload.single('file'), async (req: Request, res: Response) => {
   const file = req.file;
   if (!file) return res.status(400).json({ error: 'No file uploaded' });
 
@@ -22,7 +22,7 @@ uploadFileToR2Router.put('/', upload.single('file'), async (req: Request, res: R
   }
 });
 
-uploadFileToR2Router.get(/^\/(.+)/, async (req, res) => {
+cloudflareWorker.get(/^\/(.+)/, async (req, res) => {
   const key = req.params[0];
   if (!key) return res.status(400).json({ error: 'No key provided' });
 
@@ -37,7 +37,7 @@ uploadFileToR2Router.get(/^\/(.+)/, async (req, res) => {
   }
 });
 
-uploadFileToR2Router.delete(/^\/(.+)/, async (req: Request, res: Response) => {
+cloudflareWorker.delete(/^\/(.+)/, async (req: Request, res: Response) => {
   const key = req.params[0];
   if (!key) return res.status(400).json({ error: 'No key provided' });
 
@@ -52,4 +52,4 @@ uploadFileToR2Router.delete(/^\/(.+)/, async (req: Request, res: Response) => {
   }
 });
 
-export default uploadFileToR2Router;
+export default cloudflareWorker;

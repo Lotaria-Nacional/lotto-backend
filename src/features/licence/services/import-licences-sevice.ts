@@ -40,7 +40,7 @@ export async function importLicencesService(file: string, user: AuthPayload) {
       })
     );
 
-  stream.on('data', data => console.log(`STREAMING: ${JSON.stringify(data)}`));
+  stream.on('data', (data) => console.log(`STREAMING: ${JSON.stringify(data)}`));
 
   stream.on('end', async () => {
     try {
@@ -59,7 +59,7 @@ export async function importLicencesService(file: string, user: AuthPayload) {
         user,
         imported,
         entity: 'LICENCE',
-        desc: `Importação de licenças (${imported})`,
+        desc: 'licenças',
       });
 
       licenceEmitDone({ imported, total, errors });
@@ -68,7 +68,7 @@ export async function importLicencesService(file: string, user: AuthPayload) {
     }
   });
 
-  stream.on('error', err => {
+  stream.on('error', (err) => {
     licenceEmitError(err);
     console.log(`========= STREAM ERROR: ${err} =========`);
   });

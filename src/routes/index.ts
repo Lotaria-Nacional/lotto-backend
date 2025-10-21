@@ -8,7 +8,7 @@ import simCardRouter from '../features/sim-card/routes';
 import licenceRouter from '../features/licence/routes';
 import terminalRouter from '../features/terminal/routes';
 import auditLogRouter from '../features/audit-log/routes';
-import uploadFileToR2Router from '../features/upload-file';
+import cloudflareWorker from './cloudflare';
 import { authenticate } from '../middleware/auth/authenticate';
 import { getAgentProgress } from '../features/agent/controllers';
 import { getTerminalProgress } from '../features/terminal/controllers';
@@ -49,6 +49,6 @@ router.use('/admins', authenticate, adminRoutes);
 router.use('/provinces', authenticate, provincesRoutes);
 router.use('/audit-logs', authenticate, auditLogRouter);
 
-router.use('/file-upload', uploadFileToR2Router);
+router.use('/cloudflare-worker', cloudflareWorker);
 
 export default router;
