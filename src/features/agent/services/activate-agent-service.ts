@@ -48,7 +48,7 @@ export async function activateAgentService(data: UpdateAgentDTO & { user: AuthPa
       where: { id: data.terminal_id },
       data: {
         agent_id_reference: agent.id_reference,
-        status: agent.pos ? 'on_field' : terminal.status, // <--- ajustado
+        status: agent.pos ? 'on_field' : 'delivered', // <--- ajustado
         delivery_at: new Date(),
       },
     });

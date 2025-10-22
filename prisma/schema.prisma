@@ -363,6 +363,7 @@ enum TerminalStatus {
   broken
   maintenance
   discontinued
+  delivered
 }
 
 enum LicenceStatus {

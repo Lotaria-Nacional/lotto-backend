@@ -30,8 +30,10 @@ export const getStatus = (status: TerminalStatus | 'stock-ready' | 'on_field-rea
       return [{ status: { in: ['stock'] } }];
     case 'fixed':
       return [{ status: { in: ['fixed'] } }];
+    case 'delivered':
+      return [{ status: { in: ['delivered'] } }];
     case 'on_field-ready':
-      return [{ status: { in: ['on_field', 'ready', 'fixed'] } }];
+      return [{ status: { in: ['on_field', 'ready', 'fixed', 'delivered'] } }];
     case 'on_field':
       return [{ status: { in: ['on_field'] } }];
     case 'broken':

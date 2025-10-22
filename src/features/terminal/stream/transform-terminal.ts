@@ -38,7 +38,7 @@ export function createTransformTerminalStream(
         if (err instanceof ZodError) {
           errors.push({
             row,
-            error: err.issues.map(issue => ({
+            error: err.issues.map((issue) => ({
               campo: issue.path.join(','),
               mensagem: issue.message,
             })),

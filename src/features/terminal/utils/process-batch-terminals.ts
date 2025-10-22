@@ -15,7 +15,7 @@ export async function processBatchTerminals(batch: ImportTerminalsDTO[]) {
 
     for (const terminal of chunk) {
       try {
-        await prisma.$transaction(async tx => {
+        await prisma.$transaction(async (tx) => {
           const { agentIdRef, terminalStatus } = await getAgentId(tx, terminal);
 
           const data = {
@@ -32,7 +32,7 @@ export async function processBatchTerminals(batch: ImportTerminalsDTO[]) {
                       number: terminal.sim_card_number,
                       pin: terminal.pin,
                       puk: terminal.puk,
-                      status: 'stock' as SimCardStatus,
+                      status: 'active' as SimCardStatus,
                     },
                   },
                 }
@@ -60,7 +60,7 @@ export async function processBatchTerminals(batch: ImportTerminalsDTO[]) {
                   number: terminal.sim_card_number,
                   pin: terminal.pin,
                   puk: terminal.puk,
-                  status: 'stock' as SimCardStatus,
+                  status: 'active' as SimCardStatus,
                 },
               },
             };
@@ -107,7 +107,7 @@ const getAgentId = async (tx: Prisma.TransactionClient, terminal: ImportTerminal
 
     if (agent) {
       agentIdRef = agent.id_reference;
-      if (agent.pos?.id) terminalStatus = 'on_field';
+      terminalStatus = agent.pos?.id ? 'on_field' : 'delivered';
 
       // Remove ligação anterior
       if (agent.terminal?.id) {

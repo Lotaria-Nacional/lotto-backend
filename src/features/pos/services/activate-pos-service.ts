@@ -4,7 +4,7 @@ import { BadRequestError, NotFoundError } from '../../../errors';
 import { AuthPayload, LicenceStatus, PosStatus, UpdatePosDTO } from '@lotaria-nacional/lotto';
 
 export async function activatePosService(data: UpdatePosDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const pos = await tx.pos.findUnique({
       where: { id: data.id },
     });
@@ -71,7 +71,7 @@ export async function activatePosService(data: UpdatePosDTO & { user: AuthPayloa
         data: { status: 'active' },
       });
 
-      // 🔹 Atualizar terminal do agente, se existir
+      // Atualizar terminal do agente, se existir
       if (agent.terminal) {
         await tx.terminal.update({
           where: { id: agent.terminal.id },
@@ -86,7 +86,7 @@ export async function activatePosService(data: UpdatePosDTO & { user: AuthPayloa
     let newPosStatus: PosStatus = pos.status as any;
 
     if (hasAgent && hasLicence) {
-      newPosStatus = 'active'; // 👈 prioridade para agente
+      newPosStatus = 'active'; // prioridade para agente
     } else if (hasAgent) {
       newPosStatus = 'active';
     } else if (hasLicence) {
