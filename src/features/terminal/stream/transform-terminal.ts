@@ -21,6 +21,7 @@ export function createTransformTerminalStream(
           status: row['ESTADO'],
           chip_serial_number: row['Nº DE SERIE DO CHIP'],
           device_id: row['DEVICE ID'],
+          obs: row['NOTA'],
           activatedAt: row['DATA DA ACTIVACAO'],
         };
 

@@ -34,7 +34,7 @@ export function createTransformPosStream(batch: ImportPosDTO[], errors: any[], o
         if (err instanceof ZodError) {
           errors.push({
             row,
-            error: err.issues.map(issue => ({
+            error: err.issues.map((issue) => ({
               campo: issue.path.join('.'),
               mensagem: issue.message,
             })),
@@ -49,7 +49,7 @@ export function createTransformPosStream(batch: ImportPosDTO[], errors: any[], o
 }
 
 export function getPosColumn(row: Record<string, any>) {
-  const key = Object.keys(row).find(k =>
+  const key = Object.keys(row).find((k) =>
     k
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '') // remove acentos

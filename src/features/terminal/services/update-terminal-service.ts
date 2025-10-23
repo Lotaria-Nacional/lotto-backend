@@ -1,12 +1,12 @@
 import prisma from '../../../lib/prisma';
 import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
+import { TerminalStatus } from '@prisma/client';
 import { AuthPayload } from '../../../@types/auth-payload';
 import { Terminal, UpdateTerminalDTO } from '@lotaria-nacional/lotto';
-import { TerminalStatus } from '@prisma/client';
 
 export async function updateTerminalService({ user, ...data }: UpdateTerminalDTO & { user: AuthPayload }) {
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const terminal = await tx.terminal.findUnique({
       where: { id: data.id },
       include: { sim_card: true, agent: { select: { pos: true } } },
@@ -41,6 +41,7 @@ export async function updateTerminalService({ user, ...data }: UpdateTerminalDTO
       data: {
         ...data,
         status,
+        obs: data.obs,
         note: data.note,
         leaved_at: data.leaved_at,
         agent_id_reference: status === 'broken' ? null : terminal.agent_id_reference,

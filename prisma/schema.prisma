@@ -50,6 +50,7 @@ model Terminal {
   serial    String          @unique
   device_id String?
   note      String?
+  obs       String?
   status    TerminalStatus? @default(stock)
 
   created_at   DateTime  @default(now())

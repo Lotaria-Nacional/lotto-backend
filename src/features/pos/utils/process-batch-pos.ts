@@ -8,7 +8,7 @@ export async function processBatchPos(batch: ImportPosDTO[]) {
   for (let i = 0; i < batch.length; i += CHUNK_SIZE) {
     const chunk = batch.slice(i, i + CHUNK_SIZE);
     try {
-      await prisma.$transaction(async tx => {
+      await prisma.$transaction(async (tx) => {
         for (const pos of chunk) {
           const coords = {
             latitude: 0,
@@ -59,10 +59,10 @@ export async function processBatchPos(batch: ImportPosDTO[]) {
 
 // --- FUNÇÃO PARA COLETAR DADOS AUXILIARES ---
 async function collectData(chunk: ImportPosDTO[]) {
-  const typeNames = Array.from(new Set(chunk.map(p => p.type_name).filter(Boolean))) as string[];
-  const agentIds = Array.from(new Set(chunk.map(p => p.agent_id_reference).filter(Boolean))) as number[];
-  const licenceRefs = Array.from(new Set(chunk.map(p => p.licence).filter(Boolean))) as string[];
-  const areaNames = Array.from(new Set(chunk.map(p => p.area).filter(Boolean))) as string[];
+  const typeNames = Array.from(new Set(chunk.map((p) => p.type_name).filter(Boolean))) as string[];
+  const agentIds = Array.from(new Set(chunk.map((p) => p.agent_id_reference).filter(Boolean))) as number[];
+  const licenceRefs = Array.from(new Set(chunk.map((p) => p.licence).filter(Boolean))) as string[];
+  const areaNames = Array.from(new Set(chunk.map((p) => p.area).filter(Boolean))) as string[];
 
   const [types, subtypes, agents, licences, areas] = await Promise.all([
     prisma.type.findMany({ where: { name: { in: typeNames } } }),
@@ -84,11 +84,11 @@ async function collectData(chunk: ImportPosDTO[]) {
     }),
   ]);
 
-  const typeMap = new Map(types.map(t => [t.name, t.name]));
-  const subtypeMap = new Map(subtypes.map(s => [s.name, s]));
-  const agentSet = new Set(agents.map(a => a.id_reference));
-  const licenceMap = new Map(licences.map(l => [l.reference, l.admin?.name]));
-  const areaSet = new Set(areas.map(a => a.name));
+  const typeMap = new Map(types.map((t) => [t.name, t.name]));
+  const subtypeMap = new Map(subtypes.map((s) => [s.name, s]));
+  const agentSet = new Set(agents.map((a) => a.id_reference));
+  const licenceMap = new Map(licences.map((l) => [l.reference, l.admin?.name]));
+  const areaSet = new Set(areas.map((a) => a.name));
 
   return { typeMap, subtypeMap, agentSet, licenceMap, areaSet };
 }

@@ -8,7 +8,7 @@ export async function createTerminalService({
   user,
   ...data
 }: CreateTerminalDTO & { user: AuthPayload }): Promise<{ id: string }> {
-  const response = await prisma.$transaction(async tx => {
+  const response = await prisma.$transaction(async (tx) => {
     const existingTerminal = await tx.terminal.findUnique({
       where: {
         serial: data.serial,
@@ -25,6 +25,7 @@ export async function createTerminalService({
         serial: data.serial,
         device_id: data.device_id,
         arrived_at: data.arrived_at,
+        obs: data.obs,
       },
     });
 

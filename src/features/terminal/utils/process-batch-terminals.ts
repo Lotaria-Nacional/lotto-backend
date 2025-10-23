@@ -23,6 +23,7 @@ export async function processBatchTerminals(batch: ImportTerminalsDTO[]) {
             device_id: terminal.device_id,
             status: terminalStatus ?? undefined,
             agent_id_reference: agentIdRef,
+            obs: terminal.obs,
             activated_at: terminal.activatedAt,
             sim_card: terminal.sim_card_number
               ? {

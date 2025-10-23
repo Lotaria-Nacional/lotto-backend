@@ -5,7 +5,7 @@ import { parseImportedDate } from '../../../utils/import-utils';
 export const importTerminalsSchema = z.object({
   agent_id_reference: z
     .string()
-    .transform(val => {
+    .transform((val) => {
       const match = val.match(/^\d+$/);
       return match ? Number(match[0]) : null;
     })
@@ -16,6 +16,7 @@ export const importTerminalsSchema = z.object({
   sim_card_number: z.string().trim().optional(),
   pin: z.string().trim().optional(),
   puk: z.string().trim().optional(),
+  obs: z.string().optional(),
   status: z
     .string()
     .transform((val): TerminalStatus | undefined => {
