@@ -34,13 +34,13 @@ export async function exportLicencesService(res: Response, filters: PaginationPa
         licence.admin_name,
         licence.coordinates,
         licence.description,
-        licence.emitted_at.toISOString().split('T')[0],
-        licence.expires_at.toISOString().split('T')[0],
+        licence.emitted_at?.toISOString().split('T')[0],
+        licence.expires_at?.toISOString().split('T')[0],
         licence.limit,
         licence.number,
         licence.reference,
       ]
-        .map(v => `"${v ?? ''}"`)
+        .map((v) => `"${v ?? ''}"`)
         .join(',');
 
       res.write(line + '\n');

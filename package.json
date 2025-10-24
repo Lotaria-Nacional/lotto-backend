@@ -9,6 +9,7 @@
     "prisma:dev": "dotenv -e .env.development -- prisma migrate dev --schema=prisma/schema.prisma",
     "prisma:dev:reset": "dotenv -e .env.development -- prisma migrate reset --schema=prisma/schema.prisma",
     "prisma:prod": "dotenv -e .env.production -- prisma migrate deploy --schema=prisma/schema.prisma",
+    "prisma:prod:generate": "dotenv -e .env.production -- prisma generate --schema=prisma/schema.prisma",
     "prisma:generate": "prisma generate --env-file .env.production",
     "docker:dev": "docker-compose -f docker-compose.dev.yml up -d",
     "docker:dev:down": "docker-compose -f docker-compose.dev.yml down",

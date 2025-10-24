@@ -13,7 +13,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3333),
   DATABASE_URL: z.string(),
   FRONTEND_URL: z.string(),
-  REDIS_URL: z.string().default('redis://localhost:6379'),
+  REDIS_URL: z.string().default('redis://localhost:6379').optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
