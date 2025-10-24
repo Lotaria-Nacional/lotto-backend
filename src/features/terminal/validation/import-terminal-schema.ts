@@ -26,6 +26,8 @@ export const importTerminalsSchema = z.object({
           return 'on_field';
         case 'pronto':
           return 'ready';
+        case 'entregue':
+          return 'delivered';
         case 'inventário':
           return 'stock';
         case 'avariado':
