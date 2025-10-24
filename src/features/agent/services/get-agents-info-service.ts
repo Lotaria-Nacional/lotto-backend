@@ -5,10 +5,12 @@ export async function getAgentsInfoService() {
 
   const approved = await prisma.agent.count({ where: { status: 'approved' } });
   const active = await prisma.agent.count({ where: { status: 'active' } });
-  const blocked = await prisma.agent.count({ where: { status: 'denied' } });
-  const discontinued = await prisma.agent.count({ where: { status: 'discontinued' } });
   const ready = await prisma.agent.count({ where: { status: 'ready' } });
   const scheduled = await prisma.agent.count({ where: { status: 'scheduled' } });
 
-  return { total, approved, active, blocked, discontinued, ready, scheduled };
+  const denied = await prisma.agent.count({ where: { status: 'denied' } });
+  const blocked = await prisma.agent.count({ where: { status: 'blocked' } });
+  const discontinued = await prisma.agent.count({ where: { status: 'discontinued' } });
+
+  return { total, approved, active, blocked, discontinued, ready, scheduled, denied };
 }
