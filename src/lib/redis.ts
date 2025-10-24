@@ -10,7 +10,7 @@ redis.on('ready', async () => {
   console.log('✅ Conectado ao Redis com sucesso!');
 });
 
-redis.on('error', err => {
+redis.on('error', (err) => {
   console.error('❌ Erro ao conectar ao Redis:', err);
 });
 
