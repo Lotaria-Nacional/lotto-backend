@@ -33,7 +33,7 @@ export async function loginService(data: loginDTO) {
     Email: existingUser.email,
   };
 
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     await audit(tx, 'CREATE', {
       entity: 'USER',
       user,

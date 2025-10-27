@@ -2,9 +2,11 @@ import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
 import { NotFoundError } from '../../../errors';
 import { AuthPayload, UpdateGroupDTO } from '@lotaria-nacional/lotto';
+// import { deleteCache } from '../../../utils/redis';
+// import { userId } from '../../../../test/setup';
 
 export async function updateGroupService(data: UpdateGroupDTO, user: AuthPayload) {
-  return await prisma.$transaction(async tx => {
+  return await prisma.$transaction(async (tx) => {
     const group = await tx.group.findUnique({
       where: { id: data.id },
     });
@@ -39,7 +41,7 @@ export async function updateGroupService(data: UpdateGroupDTO, user: AuthPayload
 
       if (data.permissions.length > 0) {
         await tx.groupPermission.createMany({
-          data: data.permissions.map(perm => ({
+          data: data.permissions.map((perm) => ({
             group_id: data.id,
             module: perm.module,
             action: perm.actions,
@@ -84,7 +86,7 @@ export async function updateGroupService(data: UpdateGroupDTO, user: AuthPayload
 
         // Adicionar ao grupo atualizado
         await tx.membership.createMany({
-          data: data.users_id.map(userId => ({
+          data: data.users_id.map((userId) => ({
             group_id: data.id,
             user_id: userId,
           })),
@@ -99,6 +101,8 @@ export async function updateGroupService(data: UpdateGroupDTO, user: AuthPayload
       user,
       description: 'Atualizou um grupo',
     });
+
+    // await deleteCache(`profile"${userId}`);
 
     return updatedGroup.id;
   });

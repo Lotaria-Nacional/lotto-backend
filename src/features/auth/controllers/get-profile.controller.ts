@@ -7,12 +7,12 @@ import { getUserPermissionsService } from '../services/get-user-permissions-serv
 
 export async function getProfileController(req: Request, res: Response) {
   const user = req.user as AuthPayload;
-  const cacheKey = `profile:${user.id}`;
+  // const cacheKey = `profile:${user.id}`;
 
-  const cached = await redis.get(cacheKey);
-  if (cached) {
-    return res.status(HttpStatus.OK).json(JSON.parse(cached));
-  }
+  // const cached = await redis.get(cacheKey);
+  // if (cached) {
+  //   return res.status(HttpStatus.OK).json(JSON.parse(cached));
+  // }
 
   const permissions = await getUserPermissionsService(user.id);
 
@@ -21,7 +21,7 @@ export async function getProfileController(req: Request, res: Response) {
     permissions,
   };
 
-  await setCache(cacheKey, payload);
+  // await setCache(cacheKey, payload);
 
   return res.status(HttpStatus.OK).json(payload);
 }
