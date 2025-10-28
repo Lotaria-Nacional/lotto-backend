@@ -34,9 +34,10 @@ model Agent {
   agent_type       AgentType
   bi_number        String?
   status           AgentStatus @default(scheduled)
-
-  training_date DateTime?
-  approved_at   DateTime?
+  area             String?
+  zone             String?
+  training_date    DateTime?
+  approved_at      DateTime?
 
   created_at DateTime  @default(now())
   terminal   Terminal?
