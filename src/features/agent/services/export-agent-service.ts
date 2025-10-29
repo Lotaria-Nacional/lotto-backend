@@ -11,7 +11,7 @@ export async function exportAgentService(res: Response, filters: PaginationParam
   const where = buildAgentWhereInput(filters);
 
   // Cabeçalho CSV
-  res.write(`ID, NOME, SOBRENOME, GENERO, DATA DE FORMACAO, ESTADO, Nº TELEFONE, Nº BI\n`);
+  res.write(`ID, NOME, SOBRENOME, GENERO, DATA DE FORMACAO, ESTADO, Nº TELEFONE, Nº DO BI, AREA, ZONA\n`);
 
   let cursor: string | null = null;
   const batchSize = 500;
@@ -29,16 +29,6 @@ export async function exportAgentService(res: Response, filters: PaginationParam
 
     for (const agent of batch) {
       const genre = agent.genre === 'female' ? 'Feminino' : 'Masculino';
-      const agentStatus: Record<AgentStatus, string> = {
-        active: 'Activo',
-        approved: 'Apto',
-        discontinued: 'Negado',
-        disapproved: 'Negado',
-        denied: 'Negado',
-        scheduled: 'Agendado',
-        ready: 'Pronto',
-        blocked: 'Bloqueado',
-      };
 
       const line = [
         agent.id_reference,
@@ -46,9 +36,11 @@ export async function exportAgentService(res: Response, filters: PaginationParam
         agent.last_name,
         genre,
         dayjs(agent.training_date).format('DD/MM/YYYY'),
-        agentStatus[agent.status],
+        agent.status ? agentStatus[agent.status].toUpperCase() : '',
         agent.phone_number,
         agent.bi_number,
+        agent.area ? `AREA ${agent.area}` : '',
+        agent.zone ? `ZONA ${agent.area}` : '',
       ]
         .map((v) => `"${v ?? ''}"`)
         .join(',');
@@ -61,3 +53,14 @@ export async function exportAgentService(res: Response, filters: PaginationParam
 
   res.end();
 }
+
+const agentStatus: Record<AgentStatus, string> = {
+  active: 'Activo',
+  approved: 'Apto',
+  discontinued: 'Negado',
+  disapproved: 'Negado',
+  denied: 'Negado',
+  scheduled: 'Agendado',
+  ready: 'Pronto',
+  blocked: 'Bloqueado',
+};

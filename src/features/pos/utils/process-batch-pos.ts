@@ -26,6 +26,18 @@ export async function processBatchPos(batch: ImportPosDTO[]) {
           const { adminExists, cityExists, licenceExists } = await getLicenceAndCity({ tx, pos });
           const { agentIdReference } = await getAgent({ tx, pos });
 
+          const posStatus: PosStatus = agentIdReference ? 'active' : 'approved';
+
+          if (agentIdReference) {
+            await tx.agent.update({
+              where: { id_reference: agentIdReference },
+              data: {
+                area: areaExists,
+                zone: zoneExists?.toString(),
+              },
+            });
+          }
+
           const posData = {
             city_name: cityExists,
             province_name: 'luanda',
@@ -33,7 +45,7 @@ export async function processBatchPos(batch: ImportPosDTO[]) {
             zone_number: zoneExists,
             latitude: coords.latitude,
             longitude: coords.longitude,
-            status: pos.status as PosStatus,
+            status: posStatus,
             type_name: typeExists,
             admin_name: adminExists,
             subtype_name: subTypeExists,
@@ -42,9 +54,20 @@ export async function processBatchPos(batch: ImportPosDTO[]) {
             licence_reference: licenceExists,
           };
 
-          await tx.pos.create({
-            data: posData,
-          });
+          const existingPos = pos.id
+            ? await tx.pos.findUnique({
+                where: { id: pos.id },
+              })
+            : null;
+
+          if (existingPos) {
+            await tx.pos.update({
+              where: { id: pos.id },
+              data: posData,
+            });
+          } else {
+            await tx.pos.create({ data: posData });
+          }
         }
       });
     } catch (error) {
@@ -192,7 +215,6 @@ const getAgent = async ({ pos, tx }: GetReferenceProp) => {
 
     if (agent) {
       agentIdReference = agent.id_reference;
-
       // Se o agente já tiver POS, remover associação
       if (agent.pos?.id) {
         await tx.pos.update({
@@ -201,7 +223,7 @@ const getAgent = async ({ pos, tx }: GetReferenceProp) => {
         });
       }
 
-      if (agent.terminal?.id && agent.pos?.id) {
+      if (agent.terminal?.id) {
         await tx.terminal.update({
           where: { id: agent.terminal.id },
           data: { status: 'on_field' },

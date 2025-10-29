@@ -55,6 +55,8 @@ export async function updateAgentService({ user, ...data }: UpdateAgentDTO & { u
         last_name: data.last_name,
         bi_number: data.bi_number,
         genre: data.genre,
+        area: data.area,
+        zone: data.zone,
         phone_number: data.phone_number,
         training_date: data.training_date,
         ...connectOrDisconnect('pos', data.pos_id),

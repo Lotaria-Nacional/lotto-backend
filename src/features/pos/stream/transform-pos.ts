@@ -9,6 +9,7 @@ export function createTransformPosStream(batch: ImportPosDTO[], errors: any[], o
     async transform(row, _, callback) {
       try {
         const input: ImportPosDTO = {
+          id: row['ID'],
           agent_id_reference: row['ID REVENDEDOR'],
           province: row['PROVINCIA'],
           admin_name: row['ADMINISTRACAO'],

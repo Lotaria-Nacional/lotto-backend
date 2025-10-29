@@ -20,6 +20,8 @@ export async function processBatchAgents(batch: ImportAgentDTO[]) {
             genre: agent.gender as Genre,
             training_date: agent.training_date,
             status: agent.status,
+            area: agent.area,
+            zone: agent.zone,
             bi_number: agent.bi_number,
             phone_number: agent.phone_number,
             agent_type: agent.id_reference.toString().startsWith('1')

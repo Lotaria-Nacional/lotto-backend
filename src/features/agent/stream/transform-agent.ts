@@ -18,6 +18,8 @@ export function createTransformAgentStream(batch: ImportAgentDTO[], errors: any[
           status: row['ESTADO'],
           phone_number: row['Nº TELEFONE'],
           bi_number: row['Nº DO BI'],
+          area: row['AREA'],
+          zone: row['ZONA'],
         };
 
         const parsed = importAgentsSchema.parse(input);
@@ -33,7 +35,7 @@ export function createTransformAgentStream(batch: ImportAgentDTO[], errors: any[
         if (err instanceof ZodError) {
           errors.push({
             row,
-            error: err.issues.map(issue => ({
+            error: err.issues.map((issue) => ({
               campo: issue.path.join('.'),
               mensagem: issue.message,
             })),

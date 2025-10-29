@@ -25,6 +25,7 @@ export async function activateAgentService(data: UpdateAgentDTO & { user: AuthPa
     if (terminal.agent_id_reference && terminal.agent_id_reference !== data.id_reference) {
       throw new BadRequestError('Este terminal já está associado a outro agente');
     }
+
     if (agent.terminal && agent.terminal.id !== data.terminal_id) {
       throw new BadRequestError('Este agente já possui outro terminal associado');
     }

@@ -22,10 +22,6 @@ export async function getUserPermissionsService(userId: string) {
 
   const permissions = user.membership.flatMap((group) => group.group.permissions);
 
-  console.log(user.membership[0].group.permissions);
-  console.log('========================');
-  console.log(permissions);
-
   return permissions.map((p) => ({
     action: p.action,
     feature: p.module,

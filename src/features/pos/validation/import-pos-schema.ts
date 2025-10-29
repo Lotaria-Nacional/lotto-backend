@@ -2,6 +2,7 @@ import { PosStatus, posStatusSchema } from '@lotaria-nacional/lotto';
 import z from 'zod';
 
 export const importPosSchema = z.object({
+  id: z.string().optional(),
   agent_id_reference: z
     .string()
     .optional()

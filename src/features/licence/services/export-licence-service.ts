@@ -3,15 +3,14 @@ import { Licence } from '@prisma/client';
 import prisma from '../../../lib/prisma';
 import { buildLicenceWhereInput } from '../utils/filters';
 import { PaginationParams } from '../../../@types/pagination-params';
+import dayjs from 'dayjs';
+
+const LICENCE_HEADER = `ADMINISTRACAO, COORDENAFAS, DESCRICAO, DATA DE EMISSAO, DATA DE EXPIRACAO, LIMITE, Nº DOCUMENTO, REFERENCIA\n`;
 
 export async function exportLicencesService(res: Response, filters: PaginationParams) {
-  // Gerar WHERE com base nos filtros já existentes
   const where = buildLicenceWhereInput(filters);
 
-  // Cabeçalho CSV
-  res.write(
-    `ADMINISTRACAO, COORDENAFAS, DESCRICAO, DATA DE EMISSAO, DATA DE EXPIRACAO, LIMITE, Nº DOCUMENTO, REFERENCIA\n`
-  );
+  res.write(LICENCE_HEADER);
 
   let cursor: string | null = null;
   const batchSize = 500;
@@ -28,17 +27,16 @@ export async function exportLicencesService(res: Response, filters: PaginationPa
     if (batch.length === 0) break;
 
     for (const licence of batch) {
-      //   const status = licence.status === 'free' ? 'Livre' : 'Ocupado';
-
+      // const status = licence.status === 'free' ? 'Livre' : 'Ocupado';
       const line = [
-        licence.admin_name,
-        licence.coordinates,
-        licence.description,
-        licence.emitted_at?.toISOString().split('T')[0],
-        licence.expires_at?.toISOString().split('T')[0],
-        licence.limit,
-        licence.number,
-        licence.reference,
+        licence.admin_name || '',
+        licence.coordinates || '',
+        licence.description || '',
+        licence.emitted_at ? dayjs(licence.emitted_at).format('DD/MM/YYYY') : '',
+        licence.expires_at ? dayjs(licence.expires_at).format('DD/MM/YYYY') : '',
+        licence.limit || '',
+        licence.number || '',
+        licence.reference.toUpperCase() || '',
       ]
         .map((v) => `"${v ?? ''}"`)
         .join(',');

@@ -21,6 +21,8 @@ export async function fetchAgentsService(params: PaginationParams) {
     select: {
       status: true,
       id: true,
+      area: true,
+      zone: true,
       first_name: true,
       last_name: true,
       bi_number: true,
