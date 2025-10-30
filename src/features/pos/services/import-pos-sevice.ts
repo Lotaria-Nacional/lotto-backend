@@ -30,7 +30,7 @@ export async function importPosService(file: string, user: AuthPayload) {
     .pipe(csvParser({ mapHeaders: ({ header }) => header.trim() }))
     .pipe(
       createTransformPosStream(batch, errors, async () => {
-        const count = await processBatchPos(batch);
+        const { count } = await processBatchPos(batch);
         imported += count;
         total += count;
         batch.length = 0;
@@ -44,7 +44,7 @@ export async function importPosService(file: string, user: AuthPayload) {
 
   stream.on('end', async () => {
     if (batch.length > 0) {
-      const count = await processBatchPos(batch);
+      const { count, errors: err } = await processBatchPos(batch);
       imported += count;
       const percent = Math.min(Math.round((imported / totalLines) * 100), 100);
       posEmitProgress({ percent });

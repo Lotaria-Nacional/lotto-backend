@@ -11,7 +11,7 @@ type ProcessPosBatchParams = {
 export async function processPosBatch({ posList, user, errors }: ProcessPosBatchParams) {
   for (const posData of posList) {
     try {
-      await prisma.$transaction(async tx => {
+      await prisma.$transaction(async (tx) => {
         // --- Coordenadas ---
         let latitude: number | null = null;
         let longitude: number | null = null;

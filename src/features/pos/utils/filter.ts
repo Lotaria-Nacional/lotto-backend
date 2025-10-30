@@ -29,6 +29,8 @@ export const getStatus = (status?: PosStatus): Prisma.PosWhereInput[] => {
   if (!status) return [];
 
   switch (status) {
+    case 'approved':
+      return [{ status: { in: ['approved'] } }];
     case 'active':
       return [{ status: { in: ['active', 'approved'] } }];
     case 'pending':

@@ -24,6 +24,9 @@ export function createTransformTerminalStream(
           obs: row['NOTA'],
           activatedAt: row['DATA DA ACTIVACAO'],
         };
+        if (!input.activatedAt) {
+          console.log(input.agent_id_reference);
+        }
 
         const parsed = importTerminalsSchema.parse(input);
         batch.push(parsed);

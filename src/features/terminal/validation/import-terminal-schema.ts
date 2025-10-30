@@ -6,8 +6,9 @@ export const importTerminalsSchema = z.object({
   agent_id_reference: z
     .string()
     .transform((val) => {
-      const match = val.match(/^\d+$/);
-      return match ? Number(match[0]) : null;
+      if (!val) return null;
+      const num = Number(val.trim());
+      return !isNaN(num) && /^\d+$/.test(val.trim()) ? num : null;
     })
     .nullable()
     .optional(),
