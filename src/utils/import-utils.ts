@@ -32,11 +32,6 @@ export const auditImport = async ({ file, user, imported, entity, desc }: AuditI
   });
 };
 
-// OLD VERSION: 1.0.0
-// export function parseImportedDate(dateStr: string) {
-//  const parsedDate = dayjs(dateStr, ['D/M/YYYY', 'DD/MM/YYYY', 'M/DD/YYYY', 'MM/DD/YYYY'], true); if (!parsedDate.isValid()) { return null; } return parsedDate.toDate();
-// }
-
 export function parseImportedDate(dateStr: string) {
   if (!dateStr) return null;
   const parsedDate = dayjs(dateStr, ['D/M/YYYY', 'DD/MM/YYYY', 'M/DD/YYYY', 'MM/DD/YYYY'], true);

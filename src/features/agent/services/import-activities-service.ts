@@ -3,10 +3,10 @@ import dayjs from 'dayjs';
 import { Readable } from 'stream';
 import csvParser from 'csv-parser';
 import prisma from '../../../lib/prisma';
-import { detectCsvType } from '../utils/detect-csv-type';
+// import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
-import uploadCsvToImageKit from '../../../utils/upload-csv-to-image-kit';
-import { audit } from '../../../utils/audit-log';
+import { detectCsvType } from '../utils/detect-csv-type';
+// import uploadCsvToImageKit from '../../../utils/upload-csv-to-image-kit';
 
 export async function importActivitiesService(files: Express.Multer.File[], user: AuthPayload) {
   const allCities = await prisma.city.findMany({
@@ -25,8 +25,6 @@ export async function importActivitiesService(files: Express.Multer.File[], user
     const type = await detectCsvType(file);
     const stream = file.buffer ? Readable.from(file.buffer.toString()) : fs.createReadStream(file.path);
 
-    console.log(type);
-
     const agentsMap = new Map<
       string,
       {
@@ -42,7 +40,7 @@ export async function importActivitiesService(files: Express.Multer.File[], user
     await new Promise<void>((resolve, reject) => {
       stream
         .pipe(csvParser())
-        .on('data', async row => {
+        .on('data', async (row) => {
           try {
             // ------------------- AFRIMONEY -------------------
             if (type === 'AFRIMONEY') {
@@ -87,7 +85,7 @@ export async function importActivitiesService(files: Express.Multer.File[], user
               // ✅ Buscar área a partir da zona
               let areaFromDb: string | undefined;
               if (zoneNumber) {
-                const city = allCities.find(c => c.zone?.number === zoneNumber);
+                const city = allCities.find((c) => c.zone?.number === zoneNumber);
                 if (city?.area?.name) {
                   areaFromDb = `AREA ${city.area.name.toUpperCase()}`;
                 }

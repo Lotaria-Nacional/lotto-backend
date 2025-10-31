@@ -334,6 +334,50 @@ model AgentDailyBalance {
   @@map("agent_daily_balances")
 }
 
+model Afrimoney {
+  id                   String   @id @default(uuid())
+  transferId           String?  @map("transfer_id")
+  serviceType          String?  @map("service_type")
+  remarks              String?
+  transactionType      String?  @map("transaction_type")
+  accountId            String?  @map("account_id")
+  secondPartyAccountId String?  @map("second_party_account_id")
+  transferValue        String?  @map("transfer_value")
+  comission            String?
+  serviceCharge        String?  @map("service_charge")
+  taxa                 String?
+  previousBalance      String?  @map("previous_balance")
+  postBalance          String?  @map("post_balance")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  @@map("afrimoney")
+}
+
+model KoralPlay {
+  id                     String    @id @default(uuid())
+  transferId             String?   @map("transfer_id")
+  date                   String?
+  operationDate          DateTime? @map("operation_date")
+  operation              String?
+  amountAfter            String?   @map("amount_after")
+  senderAccountId        String?   @map("sender_account_id")
+  senderDetails          String?   @map("sender_details")
+  senderStaffReference   String?   @map("sender_staff_reference")
+  transactionType        String?   @map("transaction_type")
+  receiverAccountId      String?   @map("receiver_account_id")
+  receiverDetails        String?   @map("receiver_details")
+  receiverStaffReference String?   @map("receiver_staff_reference")
+  paymentMode            String?   @map("payment_mode")
+  signedBy               String?   @map("signed_by")
+  signedByStaffReference String?   @map("signed_by_staff_reference")
+  entity                 String?
+  column1                String?
+  column2                String?
+  createdAt              DateTime  @default(now()) @map("created_at")
+
+  @@map("koral_play")
+}
+
 enum AgentType {
   lotaria_nacional
   revendedor

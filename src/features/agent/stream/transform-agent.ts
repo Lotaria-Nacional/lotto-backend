@@ -6,7 +6,6 @@ import { CHUNK_SIZE } from '../utils/process-batch-agents';
 export function createTransformAgentStream(batch: ImportAgentDTO[], errors: any[], onBatchReady: () => Promise<void>) {
   return new Transform({
     objectMode: true,
-
     async transform(row, _, callback) {
       try {
         const input: ImportAgentDTO = {

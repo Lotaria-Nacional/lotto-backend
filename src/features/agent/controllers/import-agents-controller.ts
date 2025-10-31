@@ -23,7 +23,7 @@ export async function importAgentsController(req: Request, res: Response) {
 
   const filePath = req.file.path;
 
-  importAgentsServices(filePath, user).catch(err => console.error(err));
+  importAgentsServices(filePath, user).catch((err) => console.error(err));
 
   return res.status(HttpStatus.OK).json({ message: 'Importação iniciada com sucesso' });
 }
@@ -43,17 +43,17 @@ export async function getAgentProgress(req: Request, res: Response) {
   };
 
   // Progresso contínuo
-  progressEmitter.on('progress', data => send('progress', data));
+  progressEmitter.on('progress', (data) => send('progress', data));
 
   // Finalização (apenas uma vez)
-  progressEmitter.once('done', data => {
+  progressEmitter.once('done', (data) => {
     send('done', { ...data, completed: true });
     res.end();
     console.log('✅ SSE concluído e fechado (done).');
   });
 
   // Erros (apenas uma vez)
-  progressEmitter.once('error', err => {
+  progressEmitter.once('error', (err) => {
     send('error', { message: err.message });
     res.end();
     console.log('❌ SSE encerrado com erro.');

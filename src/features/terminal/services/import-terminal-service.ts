@@ -1,5 +1,6 @@
 import fs from 'fs';
 import csvParser from 'csv-parser';
+
 import { AuthPayload } from '@lotaria-nacional/lotto';
 import { auditImport } from '../../../utils/import-utils';
 import { processBatchTerminals } from '../utils/process-batch-terminals';
@@ -23,7 +24,7 @@ export async function importTerminalsService(file: string, user: AuthPayload) {
       .on('error', reject);
   });
 
-  console.log(`======== TOTAL LINES: ${totalLines} =========`);
+  console.log(`======== TOTAL LINES: ${totalLines} ========`);
 
   const stream = fs
     .createReadStream(file)

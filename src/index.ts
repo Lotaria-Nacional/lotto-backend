@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 
 import router from './routes';
 import { errorHandler } from './middleware/error-handler';
+import reconciliationRouter from './features/agent/controllers/reconciliation-controller';
 
 console.log('NODE_ENV:', env.NODE_ENV);
 console.log('DATABASE_URL:', env.DATABASE_URL);
@@ -32,6 +33,7 @@ app.use(
 );
 
 app.use('/api', router);
+app.use('/api/reconciliation', reconciliationRouter);
 app.use(errorHandler);
 
 app.listen(env.PORT, '0.0.0.0', () => {
