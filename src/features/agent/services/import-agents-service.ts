@@ -41,7 +41,7 @@ export async function importAgentsServices(file: string, user: AuthPayload) {
       })
     );
 
-  stream.on('data', (data) => console.log(`STREAMING: ${JSON.stringify(data)}`));
+  stream.on('data', data => console.log(`STREAMING: ${JSON.stringify(data)}`));
 
   stream.on('end', async () => {
     if (batch.length > 0) {
@@ -54,6 +54,8 @@ export async function importAgentsServices(file: string, user: AuthPayload) {
     console.log(`========= STREAM END ========= `);
     console.log(`========= TOTAL IMPORTED: ${imported} =========`);
 
+    await updateIdReference();
+
     await auditImport({
       file,
       user,
@@ -63,11 +65,10 @@ export async function importAgentsServices(file: string, user: AuthPayload) {
     });
   });
 
-  stream.on('error', (err) => {
+  stream.on('error', err => {
     emitError(err);
     console.log(`========= STREAM ERROR: ${err} =========`);
   });
 
-  await updateIdReference();
   return { imported, errors };
 }

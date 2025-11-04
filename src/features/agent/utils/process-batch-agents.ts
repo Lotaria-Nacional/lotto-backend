@@ -11,7 +11,7 @@ export async function processBatchAgents(batch: ImportAgentDTO[]) {
     const chunk = batch.slice(i, i + CHUNK_SIZE);
 
     try {
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async tx => {
         for (const agent of chunk) {
           const data = {
             id_reference: agent.id_reference,

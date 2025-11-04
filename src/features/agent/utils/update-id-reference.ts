@@ -3,40 +3,37 @@ import prisma from '../../../lib/prisma';
 export async function updateIdReference() {
   try {
     await prisma.$transaction(async tx => {
-      // Último id_reference da lotaria
       const lastLotaria = await tx.agent.findFirst({
         where: { agent_type: 'lotaria_nacional' },
         orderBy: { id_reference: 'desc' },
         select: { id_reference: true },
       });
 
-      // Último id_reference do revendedor
       const lastRevendedor = await tx.agent.findFirst({
         where: { agent_type: 'revendedor' },
         orderBy: { id_reference: 'desc' },
         select: { id_reference: true },
       });
 
-      // Actualizar a tabela idReference
       if (lastRevendedor?.id_reference) {
-        await tx.idReference.update({
+        await tx.idReference.upsert({
           where: { type: 'revendedor' },
-          data: {
-            counter: lastRevendedor.id_reference,
-          },
+          update: { counter: lastRevendedor.id_reference },
+          create: { type: 'revendedor', counter: lastRevendedor.id_reference },
         });
       }
 
       if (lastLotaria?.id_reference) {
-        await tx.idReference.update({
+        await tx.idReference.upsert({
           where: { type: 'lotaria_nacional' },
-          data: {
-            counter: lastLotaria.id_reference,
-          },
+          update: { counter: lastLotaria.id_reference },
+          create: { type: 'lotaria_nacional', counter: lastLotaria.id_reference },
         });
       }
     });
+
+    console.log('✅ idReference atualizado com sucesso.');
   } catch (error) {
-    console.error(error);
+    console.error('❌ Erro ao atualizar idReference:', error);
   }
 }

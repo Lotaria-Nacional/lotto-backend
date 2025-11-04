@@ -1,7 +1,6 @@
 import prisma from '../../../lib/prisma';
-import { Prisma, TerminalStatus } from '@prisma/client';
-import { SimCardStatus } from '@lotaria-nacional/lotto';
 import { CHUNK_SIZE } from '../../agent/utils/process-batch-agents';
+import { Prisma, SimCardStatus, TerminalStatus } from '@prisma/client';
 import { ImportTerminalsDTO } from '../validation/import-terminal-schema';
 
 export async function processBatchTerminals(batch: ImportTerminalsDTO[]) {
@@ -10,7 +9,11 @@ export async function processBatchTerminals(batch: ImportTerminalsDTO[]) {
   const errors: any[] = [];
   let processed = 0;
 
-  const uniqueBatch = [...new Map(batch.map((t) => [t.serial_number, t])).values()];
+  // elimina duplicados pelo serial_number
+  const uniqueBatch = [...new Map(batch.map(t => [t.serial_number, t])).values()];
+
+  console.log(`Batch recebido: ${batch.length}`);
+  console.log(`Batch único (sem duplicados): ${uniqueBatch.length}`);
 
   for (let i = 0; i < uniqueBatch.length; i += CHUNK_SIZE) {
     const chunk = uniqueBatch.slice(i, i + CHUNK_SIZE);
@@ -18,58 +21,36 @@ export async function processBatchTerminals(batch: ImportTerminalsDTO[]) {
     for (const terminal of chunk) {
       try {
         await prisma.$transaction(
-          async (tx) => {
-            const { agentIdRef, terminalStatus } = await getAgentId(tx, terminal);
+          async tx => {
+            const { agentIdRef, terminalStatus } = await getIdReferenceAndTerminalStatus(tx, terminal);
 
             const data: Prisma.TerminalUncheckedCreateInput = {
               serial: terminal.serial_number,
               device_id: terminal.device_id,
-              status: terminalStatus ?? 'ready',
+              status: terminalStatus ?? TerminalStatus.ready,
               agent_id_reference: agentIdRef,
               obs: terminal.obs,
               activated_at: terminal.activatedAt,
             };
-            // Gerir associação do SIM card (caso exista)
-            if (terminal.sim_card_number) {
-              const existingSim = await tx.simCard.findUnique({
-                where: { number: terminal.sim_card_number },
-              });
 
-              if (existingSim) {
-                // Desassocia SIM anterior (evita violação de FK)
-                await tx.simCard.update({
-                  where: { number: terminal.sim_card_number },
-                  data: { terminal_id: null },
-                });
-              }
-
-              data.sim_card = {
-                connectOrCreate: {
-                  where: { number: terminal.sim_card_number },
-                  create: {
-                    number: terminal.sim_card_number,
-                    pin: terminal.pin,
-                    puk: terminal.puk,
-                    status: 'active' as SimCardStatus,
-                  },
-                },
-              };
-            }
-            await tx.terminal.upsert({
+            const terminalRecord = await tx.terminal.upsert({
               where: { serial: terminal.serial_number },
               update: data,
               create: data,
             });
+
+            await createSimCard({ id: terminalRecord.id, tx, input: terminal });
           },
-          {
-            isolationLevel: 'Serializable',
-          }
+          { isolationLevel: 'ReadCommitted' }
         );
 
         processed++;
       } catch (err) {
-        console.log('PROCESS TERMINAL BATCH ERROR: ', err);
-        errors.push({ serial: terminal.serial_number, error: (err as any).message });
+        console.error('❌ Erro no terminal:', terminal.serial_number, err);
+        errors.push({
+          serial: terminal.serial_number,
+          error: (err as any).message,
+        });
       }
     }
   }
@@ -77,7 +58,8 @@ export async function processBatchTerminals(batch: ImportTerminalsDTO[]) {
   return { count: processed, errors };
 }
 
-const getAgentId = async (tx: Prisma.TransactionClient, terminal: ImportTerminalsDTO) => {
+// 🔹 Função auxiliar
+const getIdReferenceAndTerminalStatus = async (tx: Prisma.TransactionClient, terminal: ImportTerminalsDTO) => {
   let agentIdRef: number | null = null;
   let terminalStatus: TerminalStatus | undefined = terminal.status;
 
@@ -93,9 +75,9 @@ const getAgentId = async (tx: Prisma.TransactionClient, terminal: ImportTerminal
 
     if (agent) {
       agentIdRef = agent.id_reference;
-      terminalStatus = agent.pos?.id ? 'on_field' : 'delivered';
+      terminalStatus = agent.pos?.id ? TerminalStatus.on_field : TerminalStatus.delivered;
 
-      // Remove ligação anterior
+      // Remove ligação antiga
       if (agent.terminal?.id) {
         await tx.terminal.updateMany({
           where: { agent_id_reference: agentIdRef },
@@ -106,4 +88,43 @@ const getAgentId = async (tx: Prisma.TransactionClient, terminal: ImportTerminal
   }
 
   return { agentIdRef, terminalStatus };
+};
+
+interface ICreateSimCardDTO {
+  id: string;
+  tx: Prisma.TransactionClient;
+  input: ImportTerminalsDTO;
+}
+
+const createSimCard = async ({ id, input, tx }: ICreateSimCardDTO) => {
+  if (input.sim_card_number) {
+    // Desassocia qualquer outro SIM ativo
+    await tx.simCard.updateMany({
+      where: {
+        terminal_id: id,
+        number: { not: input.sim_card_number },
+      },
+      data: { terminal_id: null },
+    });
+
+    // Cria ou atualiza o SIM
+    await tx.simCard.upsert({
+      where: { number: input.sim_card_number },
+      update: {
+        terminal_id: id,
+        pin: input.pin,
+        puk: input.puk,
+        chip_serial_number: input.chip_serial_number,
+        status: SimCardStatus.active,
+      },
+      create: {
+        number: input.sim_card_number,
+        pin: input.pin,
+        puk: input.puk,
+        chip_serial_number: input.chip_serial_number,
+        status: SimCardStatus.active,
+        terminal_id: id,
+      },
+    });
+  }
 };
