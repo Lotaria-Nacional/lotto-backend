@@ -27,7 +27,7 @@ export async function processBatchTerminals(batch: ImportTerminalsDTO[]) {
             const data: Prisma.TerminalUncheckedCreateInput = {
               serial: terminal.serial_number,
               device_id: terminal.device_id,
-              status: terminalStatus ?? TerminalStatus.ready,
+              status: terminalStatus,
               agent_id_reference: agentIdRef,
               obs: terminal.obs,
               activated_at: terminal.activatedAt,
@@ -62,6 +62,12 @@ export async function processBatchTerminals(batch: ImportTerminalsDTO[]) {
 const getIdReferenceAndTerminalStatus = async (tx: Prisma.TransactionClient, terminal: ImportTerminalsDTO) => {
   let agentIdRef: number | null = null;
   let terminalStatus: TerminalStatus | undefined = terminal.status;
+
+  if (terminal.sim_card_number) {
+    terminalStatus = TerminalStatus.ready;
+  } else {
+    terminalStatus = TerminalStatus.stock;
+  }
 
   if (terminal.agent_id_reference) {
     const agent = await tx.agent.findUnique({
