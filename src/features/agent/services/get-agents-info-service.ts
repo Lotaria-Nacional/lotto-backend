@@ -1,7 +1,7 @@
 import prisma from '../../../lib/prisma';
 
 export async function getAgentsInfoService() {
-  const total = await prisma.agent.count();
+  const total = await prisma.agent.count({ where: { status: { in: ['active', 'approved', 'blocked'] } } });
 
   const approved = await prisma.agent.count({ where: { status: 'approved' } });
   const active = await prisma.agent.count({ where: { status: 'active' } });
