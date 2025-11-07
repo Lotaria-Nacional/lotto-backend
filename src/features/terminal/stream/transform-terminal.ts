@@ -28,14 +28,15 @@ export function createTransformTerminalStream(
           obs: row['NOTA']?.trim(),
           activatedAt: row['DATA DA ACTIVACAO']?.trim(),
         };
+        const parsed = importTerminalsSchema.parse(input);
 
-        if (serialSet.has(input.serial_number)) {
-          console.log(`⚠️ Duplicado ignorado (linha ${line}): ${input.serial_number}`);
+        if (serialSet.has(parsed.serial_number)) {
+          console.log(`⚠️ Duplicado ignorado (linha ${line}): ${parsed.serial_number}`);
           return callback();
         }
-        serialSet.add(input.serial_number);
 
-        const parsed = importTerminalsSchema.parse(input);
+        serialSet.add(parsed.serial_number);
+
         batch.push(parsed);
 
         if (batch.length >= CHUNK_SIZE) {

@@ -61,12 +61,15 @@ export async function processBatchTerminals(batch: ImportTerminalsDTO[]) {
 // 🔹 Função auxiliar
 const getIdReferenceAndTerminalStatus = async (tx: Prisma.TransactionClient, terminal: ImportTerminalsDTO) => {
   let agentIdRef: number | null = null;
-  let terminalStatus: TerminalStatus | undefined = terminal.status;
+  let terminalStatus: TerminalStatus | undefined = 'stock';
 
   if (terminal.sim_card_number) {
     terminalStatus = TerminalStatus.ready;
-  } else {
-    terminalStatus = TerminalStatus.stock;
+  }
+
+  if (terminal.status === 'broken') {
+    terminalStatus = TerminalStatus.broken;
+    agentIdRef = null;
   }
 
   if (terminal.agent_id_reference) {

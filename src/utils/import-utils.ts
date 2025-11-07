@@ -32,9 +32,34 @@ export const auditImport = async ({ file, user, imported, entity, desc }: AuditI
   });
 };
 
-export function parseImportedDate(dateStr: string) {
+export function parseImportedDate(dateStr: string | Date): Date | null {
   if (!dateStr) return null;
-  const parsedDate = dayjs(dateStr, ['D/M/YYYY', 'DD/MM/YYYY', 'M/DD/YYYY', 'MM/DD/YYYY'], true);
+
+  const cleaned = dateStr.toString().trim().replace(/\./g, '/').replace(/-/g, '/');
+  const formats = [
+    'D/M/YYYY',
+    'DD/MM/YYYY',
+    'D/M/YY',
+    'DD/MM/YY',
+    'M/D/YYYY',
+    'MM/DD/YYYY',
+    'M/D/YY',
+    'MM/DD/YY',
+    'YYYY-MM-DD',
+    'YYYY/MM/DD',
+    'YYYY.M.D',
+    'YYYY-M-D',
+    'D-M-YYYY HH:mm',
+    'DD-MM-YYYY HH:mm:ss',
+    'YYYY-MM-DD HH:mm:ss',
+    'DD/MM/YYYY HH:mm:ss',
+    'DD-MM-YYYY',
+    'D-M-YYYY',
+    'DD.MM.YYYY',
+    'D.M.YYYY',
+  ];
+
+  const parsedDate = dayjs(cleaned, formats, true);
   return parsedDate.isValid() ? parsedDate.toDate() : null;
 }
 
