@@ -16,12 +16,12 @@ async function seedData() {
       await resetDatabase(tx);
 
       // Referências iniciais
-      // await tx.idReference.createMany({
-      //   data: [
-      //     { type: 'lotaria_nacional', counter: 9000 },
-      //     { type: 'revendedor', counter: 1000 },
-      //   ],
-      // });
+      await tx.idReference.createMany({
+        data: [
+          { type: 'lotaria_nacional', counter: 9000 },
+          { type: 'revendedor', counter: 1000 },
+        ],
+      });
 
       // Áreas e zonas
       const areas = await seedAreas(tx);

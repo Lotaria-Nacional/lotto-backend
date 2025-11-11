@@ -31,8 +31,8 @@ export async function processBatchAgents(batch: ImportAgentDTO[]) {
 
           await tx.agent.upsert({
             where: { id_reference: agent.id_reference },
-            create: data as any,
-            update: data as any,
+            create: data,
+            update: data,
           });
         }
       });

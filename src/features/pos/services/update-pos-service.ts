@@ -7,7 +7,9 @@ interface UpdatePosServiceResponse {
   id: string;
 }
 
-export async function updatePosService(data: UpdatePosDTO & { user: AuthPayload }): Promise<UpdatePosServiceResponse> {
+export async function updatePosService(
+  data: UpdatePosDTO & { description?: string; user: AuthPayload }
+): Promise<UpdatePosServiceResponse> {
   const result = await prisma.$transaction(async tx => {
     const pos = await tx.pos.findUnique({ where: { id: data.id } });
 
@@ -47,6 +49,7 @@ export async function updatePosService(data: UpdatePosDTO & { user: AuthPayload 
       data: {
         coordinates: data.coordinates,
         latitude: data.latitude,
+        description: data.description,
         longitude: data.longitude,
         admin_name: licence?.admin_name,
         province_name: data.province_name,

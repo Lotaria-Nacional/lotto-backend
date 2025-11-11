@@ -25,6 +25,8 @@ export function createTransformAgentStream(batch: ImportAgentDTO[], errors: any[
         const parsed = importAgentsSchema.parse(input);
         batch.push(parsed);
 
+        console.log(parsed);
+
         if (batch.length >= CHUNK_SIZE) {
           await onBatchReady();
         }
@@ -35,7 +37,7 @@ export function createTransformAgentStream(batch: ImportAgentDTO[], errors: any[
         if (err instanceof ZodError) {
           errors.push({
             row,
-            error: err.issues.map((issue) => ({
+            error: err.issues.map(issue => ({
               campo: issue.path.join('.'),
               mensagem: issue.message,
             })),
@@ -44,6 +46,21 @@ export function createTransformAgentStream(batch: ImportAgentDTO[], errors: any[
           errors.push({ row, error: (err as any).message || err });
         }
         callback();
+      }
+    },
+
+    async flush(callback) {
+      try {
+        if (batch.length > 0) {
+          await onBatchReady();
+          batch.length = 0; // limpa o batch
+        }
+        console.log(`✅ Transform stream finalizado (processados todos os agentes)`);
+
+        callback();
+      } catch (err: any) {
+        console.error(`❌ Erro no flush do stream:`, err);
+        callback(err);
       }
     },
   });

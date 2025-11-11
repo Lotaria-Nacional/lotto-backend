@@ -85,8 +85,10 @@ model SimCard {
 }
 
 model Pos {
-  id          String     @id @default(uuid())
-  // pos_reference String?    @unique
+  id     String @id @default(uuid())
+  pos_id String @unique
+
+  description String?
   coordinates String?
   latitude    Float?
   longitude   Float?

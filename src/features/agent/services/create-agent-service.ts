@@ -4,7 +4,7 @@ import { CreateAgentDTO } from '@lotaria-nacional/lotto';
 import { AuthPayload } from '../../../@types/auth-payload';
 
 export async function createAgentService({ user, ...data }: CreateAgentDTO & { user: AuthPayload }) {
-  const id = await prisma.$transaction(async (tx) => {
+  const id = await prisma.$transaction(async tx => {
     const { counter } = await tx.idReference.update({
       where: { type: data.agent_type },
       data: { counter: { increment: 1 } },

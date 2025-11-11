@@ -4,7 +4,7 @@ import { audit } from '../../../utils/audit-log';
 import { AuthPayload, UpdateTerminalDTO } from '@lotaria-nacional/lotto';
 
 export async function reportTerminalMalFunctionService(data: UpdateTerminalDTO, user: AuthPayload) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const terminal = await tx.terminal.findUnique({
       where: { id: data.id },
     });

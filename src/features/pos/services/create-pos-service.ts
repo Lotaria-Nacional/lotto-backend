@@ -1,5 +1,6 @@
 import prisma from '../../../lib/prisma';
 import { audit } from '../../../utils/audit-log';
+import { generatePosID } from '../utils/generate-pos-id';
 import { AuthPayload, CreatePosDTO } from '@lotaria-nacional/lotto';
 
 interface CreatePosServiceResponse {
@@ -9,8 +10,9 @@ interface CreatePosServiceResponse {
 export async function createPosService({
   user,
   ...data
-}: CreatePosDTO & { user: AuthPayload }): Promise<CreatePosServiceResponse> {
-  const response = await prisma.$transaction(async (tx) => {
+}: CreatePosDTO & { description?: string; user: AuthPayload }): Promise<CreatePosServiceResponse> {
+  const response = await prisma.$transaction(async tx => {
+    const posID = await generatePosID(data.province_name, data.area_name!, data.zone_number!);
     let licence;
     if (data.licence_reference) {
       licence = await tx.licence.findUnique({
@@ -23,9 +25,11 @@ export async function createPosService({
 
     const posCreated = await tx.pos.create({
       data: {
+        pos_id: posID,
         coordinates: data.coordinates,
         latitude: data.latitude!,
         admin_name: licence?.admin_name,
+        description: data.description,
         longitude: data.longitude!,
         province_name: data.province_name,
         city_name: data.city_name,

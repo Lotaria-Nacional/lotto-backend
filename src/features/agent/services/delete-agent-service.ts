@@ -4,7 +4,7 @@ import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '../../../@types/auth-payload';
 
 export async function deleteAgentService(id: string, user: AuthPayload) {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     const agent = await tx.agent.findUnique({
       where: {
         id,

@@ -4,7 +4,7 @@ import { audit } from '../../../utils/audit-log';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 
 async function blockAgentsActivitiesService(agentsIds: string[], user: AuthPayload) {
-  const count = await prisma.$transaction(async (tx) => {
+  const count = await prisma.$transaction(async tx => {
     const { count } = await tx.agentActivity.updateMany({
       where: {
         id: { in: agentsIds },

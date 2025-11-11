@@ -7,7 +7,7 @@ export const importAgentsSchema = z.object({
   id_reference: z.coerce.number().int(),
   name: z.string().trim(),
   last_name: z.string().trim(),
-  gender: z.string().transform((val) => {
+  gender: z.string().transform(val => {
     const v = val.toLowerCase().trim();
     if (/^m(asculino)?$/.test(v)) return 'male';
     if (/^f(eminino)?$/.test(v)) return 'female';
@@ -15,14 +15,14 @@ export const importAgentsSchema = z.object({
   }),
   area: z
     .string()
-    .transform((val) => {
+    .transform(val => {
       const match = val.match(/AREA\s*(\w+)/i);
       return match ? match[1].toUpperCase() : null;
     })
     .optional(),
   zone: z
     .string()
-    .transform((val) => {
+    .transform(val => {
       const match = val.match(/ZONA\s*(\w+)/i);
       return match ? match[1].toUpperCase() : null;
     })
