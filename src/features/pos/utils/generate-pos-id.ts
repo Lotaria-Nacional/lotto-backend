@@ -1,12 +1,19 @@
 import { ACRONYMS } from '../constants';
-import prisma from '../../../lib/prisma';
+import { Prisma, PrismaClient } from '@prisma/client';
 
-export async function generatePosID(province: string, area: string, zone: number) {
+interface Props {
+  tx: Prisma.TransactionClient;
+  province: string;
+  area: string;
+  zone: number;
+}
+
+export async function generatePosID({ tx, province, area, zone }: Props) {
   const prov = province.toLowerCase().replace(/\s+/g, '_');
   const acronym = ACRONYMS[prov] || 'UNKNOWN';
   const normalizedArea = area.replace(/\s+/g, '').toUpperCase();
 
-  const lastPos = await prisma.pos.findFirst({
+  const lastPos = await tx.pos.findFirst({
     where: {
       pos_id: {
         startsWith: `PDV-${acronym}-${normalizedArea}`,

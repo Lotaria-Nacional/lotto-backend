@@ -6,16 +6,16 @@ export const importPosSchema = z.object({
   agent_id_reference: z
     .string()
     .optional()
-    .transform((val) => (val ? Number(val.replace(/\D/g, '')) || null : null)),
+    .transform(val => (val ? Number(val.replace(/\D/g, '')) || null : null)),
 
   province: z
     .string()
     .optional()
-    .transform((val) => val?.trim() || null),
+    .transform(val => val?.trim().toLowerCase() || null),
   city: z
     .string()
     .optional()
-    .transform((val) => {
+    .transform(val => {
       if (!val) return null;
       const cleaned = val.trim().toLowerCase();
       return ['n/d', 'agencias', 'agençias'].includes(cleaned) ? null : cleaned;
@@ -23,7 +23,7 @@ export const importPosSchema = z.object({
   area: z
     .string()
     .optional()
-    .transform((val) => {
+    .transform(val => {
       if (!val) return null;
       const match = val.match(/AREA\s*(\w+)/i); // captura qualquer letra/número depois de "AREA"
       return match ? match[1].toUpperCase() : null;
@@ -31,7 +31,7 @@ export const importPosSchema = z.object({
   zone: z
     .string()
     .optional()
-    .transform((val) => {
+    .transform(val => {
       if (!val) return null;
       const match = val.match(/ZONA\s*(\d+)/i); // captura apenas números depois de "ZONA"
       return match ? Number(match[1].toLowerCase()) : null;
@@ -39,7 +39,7 @@ export const importPosSchema = z.object({
   type_name: z
     .string()
     .optional()
-    .transform((val) => {
+    .transform(val => {
       const regex = /AG[EÊ]NCIAS?\s*(.+)$/iu;
 
       if (val && regex.test(val)) {
@@ -53,11 +53,12 @@ export const importPosSchema = z.object({
   admin_name: z
     .string()
     .optional()
-    .transform((val) => val?.trim().toLowerCase() || null),
+    .transform(val => val?.trim().toLowerCase() || null),
+  description: z.string().optional(),
   status: z
     .string()
     .optional()
-    .transform((val) => {
+    .transform(val => {
       const v = val?.toLowerCase();
       if (!v) return 'pending';
       const map: Record<string, string> = {
@@ -72,11 +73,11 @@ export const importPosSchema = z.object({
   licence: z
     .string()
     .optional()
-    .transform((val) => val || null),
+    .transform(val => val || null),
   coordinates: z
     .string()
     .optional()
-    .transform((val) => val || null),
+    .transform(val => val || null),
 });
 
 export type ImportPosDTO = z.infer<typeof importPosSchema>;

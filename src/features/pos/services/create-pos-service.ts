@@ -12,7 +12,13 @@ export async function createPosService({
   ...data
 }: CreatePosDTO & { description?: string; user: AuthPayload }): Promise<CreatePosServiceResponse> {
   const response = await prisma.$transaction(async tx => {
-    const posID = await generatePosID(data.province_name, data.area_name!, data.zone_number!);
+    const posID = await generatePosID({
+      tx,
+      province: data.province_name,
+      area: data.area_name!,
+      zone: data.zone_number!,
+    });
+
     let licence;
     if (data.licence_reference) {
       licence = await tx.licence.findUnique({

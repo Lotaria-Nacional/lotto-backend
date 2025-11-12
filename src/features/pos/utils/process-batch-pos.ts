@@ -1,8 +1,9 @@
 import prisma from '../../../lib/prisma';
+import { PosStatus } from '@lotaria-nacional/lotto';
 import { ImportPosDTO } from '../validation/import-pos-schema';
 import { CHUNK_SIZE } from '../../agent/utils/process-batch-agents';
-import { PosStatus } from '@lotaria-nacional/lotto';
 import { getAgent, getArea, getLicenceAndCity, getTypes, parseCoordinates } from './import-helpers';
+import { generatePosID } from './generate-pos-id';
 
 export async function processBatchPos(batch: ImportPosDTO[]) {
   if (batch.length === 0) return { count: 0, errors: [] };
@@ -18,7 +19,7 @@ export async function processBatchPos(batch: ImportPosDTO[]) {
     for (const pos of chunk) {
       try {
         await prisma.$transaction(
-          async (tx) => {
+          async tx => {
             const coords = parseCoordinates(pos.coordinates);
 
             const { typeExists, subTypeExists } = await getTypes({ tx, pos });
@@ -38,11 +39,22 @@ export async function processBatchPos(batch: ImportPosDTO[]) {
               });
             }
 
+            const pos_id = await generatePosID({
+              tx,
+              province: pos.province || 'luanda',
+              area: areaExists || 'a',
+              zone: zoneExists || 1,
+            });
+
+            console.log('POINT OF SALE CUSTOM ID: ', pos_id);
+
             const posData = {
+              pos_id,
               city_name: cityExists,
-              province_name: 'luanda',
+              province_name: pos.province || 'luanda',
               area_name: areaExists,
               zone_number: zoneExists,
+              description: pos.description,
               latitude: coords.latitude,
               longitude: coords.longitude,
               status: posStatus,
