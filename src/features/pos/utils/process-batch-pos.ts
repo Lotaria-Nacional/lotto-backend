@@ -11,8 +11,6 @@ export async function processBatchPos(batch: ImportPosDTO[]) {
   const errors: any[] = [];
   let processed = 0;
 
-  console.log(batch);
-
   for (let i = 0; i < batch.length; i += CHUNK_SIZE) {
     const chunk = batch.slice(i, i + CHUNK_SIZE);
 
@@ -46,8 +44,6 @@ export async function processBatchPos(batch: ImportPosDTO[]) {
               zone: zoneExists || 1,
             });
 
-            console.log('POINT OF SALE CUSTOM ID: ', pos_id);
-
             const posData = {
               pos_id,
               city_name: cityExists,
@@ -67,9 +63,9 @@ export async function processBatchPos(batch: ImportPosDTO[]) {
             };
 
             // Usa upsert atómico para evitar duplicados
-            if (pos.id) {
+            if (pos.pos_id) {
               await tx.pos.upsert({
-                where: { id: pos.id },
+                where: { pos_id: pos.pos_id },
                 update: posData,
                 create: posData,
               });

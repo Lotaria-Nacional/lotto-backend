@@ -31,7 +31,7 @@ export async function exportPosService(res: Response, filters: PaginationParams)
       console.log(pos);
 
       const line = [
-        pos.id,
+        pos.pos_id,
         pos.agent_id_reference || '',
         pos.province_name?.toUpperCase() || '',
         pos.admin_name?.toUpperCase() || '',
@@ -43,7 +43,7 @@ export async function exportPosService(res: Response, filters: PaginationParams)
         pos.licence_reference?.toUpperCase() || '',
         pos.coordinates || '',
       ]
-        .map((v) => `"${v ?? ''}"`)
+        .map(v => `"${v ?? ''}"`)
         .join(',');
 
       res.write(line + '\n');

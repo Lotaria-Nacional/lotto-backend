@@ -11,7 +11,7 @@ export async function fetchPoService(params: PaginationParams) {
     where,
     skip: offset,
     take: params.limit,
-    orderBy: { created_at: 'desc' },
+    orderBy: { pos_id: 'asc' },
     select: {
       licence: {
         include: {

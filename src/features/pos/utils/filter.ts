@@ -7,6 +7,7 @@ export const createPosSearchFilters = (query: string | undefined) => {
 
   if (!query?.trim()) return filters;
 
+  filters.push({ pos_id: { equals: query, mode: 'insensitive' } });
   filters.push({ admin: { name: { equals: query, mode: 'insensitive' } } });
   filters.push({ city: { name: { equals: query, mode: 'insensitive' } } });
   filters.push({ province: { name: { equals: query, mode: 'insensitive' } } });

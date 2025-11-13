@@ -6,12 +6,12 @@ import { Prisma } from '@prisma/client';
 import dayjs from 'dayjs';
 import { TerminalStatus } from '@lotaria-nacional/lotto';
 
-type TerminalWithSimCard = Prisma.TerminalGetPayload<{
-  include: { sim_card: true };
+type TerminalWithRelations = Prisma.TerminalGetPayload<{
+  include: { sim_card: true; agent: { include: { pos: true } } };
 }>;
 
 const TERMINAL_HEADER =
-  'ID REVENDEDOR, Nº DE SERIE DO TERMINAL, Nº DO CARTAO UNITEL, PIN, PUK, Nº DE SERIE DO CHIP, DEVICE ID, ESTADO, DATA DA ACTIVACAO\n';
+  'ID REVENDEDOR, AREA, ZONA, Nº DE SERIE DO TERMINAL, Nº DO CARTAO UNITEL, PIN, PUK, Nº DE SERIE DO CHIP, DEVICE ID, ESTADO, DATA DA ACTIVACAO\n';
 
 export async function exportTerminalService(res: Response, filters: PaginationParams) {
   const where = buildTermninalWhereInput(filters);
@@ -22,13 +22,14 @@ export async function exportTerminalService(res: Response, filters: PaginationPa
   const batchSize = 500;
 
   while (true) {
-    const batch: TerminalWithSimCard[] = await prisma.terminal.findMany({
+    const batch: TerminalWithRelations[] = await prisma.terminal.findMany({
       where,
       take: batchSize,
       skip: cursor ? 1 : 0,
       ...(cursor ? { cursor: { id: cursor } } : {}),
       orderBy: { id: 'desc' },
       include: {
+        agent: { include: { pos: { select: { area_name: true, zone_number: true } } } },
         sim_card: true,
       },
     });
@@ -37,6 +38,9 @@ export async function exportTerminalService(res: Response, filters: PaginationPa
 
     for (const terminal of batch) {
       const line = [
+        terminal.agent_id_reference,
+        terminal?.agent?.pos?.area_name || terminal?.agent?.area,
+        terminal?.agent?.pos?.zone_number || terminal?.agent?.zone,
         terminal.agent_id_reference,
         terminal.serial,
         terminal?.sim_card?.number || '',
@@ -47,7 +51,7 @@ export async function exportTerminalService(res: Response, filters: PaginationPa
         terminal.status ? TERMINAL_STATUS[terminal.status].toUpperCase() : '',
         dayjs(terminal.activated_at).format('DD/MM/YYYY') || '',
       ]
-        .map((v) => `"${v ?? ''}"`)
+        .map(v => `"${v ?? ''}"`)
         .join(',');
 
       res.write(line + '\n');
