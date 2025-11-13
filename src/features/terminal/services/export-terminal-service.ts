@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import { TerminalStatus } from '@lotaria-nacional/lotto';
 
 type TerminalWithRelations = Prisma.TerminalGetPayload<{
-  include: { sim_card: true; agent: { include: { pos: true } } };
+  include: { sim_card: true; agent: { include: { pos: { select: { area_name: true; zone_number: true } } } } };
 }>;
 
 const TERMINAL_HEADER =
