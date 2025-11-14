@@ -3,77 +3,71 @@ import { NotFoundError } from '../../../errors';
 import { audit } from '../../../utils/audit-log';
 import { AuthPayload, UpdatePosDTO } from '@lotaria-nacional/lotto';
 
-interface UpdatePosServiceResponse {
-  id: string;
-}
+export async function updatePosService(data: UpdatePosDTO & { description?: string; user: AuthPayload }) {
+  try {
+    await prisma.$transaction(async tx => {
+      const pos = await tx.pos.findUnique({ where: { id: data.id } });
 
-export async function updatePosService(
-  data: UpdatePosDTO & { description?: string; user: AuthPayload }
-): Promise<UpdatePosServiceResponse> {
-  const result = await prisma.$transaction(async tx => {
-    const pos = await tx.pos.findUnique({ where: { id: data.id } });
+      if (!pos) throw new NotFoundError('POS não encontrado.');
 
-    if (!pos) throw new NotFoundError('POS não encontrado.');
+      if (data.agent_id_reference) {
+        const agent = await tx.agent.findUnique({
+          where: { id_reference: data.agent_id_reference },
+        });
 
-    if (data.agent_id_reference) {
-      const agent = await tx.agent.findUnique({
-        where: { id_reference: data.agent_id_reference },
-      });
+        if (!agent) {
+          throw new NotFoundError('Agente não encontrado.');
+        }
 
-      if (!agent) {
-        throw new NotFoundError('Agente não encontrado.');
+        await tx.agent.update({
+          where: { id: agent.id },
+          data: {
+            status: 'active',
+          },
+        });
       }
 
-      await tx.agent.update({
-        where: { id: agent.id },
+      let licence;
+      if (data.licence_reference) {
+        licence = await tx.licence.findUnique({
+          where: {
+            reference: data.licence_reference,
+          },
+          include: { admin: { select: { name: true } } },
+        });
+      }
+
+      const posUpdated = await tx.pos.update({
+        where: { id: data.id },
         data: {
-          status: 'active',
+          coordinates: data.coordinates,
+          latitude: data.latitude,
+          description: data.description,
+          longitude: data.longitude,
+          admin_name: licence?.admin_name,
+          province_name: data.province_name,
+          city_name: data.city_name,
+          area_name: data.area_name,
+          zone_number: data.zone_number,
+          type_name: data.type_name,
+          status: data.agent_id_reference ? 'active' : pos.status,
+          subtype_name: data.subtype_name,
+          agent_id_reference: data.agent_id_reference,
+          licence_reference: data.licence_reference,
         },
       });
-    }
 
-    console.log(data);
-
-    let licence;
-    if (data.licence_reference) {
-      licence = await tx.licence.findUnique({
-        where: {
-          reference: data.licence_reference,
-        },
-        include: { admin: { select: { name: true } } },
+      await audit(tx, 'UPDATE', {
+        user: data.user,
+        entity: 'POS',
+        before: pos,
+        after: posUpdated,
+        description: 'Atualizou os dados de um ponto de venda',
       });
-    }
 
-    const posUpdated = await tx.pos.update({
-      where: { id: data.id },
-      data: {
-        coordinates: data.coordinates,
-        latitude: data.latitude,
-        description: data.description,
-        longitude: data.longitude,
-        admin_name: licence?.admin_name,
-        province_name: data.province_name,
-        city_name: data.city_name,
-        area_name: data.area_name,
-        zone_number: data.zone_number,
-        type_name: data.type_name,
-        status: data.agent_id_reference ? 'active' : pos.status,
-        subtype_name: data.subtype_name,
-        agent_id_reference: data.agent_id_reference,
-        licence_reference: data.licence_reference,
-      },
+      return posUpdated.id;
     });
-
-    await audit(tx, 'UPDATE', {
-      user: data.user,
-      entity: 'POS',
-      before: pos,
-      after: posUpdated,
-      description: 'Atualizou os dados de um ponto de venda',
-    });
-
-    return posUpdated.id;
-  });
-
-  return { id: result };
+  } catch (error) {
+    console.log('[ERROR: UPDATE POS SERVICE]: ', error);
+  }
 }

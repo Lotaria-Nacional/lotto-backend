@@ -17,9 +17,10 @@ export async function createPosController(req: Request, res: Response) {
     },
   });
 
+  const file = req.file;
   const body = createPosSchema.parse(req.body);
 
-  const response = await createPosService({ ...body, user });
+  const response = await createPosService({ ...body, user, file });
 
   return res.status(HttpStatus.CREATED).json({
     message: 'O POS foi criado',

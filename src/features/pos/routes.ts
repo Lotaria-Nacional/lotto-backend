@@ -28,7 +28,7 @@ import { reactivateManyPosController } from './controllers/re-activate-many-pos-
 const posRouter = Router();
 
 posRouter.post('/import', upload.single('file'), catchErrors(importPosController));
-posRouter.post('/', catchErrors(createPosController));
+posRouter.post('/', upload.single('file'), catchErrors(createPosController));
 
 posRouter.put('/deny-many', catchErrors(denyManyPosController));
 posRouter.put('/reset-many', catchErrors(resetManyPosController));

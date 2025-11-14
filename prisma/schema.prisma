@@ -88,6 +88,7 @@ model Pos {
   id     String @id @default(uuid())
   pos_id String @unique
 
+  image       String?
   description String?
   coordinates String?
   latitude    Float?

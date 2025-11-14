@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { fetchManyUsersService } from '../services';
+import { fetchUsersService } from '../services';
 import { HttpStatus } from '../../../constants/http';
 import { AuthPayload } from '@lotaria-nacional/lotto';
 import { paramsSchema } from '../../../schemas/common/query.schema';
@@ -19,7 +19,7 @@ export async function fetchManyUsersController(req: Request, res: Response) {
     },
   });
 
-  const response = await fetchManyUsersService(params);
+  const response = await fetchUsersService(params);
 
   return res.status(HttpStatus.OK).json(response);
 }

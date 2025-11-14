@@ -32,6 +32,7 @@ export async function fetchPoService(params: PaginationParams) {
       id: true,
       pos_id: true,
       description: true,
+      image: true,
       status: true,
       latitude: true,
       coordinates: true,
