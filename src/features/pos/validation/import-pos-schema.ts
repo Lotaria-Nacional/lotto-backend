@@ -1,5 +1,5 @@
 import z from 'zod';
-import { PosStatus, posStatusSchema } from '@lotaria-nacional/lotto';
+import { PosStatus } from '@lotaria-nacional/lotto';
 
 export const importPosSchema = z.object({
   id: z.string().optional(),

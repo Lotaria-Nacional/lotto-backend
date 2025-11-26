@@ -13,6 +13,21 @@ export const createLicenceSearchFilters = (query: string): Prisma.LicenceWhereIn
   return filters;
 };
 
+export const getStatus = (status?: LicenceStatus | 'free-used'): Prisma.LicenceWhereInput[] => {
+  if (!status) return [];
+
+  switch (status) {
+    case 'free':
+      return [{ status: { in: ['free'] } }];
+    case 'used':
+      return [{ status: { in: ['used'] } }];
+    case 'free-used':
+      return [{ status: { in: ['free', 'used'] } }];
+    default:
+      return [];
+  }
+};
+
 export const buildLicenceWhereInput = (params: PaginationParams): Prisma.LicenceWhereInput => {
   const filters = createLicenceSearchFilters(params.query);
   const filterByDate: Prisma.LicenceWhereInput[] = [];
@@ -46,6 +61,9 @@ export const buildLicenceWhereInput = (params: PaginationParams): Prisma.Licence
   let where: Prisma.LicenceWhereInput = {
     AND: [
       ...(filters.length ? [{ OR: filters }] : []),
+
+      ...(params.status ? getStatus(params.status as LicenceStatus) : []),
+
       ...(params.admin_name ? [{ admin: { name: params.admin_name } }] : []),
       ...(params.status ? [{ status: params.status as LicenceStatus }] : []),
       ...filterByDate,

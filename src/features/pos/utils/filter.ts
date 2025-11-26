@@ -26,10 +26,14 @@ export const createPosSearchFilters = (query: string | undefined) => {
   return filters;
 };
 
-export const getStatus = (status?: PosStatus): Prisma.PosWhereInput[] => {
+export const getStatus = (status?: PosStatus | 'pending-denied' | 'active-approved'): Prisma.PosWhereInput[] => {
   if (!status) return [];
 
   switch (status) {
+    case 'pending-denied':
+      return [{ status: { in: ['pending', 'denied'] } }];
+    case 'active-approved':
+      return [{ status: { in: ['approved', 'active'] } }];
     case 'approved':
       return [{ status: { in: ['approved'] } }];
     case 'active':

@@ -1,49 +1,74 @@
 import { Prisma } from '@prisma/client';
 
-export async function seedProvinceAndCities(
-  tx: Prisma.TransactionClient,
-  areas: any[],
-  zones: any[],
-  administrations: any[]
-) {
-  const { id: luandaId } = await tx.province.create({ data: { name: 'luanda' } });
+type City = {
+  name: string;
+  area: any;
+  zone: any;
+  adminName?: string;
+};
 
-  const citiesData = [
-    { name: 'ingombota', area: areas[0], zone: zones[0], adminName: 'ingombota' },
-    { name: 'mutamba', area: areas[0], zone: zones[1], adminName: 'ingombota' },
-    { name: 'samba', area: areas[0], zone: zones[2], adminName: 'samba' },
-    { name: 'morro bento', area: areas[0], zone: zones[3], adminName: 'talatona' },
-    { name: 'nova vida', area: areas[1], zone: zones[4], adminName: 'kilamba kiaxi' },
-    { name: 'talatona', area: areas[1], zone: zones[5], adminName: 'talatona' },
-    { name: 'patriota', area: areas[1], zone: zones[6], adminName: 'talatona' },
-    { name: 'benfica', area: areas[1], zone: zones[7], adminName: 'talatona' },
-    { name: 'fubu', area: areas[2], zone: zones[8], adminName: 'talatona' },
-    { name: 'calemba 2', area: areas[2], zone: zones[9], adminName: 'talatona' },
-    { name: 'camama', area: areas[2], zone: zones[10], adminName: 'talatona' },
-    { name: 'viana', area: areas[2], zone: zones[11], adminName: 'viana' },
-    { name: 'palanca', area: areas[3], zone: zones[12], adminName: 'kilamba kiaxi' },
-    { name: 'mulenvos', area: areas[3], zone: zones[13], adminName: 'cacuaco' },
-    { name: 'cazenga', area: areas[3], zone: zones[14], adminName: 'cazenga' },
-    { name: 'sao paulo', area: areas[3], zone: zones[15], adminName: 'sambizanga' },
-    { name: 'kikolo', area: areas[4], zone: zones[16], adminName: 'cacuaco' },
-    { name: 'sambizanga', area: areas[4], zone: zones[17], adminName: 'sambizanga' },
-    { name: 'cacuaco', area: areas[4], zone: zones[18], adminName: 'cacuaco' },
-    { name: 'quifangondo', area: areas[4], zone: zones[19], adminName: 'cacuaco' },
-    { name: 'belo monte', area: areas[5], zone: zones[20], adminName: 'cacuaco' },
-    { name: 'capalanga', area: areas[5], zone: zones[21], adminName: 'viana' },
-    { name: 'luanda sul', area: areas[5], zone: zones[22], adminName: 'viana' },
-    { name: 'zango', area: areas[5], zone: zones[23], adminName: 'viana' },
+export async function seedProvinceAndCities(tx: Prisma.TransactionClient, areas: any[], zones: any[]) {
+  const luanda = await tx.province.upsert({
+    where: { name: 'luanda' },
+    update: {},
+    create: { name: 'luanda' },
+  });
+
+  const citiesData: City[] = [
+    { name: 'ingombota', area: areas[0], zone: zones[0] }, // A - 1
+    { name: 'mutamba', area: areas[0], zone: zones[1] }, // A - 2
+    { name: 'samba', area: areas[0], zone: zones[2] }, // A - 3
+    { name: 'palanca', area: areas[0], zone: zones[3] }, // A - 4
+
+    { name: 'morro bento', area: areas[1], zone: zones[4] }, // B - 5
+    { name: 'nova vida', area: areas[1], zone: zones[5] }, // B - 6
+    { name: 'talatona', area: areas[1], zone: zones[6] }, // B - 7
+    { name: 'patriota', area: areas[1], zone: zones[7] }, // B - 8
+
+    { name: 'fubu', area: areas[2], zone: zones[8] }, // C - 9
+    { name: 'calemba 2', area: areas[2], zone: zones[9] }, // C - 10
+    { name: 'camama', area: areas[2], zone: zones[10] }, // C - 11
+    { name: 'viana', area: areas[2], zone: zones[11] }, // C - 12
+
+    { name: 'sao paulo', area: areas[3], zone: zones[12] }, // D - 13
+    { name: 'sambizanga', area: areas[3], zone: zones[13] }, // D - 14
+    { name: 'cazenga popular', area: areas[3], zone: zones[14] }, // D - 15
+    { name: 'cazenga kalawenda', area: areas[3], zone: zones[15] }, // D - 16
+
+    { name: 'kikolo', area: areas[4], zone: zones[16] }, // E - 17
+    { name: 'mulenvos de baixo', area: areas[4], zone: zones[17] }, // E - 18
+    { name: 'mulenvos de cima', area: areas[4], zone: zones[18] }, // E - 19
+    { name: 'capalanca', area: areas[4], zone: zones[19] }, // E - 20
+
+    { name: 'cacuaco', area: areas[5], zone: zones[20] }, // F - 21
+    { name: 'quifangondo', area: areas[5], zone: zones[21] }, // F - 22
+    { name: 'belo monte', area: areas[5], zone: zones[22] }, // F - 23
+    { name: 'sequele', area: areas[5], zone: zones[23] }, // F - 24
+
+    { name: 'km 30-viana', area: areas[6], zone: zones[24] }, // G - 25
+    { name: 'luanda sul', area: areas[6], zone: zones[25] }, // G - 26
+    { name: 'zango 0-2', area: areas[6], zone: zones[26] }, // G - 27
+    { name: 'zango 3-5', area: areas[6], zone: zones[27] }, // G - 28
+
+    { name: 'vila flor - bita', area: areas[7], zone: zones[28] }, // H - 29
+    { name: 'kilamba', area: areas[7], zone: zones[29] }, // H - 30
+    { name: 'benfica', area: areas[7], zone: zones[30] }, // H - 31
+    { name: 'belas', area: areas[7], zone: zones[31] }, // H - 32
   ];
 
   for (const city of citiesData) {
-    const admin = administrations.find(a => a.name === city.adminName);
-    await tx.city.create({
-      data: {
+    await tx.city.upsert({
+      where: { name: city.name },
+      create: {
         name: city.name,
-        province_id: luandaId,
         area_id: city.area.id,
         zone_id: city.zone.id,
-        administration_id: admin.id,
+        province_id: luanda.id,
+      },
+      update: {
+        area_id: city.area.id,
+        zone_id: city.zone.id,
+        province_id: luanda.id,
       },
     });
   }

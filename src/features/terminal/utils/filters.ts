@@ -20,10 +20,14 @@ export const createTerminalSearchFilters = (query: string): Prisma.TerminalWhere
   return filters;
 };
 
-export const getStatus = (status: TerminalStatus | 'stock-ready' | 'on_field-ready'): Prisma.TerminalWhereInput[] => {
+export const getStatus = (
+  status: TerminalStatus | 'on_field-ready-delivered' | 'stock-ready' | 'on_field-ready'
+): Prisma.TerminalWhereInput[] => {
   if (!status) return [];
 
   switch (status) {
+    case 'on_field-ready-delivered':
+      return [{ status: { in: ['on_field', 'ready', 'delivered'] } }];
     case 'ready':
       return [{ status: { in: ['ready'] } }];
     case 'stock':

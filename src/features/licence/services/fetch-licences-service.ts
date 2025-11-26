@@ -5,6 +5,8 @@ import { PaginationParams } from '../../../@types/pagination-params';
 export async function fetchLicencesService(params: PaginationParams) {
   const where = buildLicenceWhereInput(params);
 
+  console.log(params);
+
   const offset = (params.page - 1) * params.limit;
 
   const licences = await prisma.licence.findMany({

@@ -1,10 +1,9 @@
-import path from 'node:path';
-import imageKit from '../../../lib/image-kit';
 import prisma from '../../../lib/prisma';
+import { createReadStream } from 'node:fs';
+import imageKit from '../../../lib/image-kit';
 import { audit } from '../../../utils/audit-log';
 import { generatePosID } from '../utils/generate-pos-id';
 import { AuthPayload, CreatePosDTO } from '@lotaria-nacional/lotto';
-import { createReadStream } from 'node:fs';
 
 export async function createPosService({
   user,
