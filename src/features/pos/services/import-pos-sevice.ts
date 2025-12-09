@@ -20,7 +20,7 @@ export async function importPosService(file: string, user: AuthPayload) {
       .pipe(csvParser())
       .on('data', () => count++)
       .on('end', () => resolve(count))
-      .on('error', () => reject);
+      .on('error', e => reject(e));
   });
 
   console.log(`======== TOTAL LINES: ${totalLines} =========`);

@@ -4,10 +4,10 @@ import { ImportPosDTO } from '../validation/import-pos-schema';
 
 // --- FUNÇÃO PARA COLETAR DADOS AUXILIARES ---
 export async function collectData(chunk: ImportPosDTO[]) {
-  const typeNames = Array.from(new Set(chunk.map((p) => p.type_name).filter(Boolean))) as string[];
-  const agentIds = Array.from(new Set(chunk.map((p) => p.agent_id_reference).filter(Boolean))) as number[];
-  const licenceRefs = Array.from(new Set(chunk.map((p) => p.licence).filter(Boolean))) as string[];
-  const areaNames = Array.from(new Set(chunk.map((p) => p.area).filter(Boolean))) as string[];
+  const typeNames = Array.from(new Set(chunk.map(p => p.type_name).filter(Boolean))) as string[];
+  const agentIds = Array.from(new Set(chunk.map(p => p.agent_id_reference).filter(Boolean))) as number[];
+  const licenceRefs = Array.from(new Set(chunk.map(p => p.licence).filter(Boolean))) as string[];
+  const areaNames = Array.from(new Set(chunk.map(p => p.area).filter(Boolean))) as string[];
 
   const [types, subtypes, agents, licences, areas] = await Promise.all([
     prisma.type.findMany({ where: { name: { in: typeNames } } }),
@@ -29,11 +29,11 @@ export async function collectData(chunk: ImportPosDTO[]) {
     }),
   ]);
 
-  const typeMap = new Map(types.map((t) => [t.name, t.name]));
-  const subtypeMap = new Map(subtypes.map((s) => [s.name, s]));
-  const agentSet = new Set(agents.map((a) => a.id_reference));
-  const licenceMap = new Map(licences.map((l) => [l.reference, l.admin?.name]));
-  const areaSet = new Set(areas.map((a) => a.name));
+  const typeMap = new Map(types.map(t => [t.name, t.name]));
+  const subtypeMap = new Map(subtypes.map(s => [s.name, s]));
+  const agentSet = new Set(agents.map(a => a.id_reference));
+  const licenceMap = new Map(licences.map(l => [l.reference, l.admin?.name]));
+  const areaSet = new Set(areas.map(a => a.name));
 
   return { typeMap, subtypeMap, agentSet, licenceMap, areaSet };
 }
@@ -129,26 +129,35 @@ export const getAgent = async ({ pos, tx }: GetReferenceProp) => {
   let agentIdReference: number | null = null;
 
   if (pos.agent_id_reference) {
-    // Buscar o agente com POS já existente
+    // 1. Buscar o agente com POS e terminal já existentes
     const agent = await tx.agent.findUnique({
       where: { id_reference: pos.agent_id_reference },
-      select: { id_reference: true, pos: { select: { id: true } }, terminal: { select: { id: true } } },
+      select: {
+        id_reference: true,
+        pos: { select: { id: true } },
+        terminal: { select: { id: true } },
+      },
     });
 
     if (agent) {
       agentIdReference = agent.id_reference;
-      // Se o agente já tiver POS, remover associação
+
+      // 2. Se o agente já tiver POS associado, desassociar
       if (agent.pos?.id) {
         await tx.pos.update({
           where: { id: agent.pos.id },
-          data: { agent_id_reference: null, status: 'approved' },
+          data: {
+            agent_id_reference: null,
+            status: 'approved',
+          },
         });
       }
 
+      // 3. Se o agente tiver terminal, mudar status para 'delivered'
       if (agent.terminal?.id) {
         await tx.terminal.update({
           where: { id: agent.terminal.id },
-          data: { status: 'on_field' },
+          data: { status: 'delivered' }, // Status alterado para 'delivered'
         });
       }
     }
@@ -164,7 +173,7 @@ export function parseCoordinates(coordinates?: string | null) {
   const [lat, lng] = coordinates
     .trim()
     .split(',')
-    .map((n) => Number(n) || 0);
+    .map(n => Number(n) || 0);
   coords.latitude = lat;
   coords.longitude = lng;
   return coords;
